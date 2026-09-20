@@ -31,3 +31,4 @@ Contents
    :maxdepth: 4
 
    pbpstats
+   v3-data-contract

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "path": "pbp/stats_v3_0021900001.json",
+      "game_id": "0021900001",
+      "kind": "archived_response",
+      "complete_game": true,
+      "actions": 596,
+      "sha256": "a07afdeec43d6186afeecdbf3f93a96392689ac4790a740fec32191a1dc74c78",
+      "source": {
+        "original_filename": "v3_0021900001.json",
+        "sha256": "a07afdeec43d6186afeecdbf3f93a96392689ac4790a740fec32191a1dc74c78",
+        "response_metadata_time": "2025-04-17T12:11:02.112Z",
+        "retrieved_at_utc": null,
+        "origin": "User-provided archive from an earlier local investigation; original capture not independently verified."
+      }
+    },
+    {
+      "path": "pbp/stats_v3_0022400001.json",
+      "game_id": "0022400001",
+      "kind": "published_response",
+      "complete_game": true,
+      "actions": 475,
+      "sha256": "0af1b3e7e9d75e8a8c29cb465b202192863fcb21df9cf46aebda122093870914",
+      "source": {
+        "original_filename": "stats-pbp_0022400001.json",
+        "sha256": "0af1b3e7e9d75e8a8c29cb465b202192863fcb21df9cf46aebda122093870914",
+        "response_metadata_time": "2025-08-26T12:10:11.1011Z",
+        "retrieved_at_utc": "2026-09-20T03:49:51.483352+00:00",
+        "source_repository": "swar/nba_api",
+        "source_commit": "0d0108875f3fc9455f67cbd6670aeb642756009f",
+        "url": "https://raw.githubusercontent.com/swar/nba_api/0d0108875f3fc9455f67cbd6670aeb642756009f/docs/nba_api/stats/endpoints/responses/playbyplayv3.json"
+      }
+    },
+    {
+      "path": "pbp/stats_v3_0042500317_heaves_excerpt.json",
+      "game_id": "0042500317",
+      "kind": "excerpt",
+      "complete_game": false,
+      "actions": 8,
+      "sha256": "75a58ef354ba90bf3e856e9bdd47d0232d57f9c201f57df62c339def9215a66f",
+      "source": {
+        "original_filename": "pbp_v3_0042500317.json",
+        "sha256": "2dc5e4cf9973d920aa0026b3627c29fcac6d2eae08c42c6a0eddd47620c10bd8",
+        "response_metadata_time": "2026-06-01T12:10:14.1014Z",
+        "retrieved_at_utc": null,
+        "origin": "User-provided archive from an earlier local investigation; original capture not independently verified.",
+        "action_indices": [
+          117,
+          118,
+          119,
+          120,
+          388,
+          389,
+          390,
+          391
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+# Preserve the exact bytes covered by the V3 fixture provenance checksums.
+tests/data/pbp/stats_v3_*.json -text

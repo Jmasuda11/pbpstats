@@ -398,6 +398,7 @@ def test_away_from_play_free_throw_type():
     order = 1
     foul_event = StatsFoul(foul, order)
     ft = {
+        "GAME_ID": "0021900001",
         "EVENTMSGTYPE": 3,
         "EVENTMSGACTIONTYPE": 10,
         "HOMEDESCRIPTION": "Free Throw 1 of 1",
@@ -443,6 +444,7 @@ def test_flagrant_free_throw_type():
     order = 1
     foul_event = StatsFoul(foul, order)
     ft_1_of_2 = {
+        "GAME_ID": "0021900001",
         "EVENTNUM": 611,
         "PCTIMESTRING": "0:25",
         "HOMEDESCRIPTION": "Beal Free Throw Flagrant 1 of 2 (32 PTS)",

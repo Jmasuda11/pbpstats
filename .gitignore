@@ -11,3 +11,4 @@ debug.py
 *.ipynb
 docs/_build
 poetry.lock
+docs/v3-migration-plan.md
