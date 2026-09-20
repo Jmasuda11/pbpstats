@@ -3,6 +3,12 @@ import abc
 import pbpstats
 from pbpstats.resources.enhanced_pbp import Foul
 
+FREE_THROW_TYPE_OVERRIDES = {
+    # penalty FTs were not shot at time of the foul and officials noticed this
+    # afterwards so they were shot later
+    ("0022301195", 138): "Penalty",
+}
+
 
 class FreeThrow(metaclass=abc.ABCMeta):
     """
@@ -237,10 +243,11 @@ class FreeThrow(metaclass=abc.ABCMeta):
         """
         returns string description of free throw type
         """
-        if self.game_id == "0022301195" and self.event_num == 138:
-            # override for when penalty FTs were not shot at time of the foul
-            # and officials noticed this afterwards to they were shot later
-            return "Penalty"
+        override = FREE_THROW_TYPE_OVERRIDES.get(
+            (getattr(self, "game_id", None), getattr(self, "event_num", None))
+        )
+        if override is not None:
+            return override
         if self.is_technical_ft:
             return "Technical"
         num_fts = self.num_ft_for_trip

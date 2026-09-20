@@ -10,6 +10,8 @@ repos:
     rev: v4.0.1
     hooks:
       - id: trailing-whitespace
+        # rewriting these would break the checksums in tests/data/v3/manifest.json
+        exclude: ^tests/data/
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:

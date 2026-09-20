@@ -1,2 +1,3 @@
-# Preserve the exact bytes covered by the V3 fixture provenance checksums.
-tests/data/pbp/stats_v3_*.json -text
+# Recorded fixtures are compared byte-for-byte against the checksums in
+# tests/data/v3/manifest.json, so no EOL conversion, whatever the path.
+tests/data/** -text

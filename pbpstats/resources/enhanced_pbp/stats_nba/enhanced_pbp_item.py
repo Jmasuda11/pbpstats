@@ -42,6 +42,9 @@ class StatsEnhancedPbpItem(EnhancedPbpItem):
     """
 
     def __init__(self, event, order):
+        # set unconditionally so a missing or null GAME_ID is None rather than
+        # an undefined attribute, matching LiveEnhancedPbpItem/DataEnhancedPbpItem
+        self.game_id = event.get("GAME_ID")
         for key, value in KEY_ATTR_MAPPER.items():
             if event.get(key) is not None:
                 setattr(self, value, event.get(key))

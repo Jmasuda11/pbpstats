@@ -45,6 +45,12 @@ must retain the original sequence and record its reason separately.
 Participants and completeness
 -----------------------------
 
+Team rows put the team id in ``personId`` and set ``teamId`` to ``0``. In the
+recorded games this covers 34 and 32 rows respectively, and two of the excerpt's
+eight: team rebounds, timeouts, and delay-of-game and eight-second violations.
+Resolve those to a team, never to a player; existing V2 handling makes the same
+correction. Losing it corrupts rebound and possession-ownership accounting.
+
 Use explicit participant IDs where present. Resolve description-only assists,
 incoming substitutions, and jump-ball participants using team-scoped names,
 roster information, and validated event context. Preserve the resolution evidence.
@@ -57,8 +63,15 @@ resolution failed.
 
 V3 does not identify every player who drew a foul. For example, event ``29`` in
 the paired game records an offensive foul by Kyle Lowry, but omits the Brandon
-Ingram identity present in V2. There is no free throw at that clock from which
-to recover a candidate. A roster cannot recover that missing relationship.
+Ingram identity present in V2. This ordinary offensive foul has no free throw
+at that clock to supply a candidate, and a roster cannot recover the relationship.
+Other sequences do offer evidence: shooting foul ``18`` shares its period and
+clock with free throws ``20`` and ``21``, whose shooter matches the V2 fouled
+player. Attempt resolution before declaring an attribution unavailable, but
+validate the foul/free-throw association and the shooter's role. A matching clock
+alone is insufficient: `NBA free-throw rules`_ allow replacement shooters in
+specified circumstances, including injury, and unrelated technical attempts can
+occur at the same clock.
 
 Reject unresolved facts that affect scoring, lineups, or possession ownership.
 Missing optional attribution may leave those outputs usable, but dependent
@@ -95,10 +108,12 @@ architectures must support this accounting.
 The excerpt records ``Heave / Team Field Goal Attempt`` rows with zero person
 and team IDs, while location, description, and surrounding data identify the
 side. Recover the team from validated game context. Do not invent a shooter:
-the absence of individual attribution is intentional. Count the team FGA without
-crediting an individual player FGA, and test the subsequent rebound and lineup
-aggregation separately. Apply the relevant season's accounting rather than
-retroactively changing historical player-attributed attempts.
+the absence of individual attribution is intentional. These rows also carry
+``isFieldGoal=0``, ``shotValue=0`` and a blank ``shotResult``, so ``isFieldGoal``
+does not select them; a filter on that flag silently drops every team heave.
+Count the team FGA without crediting an individual player FGA, and test the
+subsequent rebound and lineup aggregation separately. Apply the relevant season's
+accounting rather than retroactively changing historical player-attributed attempts.
 
 Offline behavior and validation
 -------------------------------
@@ -120,3 +135,4 @@ by timing precision, missing information, or legitimate source corrections.
 Network smoke tests must remain separate from ordinary fixture-based CI.
 
 .. _NBA.com rule-change report: https://www.nba.com/news/nbas-heave-rule-will-allow-deep-end-of-quarter-shots-without-hurting-shooting-percentages
+.. _NBA free-throw rules: https://official.nba.com/rule-no-9-free-throws-and-penalties/
