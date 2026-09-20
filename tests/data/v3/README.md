@@ -2,7 +2,8 @@
 
 These files are recorded inputs for developing the V3 provider. They do not
 establish current endpoint availability or prove that a possession parser is
-correct. No V3 provider is exposed by this change.
+correct. A [raw-file loader](../../../docs/v3-file-loading.rst) is available;
+V3 enhanced events and possession parsing are not implemented yet.
 
 `manifest.json` records each fixture's origin, SHA-256, game, scope, and available
 response metadata. Metadata timestamps are not independently verified capture
