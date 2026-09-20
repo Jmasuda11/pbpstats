@@ -4,6 +4,8 @@ Loading recorded Stats V3 actions
 The native V3 file loader reads recorded NBA PlayByPlayV3 responses. It exposes
 validated raw actions with their original fields and order. It does not resolve
 participants, repair event sequences, infer lineups, or calculate possessions.
+The separate :doc:`v3-participants` layer associates rows and records participant
+identities using explicit game context.
 
 Usage
 -----
