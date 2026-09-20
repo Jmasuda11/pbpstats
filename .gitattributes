@@ -1,0 +1,3 @@
+# Recorded fixtures are compared byte-for-byte against the checksums in
+# tests/data/v3/manifest.json, so no EOL conversion, whatever the path.
+tests/data/** -text

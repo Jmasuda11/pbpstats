@@ -1,3 +1,5 @@
+import pytest
+
 from pbpstats.resources.enhanced_pbp.data_nba.free_throw import DataFreeThrow
 from pbpstats.resources.enhanced_pbp.stats_nba.field_goal import StatsFieldGoal
 from pbpstats.resources.enhanced_pbp.stats_nba.foul import StatsFoul
@@ -398,6 +400,7 @@ def test_away_from_play_free_throw_type():
     order = 1
     foul_event = StatsFoul(foul, order)
     ft = {
+        "GAME_ID": "0000000000",
         "EVENTMSGTYPE": 3,
         "EVENTMSGACTIONTYPE": 10,
         "HOMEDESCRIPTION": "Free Throw 1 of 1",
@@ -443,6 +446,7 @@ def test_flagrant_free_throw_type():
     order = 1
     foul_event = StatsFoul(foul, order)
     ft_1_of_2 = {
+        "GAME_ID": "0000000000",
         "EVENTNUM": 611,
         "PCTIMESTRING": "0:25",
         "HOMEDESCRIPTION": "Beal Free Throw Flagrant 1 of 2 (32 PTS)",
@@ -458,6 +462,7 @@ def test_flagrant_free_throw_type():
     order = 1
     ft_1_of_2_event = StatsFreeThrow(ft_1_of_2, order)
     ft_2_of_2 = {
+        "GAME_ID": "0000000000",
         "EVENTNUM": 611,
         "PCTIMESTRING": "0:25",
         "HOMEDESCRIPTION": "Beal Free Throw Flagrant 2 of 2 (32 PTS)",
@@ -481,6 +486,37 @@ def test_flagrant_free_throw_type():
     ft_2_of_2_event.next_event = None
 
     assert ft_1_of_2_event.free_throw_type == "2 Shot Flagrant"
+
+
+@pytest.mark.parametrize(
+    "identity, expected_type",
+    [
+        ({"GAME_ID": "0022301195", "EVENTNUM": 138}, "Penalty"),
+        ({"GAME_ID": "0022301195", "EVENTNUM": 139}, "1 Shot Away From Play"),
+        ({"GAME_ID": "0000000000", "EVENTNUM": 138}, "1 Shot Away From Play"),
+        ({"EVENTNUM": 138}, "1 Shot Away From Play"),
+        ({"GAME_ID": None, "EVENTNUM": 138}, "1 Shot Away From Play"),
+        ({"GAME_ID": "0022301195"}, "1 Shot Away From Play"),
+        ({"GAME_ID": "0022301195", "EVENTNUM": None}, "1 Shot Away From Play"),
+        ({}, "1 Shot Away From Play"),
+    ],
+)
+def test_free_throw_type_override_requires_matching_game_and_event(
+    identity, expected_type
+):
+    # Synthetic one-shot trip: only the recorded game/event correction should
+    # override its ordinary classification, even when identity is incomplete.
+    item = {
+        "EVENTMSGTYPE": 3,
+        "EVENTMSGACTIONTYPE": 10,
+        "HOMEDESCRIPTION": "Free Throw 1 of 1",
+        "PCTIMESTRING": "0:45",
+        **identity,
+    }
+    event = StatsFreeThrow(item, 1)
+    event.previous_event = None
+    assert event.game_id == identity.get("GAME_ID")
+    assert event.free_throw_type == expected_type
 
 
 def test_event_for_efficiency_stats_when_events_out_of_order():
