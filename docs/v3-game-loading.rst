@@ -43,6 +43,9 @@ league/season formats are described in :doc:`v3-leagues`.
 Bundle layout and provenance
 ----------------------------
 
+For importing recorded responses and preparing reviewed lineup evidence, see
+:doc:`v3-evidence-preparation`.
+
 The data directory contains ``pbp/stats_v3_<game_id>.json``,
 ``game_details/stats_v3_boxscore_<game_id>.json``, its matching
 ``.evidence.json`` sidecar, and the reviewed lineup evidence. Explicit evidence

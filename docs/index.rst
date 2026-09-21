@@ -40,4 +40,5 @@ Contents
    v3-possessions
    v3-leagues
    v3-game-loading
+   v3-evidence-preparation
    v3-shot-zones
