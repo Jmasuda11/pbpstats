@@ -35,3 +35,4 @@ Contents
    v3-file-loading
    v3-participants
    v3-game-context
+   v3-classification
