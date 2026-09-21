@@ -105,6 +105,10 @@ class V3FieldGoal(V3EnhancedEvent, FieldGoal):
 
     @property
     def is_corner_3(self):
+        if self.shot_value == 3 and self.rules.league_id == "10":
+            raise self.error(
+                "WNBA three-point zone classification requires separate validation"
+            )
         if self.shot_value == 3 and not hasattr(self, "locY"):
             raise self.error("three-point shot location is unavailable")
         return FieldGoal.is_corner_3.fget(self)

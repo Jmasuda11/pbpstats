@@ -70,6 +70,10 @@ three-second technical attempts retain the interrupted offense. Native team
 heaves retain a team miss with no invented player or shot value, with
 league/season/period checks. Detailed event statistics and full ``Client``
 possession-provider registration remain outside this adapter's contract.
+Take/away-from-play shooters must belong to the lineup at the foul. WNBA
+corner/arc three-point classification also remains unvalidated, so its lookup
+and dependent ``possession_start_type`` labels raise explicitly; this does not
+prevent possession counts or lineup/time accounting.
 Transition-take awards exclude the last two minutes of Q4 and timed NBA/WNBA
 overtime, and the entirety of G League overtime; see Rule 4 in the
 `2025-26 NBA rule book

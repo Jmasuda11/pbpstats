@@ -83,14 +83,17 @@ def facts(rows, gid="0022500001", ctx=None):
     )
 
 
-def load(rows, gid="0022500001", ctx=None):
+def load(rows, gid="0022500001", ctx=None, batches=None):
     events = facts(rows, gid, ctx)
     periods = sorted({e.group.primary.period for e in events.items})
     evidence = dict(
         schema_version=1,
         game_id=gid,
         **lineup_fingerprints(events),
-        batches=[],
+        batches=[
+            dict(source_indices=indices, source="Synthetic reviewed batch")
+            for indices in (batches or [])
+        ],
         periods=[synthetic.period_evidence(p) for p in periods],
     )
     return StatsNbaV3PossessionLoader(lineups(events, evidence))
@@ -584,3 +587,54 @@ def test_target_overtime_does_not_allow_a_second_period():
     rows = target_rows() + [synthetic.start(6), synthetic.end(6)]
     with pytest.raises(ValueError, match="exactly one period"):
         load(rows, "2022500001")
+
+
+@pytest.mark.parametrize("subtype", ["Transition Take", "Away From Play"])
+def test_retained_ball_shooter_must_be_on_court_at_the_foul(subtype):
+    rows = [
+        synthetic.start(),
+        plays.foul(subtype),
+        synthetic.sub(1, 6),
+        plays.ft(total=1, pid=6),
+        synthetic.shot(2),
+        synthetic.end(),
+    ]
+    with pytest.raises(ValueError, match="shooter was not on court at the foul"):
+        load(rows, batches=[[2]])
+
+
+@pytest.mark.parametrize("subtype", ["Transition Take", "Away From Play"])
+def test_retained_ball_shooter_can_differ_from_fouled_player(subtype):
+    result = load(
+        [
+            synthetic.start(),
+            plays.foul(subtype, foulDrawnPersonId=2),
+            synthetic.sub(2, 6),
+            plays.ft(total=1),
+            synthetic.shot(6),
+            synthetic.end(),
+        ],
+        batches=[[2]],
+    )
+    assert result.events[3].player1_id == 1
+    assert not result.events[3].is_end_ft
+
+
+def test_wnba_three_point_zones_need_separate_validation():
+    start = dict(synthetic.start(), clock="PT10M00S")
+    shot = dict(
+        synthetic.shot(1, "PT09M00S"),
+        shotValue=3,
+        description="Player1 3PT Jump Shot (3 PTS)",
+        xLegacy=230,
+        yLegacy=50,
+    )
+    result = load(
+        [start, shot, synthetic.shot(11, "PT08M00S", team=plays.AWAY), synthetic.end()],
+        "1022600001",
+    )
+    assert result.events[1].shot_value == 3
+    with pytest.raises(ValueError, match="WNBA three-point zone"):
+        result.events[1].is_corner_3
+    with pytest.raises(ValueError, match="WNBA three-point zone"):
+        result.items[1].possession_start_type

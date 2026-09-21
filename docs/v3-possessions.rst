@@ -46,6 +46,10 @@ Detailed ``event_stats``, ``Possession.possession_stats``, and aggregate
 evidence contract is not implemented; an unknown foul-drawn identity is never
 filled from the free-throw shooter. Use ``base_stats`` for the supported
 accounting output. This entry point is not registered as a ``Client`` provider.
+WNBA three-point zone lookups also raise pending separate validation; this
+includes ``possession_start_type`` when its label depends on a preceding WNBA
+three-pointer. A possession's offense, boundaries, score, counts, and time
+accounting remain available without that optional label.
 
 Evidence and failure behavior
 -----------------------------
@@ -62,6 +66,8 @@ can intervene in a regular trip. Ordinary one-point trips require a matching
 and-one; take/away-from-play awards retain the ball, and G League single-shot
 trips carry their recorded point value. Other non-shooting regular trips require exhausted team fouls before the
 foul. Required but missing trips fail, as do explicitly conflicting shooters.
+Take/away-from-play free throws require the shooter to have been on court at
+the foul; a subsequent substitution cannot establish that eligibility.
 Technical, flagrant, and clear-path attempts do not become ordinary final-shot
 possession boundaries.
 

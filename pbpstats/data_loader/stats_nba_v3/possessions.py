@@ -342,6 +342,10 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
         award = ft.total * ft.points_per_attempt
         retained = foul.is_transition_take_foul or foul.is_away_from_play_foul
         if retained:
+            if event.player1_id not in foul.lineup.before[event.team_id]:
+                raise event.error(
+                    "retained-ball free-throw shooter was not on court at the foul"
+                )
             if ft.category != "regular" or award != 1:
                 raise event.error(
                     "take/away-from-play foul requires one retained-ball free throw"
