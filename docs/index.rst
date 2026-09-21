@@ -33,3 +33,4 @@ Contents
    pbpstats
    v3-data-contract
    v3-file-loading
+   v3-participants

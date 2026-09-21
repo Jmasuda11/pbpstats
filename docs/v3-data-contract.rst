@@ -4,6 +4,7 @@ Stats V3 input contract
 This document specifies the boundary for adding Stats PlayByPlayV3 support.
 It records observations from archived responses and requirements for the new
 provider. Raw file ingestion is available; see :doc:`v3-file-loading`.
+Source association and participant facts are described in :doc:`v3-participants`.
 **V3 enhanced events and possession parsing are not implemented yet.**
 
 The intended design is a separate ``stats_nba_v3`` provider whose enhanced
