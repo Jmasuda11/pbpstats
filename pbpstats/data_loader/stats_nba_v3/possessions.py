@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 
 from pbpstats.data_loader.nba_possession_loader import NbaPossessionLoader
 from pbpstats.data_loader.stats_nba_v3.lineups import StatsNbaV3LineupLoader
+from pbpstats.data_loader.stats_nba_v3.shot_zones import StatsNbaV3ShotZoneLoader
 from pbpstats.resources.enhanced_pbp.stats_nba_v3 import (
     EVENT_CLASSES,
     V3EndOfPeriod,
@@ -28,12 +29,17 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
     remain unavailable; shared ``base_stats`` cover possession/time accounting.
     """
 
-    def __init__(self, lineups):
+    def __init__(self, lineups, *, shot_zones=None):
         if not isinstance(lineups, StatsNbaV3LineupLoader):
             raise TypeError("V3 possession loader requires StatsNbaV3LineupLoader")
         self.game_id, self.context = lineups.game_id, lineups.context
         self.rules = self.context.rules
         self.lineups = lineups
+        if shot_zones is not None:
+            if not isinstance(shot_zones, StatsNbaV3ShotZoneLoader):
+                raise TypeError("shot_zones requires StatsNbaV3ShotZoneLoader")
+            shot_zones.validate_lineups(lineups)
+        self.shot_zones = shot_zones
         self.events = []
         for i, item in enumerate(lineups.items):
             if item.event.kind == "team_heave" and not self.rules.team_heave(
@@ -49,7 +55,10 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     f"Stats V3 game {self.game_id}, source rows "
                     f"{item.event.group.source_indices}: unsupported possession kind {item.event.kind}"
                 )
-            self.events.append(event_class(item, i))
+            event = event_class(item, i)
+            if isinstance(event, V3FieldGoal):
+                event.shot_zones = shot_zones
+            self.events.append(event)
         self._link_and_score()
         self._validate_replays()
         self._associate_free_throws()
