@@ -1,0 +1,33 @@
+{
+  "capture_method": "Unmodified official live play-by-play response bytes",
+  "games": [
+    {
+      "game_id": "1022600100",
+      "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600100.json",
+      "retrieved_at_utc": "2026-09-21T08:13:59.906674+00:00",
+      "file": "1022600100-live.json",
+      "sha256": "f3907dcbf3ebfde3ffa8c876b59826c6b77c143417c162e9625e3ff0b7c84864"
+    },
+    {
+      "game_id": "1022600101",
+      "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600101.json",
+      "retrieved_at_utc": "2026-09-21T08:13:59.907674+00:00",
+      "file": "1022600101-live.json",
+      "sha256": "493f3c24396c4d61d8799b6c540bddf4a8c71dd3680dae136ff1cc8a209a8a58"
+    },
+    {
+      "game_id": "0022500341",
+      "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500341.json",
+      "retrieved_at_utc": "2026-09-21T08:13:59.907674+00:00",
+      "file": "0022500341-live.json",
+      "sha256": "3b12a3351d846c0a7119ed759424854577e59e1c9b0f4da9bfc4f963474e8f35"
+    },
+    {
+      "game_id": "2022500001",
+      "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/GLEAGUE/liveData/playbyplay/playbyplay_2022500001.json",
+      "retrieved_at_utc": "2026-09-21T08:14:01.309235+00:00",
+      "file": "2022500001-live.json",
+      "sha256": "a6ce250f2d4c6f419bb3e720693ba525ebbffcf131b736b6962532e9f19a4d7a"
+    }
+  ]
+}

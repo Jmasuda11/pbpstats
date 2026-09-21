@@ -93,6 +93,7 @@ class V3EnhancedEvent(PossessionRules, EnhancedPbpItem):
 class V3FieldGoal(V3EnhancedEvent, FieldGoal):
     _and_one = None
     _retained_make = False
+    shot_zones = None
 
     def __init__(self, lineup, order):
         super().__init__(lineup, order)
@@ -105,9 +106,14 @@ class V3FieldGoal(V3EnhancedEvent, FieldGoal):
 
     @property
     def is_corner_3(self):
+        if self.shot_value == 3 and self.shot_zones is not None:
+            return (
+                self.shot_zones.require_zone(self.facts.group.primary.order)
+                == "Corner3"
+            )
         if self.shot_value == 3 and self.rules.league_id == "10":
             raise self.error(
-                "WNBA three-point zone classification requires separate validation"
+                "WNBA three-point zone classification requires live shot evidence"
             )
         if self.shot_value == 3 and not hasattr(self, "locY"):
             raise self.error("three-point shot location is unavailable")

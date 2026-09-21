@@ -46,10 +46,11 @@ Detailed ``event_stats``, ``Possession.possession_stats``, and aggregate
 evidence contract is not implemented; an unknown foul-drawn identity is never
 filled from the free-throw shooter. Use ``base_stats`` for the supported
 accounting output. This entry point is not registered as a ``Client`` provider.
-WNBA three-point zone lookups also raise pending separate validation; this
-includes ``possession_start_type`` when its label depends on a preceding WNBA
-three-pointer. A possession's offense, boundaries, score, counts, and time
-accounting remain available without that optional label.
+WNBA three-point zone lookups require the optional :doc:`v3-shot-zones`
+evidence loader. Missing or conflicting evidence raises, including when
+``possession_start_type`` depends on that shot. A possession's offense,
+boundaries, score, counts, and time accounting remain available without that
+optional label.
 
 Evidence and failure behavior
 -----------------------------
