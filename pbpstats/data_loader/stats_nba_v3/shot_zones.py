@@ -15,6 +15,7 @@ from pbpstats.data_loader.stats_nba_v3.pbp.file import (
     _reject_constant,
     _unique_object,
 )
+from pbpstats.data_loader.stats_nba_v3.shot_zone_clocks import untimed_clock_evidence
 from pbpstats.resources.json_copy import json_copy
 from pbpstats.resources.period_clock import parse_period_clock
 
@@ -86,6 +87,9 @@ class V3ShotZone:
     area_detail: Optional[str]
     shot_type: Optional[str]
     issues: Tuple[str, ...]
+    clock_basis: Optional[str] = None
+    native_clock: Optional[str] = None
+    live_clock: Optional[str] = None
 
     @property
     def validated(self):
@@ -135,6 +139,7 @@ class StatsNbaV3ShotZoneLoader:
         native = self._index(
             [e.group.primary.data for e in event_loader.items], "native"
         )
+        untimed_rows, untimed_issue = untimed_clock_evidence(event_loader, actions)
         # Extra live shots may reflect a stale or unrelated snapshot; never
         # silently discard them. Matching rows are checked individually below.
         for number, action in live.items():
@@ -144,7 +149,11 @@ class StatsNbaV3ShotZoneLoader:
         for event in event_loader.items:
             if event.kind == "field_goal" and event.shot_value == 3:
                 row = event.group.primary
-                results.append(self._match(event, live.get(row.action_number)))
+                results.append(
+                    self._match(
+                        event, live.get(row.action_number), untimed_rows, untimed_issue
+                    )
+                )
             elif row_is_three(live.get(event.group.primary.action_number)):
                 raise self._error(
                     f"live three-point actionNumber {event.group.primary.action_number} "
@@ -171,12 +180,18 @@ class StatsNbaV3ShotZoneLoader:
             result[number] = action
         return result
 
-    def _match(self, event, action):
+    def _match(self, event, action, untimed_rows, untimed_issue):
         row = event.group.primary
         issues = []
         if action is None:
             return V3ShotZone(
-                row.order, row.action_number, None, None, None, ("missing live shot",)
+                row.order,
+                row.action_number,
+                None,
+                None,
+                None,
+                ("missing live shot",),
+                native_clock=row.get("clock"),
             )
         expected = dict(
             period=row.period,
@@ -189,8 +204,15 @@ class StatsNbaV3ShotZoneLoader:
         for field, value in expected.items():
             if type(action.get(field)) is not type(value) or action[field] != value:
                 issues.append(f"{field} conflicts with native shot")
-        if _clock(action.get("clock")) != row.seconds_remaining_exact:
+        clock_basis = None
+        if _clock(action.get("clock")) == row.seconds_remaining_exact:
+            clock_basis = "exact"
+        elif row.order in untimed_rows:
+            clock_basis = "untimed_sequence"
+        else:
             issues.append("clock conflicts with native shot")
+            if row.period == 5 and untimed_issue:
+                issues.append(untimed_issue)
         for field in ("xLegacy", "yLegacy"):
             value, native = action.get(field), row.get(field)
             if not _finite(value) or not _finite(native):
@@ -218,6 +240,9 @@ class StatsNbaV3ShotZoneLoader:
             detail,
             zone if not issues else None,
             tuple(issues),
+            clock_basis,
+            row.get("clock"),
+            action.get("clock") if isinstance(action.get("clock"), str) else None,
         )
 
     def require_zone(self, source_index):
