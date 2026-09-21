@@ -27,23 +27,43 @@ fallback to a different provider occurs, and the input file is never rewritten.
     print(first_action.action_id)          # original actionId
     print(first_action.action_number)      # original actionNumber
     print(first_action.clock)              # original ISO-style clock
-    print(first_action.seconds_remaining)  # Decimal, retaining fractional seconds
+    print(first_action.description)        # original description
+    print(first_action.seconds_remaining)  # float, matching other providers
+    print(first_action.seconds_remaining_exact)  # Decimal, keeping the scale
+    print(first_action.get("personId"))    # one field, without copying the action
     print(first_action.data)               # original action fields
 
-Import these classes directly from the module shown above. This file-only
-provider is not registered with ``Client`` or the existing loader factory, which
-currently requires both file and web implementations. Existing providers keep
-their existing registration and behavior.
+The provider is registered as ``stats_nba_v3``, so ``Client`` can load it from
+file like any other. It has no web loader; asking for ``source: "web"`` raises
+a ``ValueError`` naming the missing source. Existing providers keep their
+existing registration and behavior.
+
+.. code-block:: python
+
+    from pbpstats.client import Client
+
+    settings = {
+        "dir": "tests/data",
+        "Pbp": {"source": "file", "data_provider": "stats_nba_v3"},
+    }
+    game = Client(settings).Game("0021900001")
 
 Preserved data
 --------------
 
 ``pbp.source_bytes`` contains the exact file contents, including whitespace and
-encoding markers. ``pbp.source_data`` returns the complete decoded JSON envelope,
-and ``pbp.data`` returns its action list. These dictionaries and lists are
-defensive copies; changing them or an item's ``data`` does not alter the stored
-source. Derived attributes such as ``order`` are never inserted into raw actions.
-Unknown envelope, game, and action fields remain available.
+encoding markers. The source loader returns those bytes together with the payload
+it decoded them from, so one source loader can serve several games without a
+loader ever receiving another game's bytes. ``pbp.source_data`` returns the
+complete decoded JSON envelope, and ``pbp.data`` returns its action list. These
+dictionaries and lists are defensive copies; changing them or an item's ``data``
+does not alter the stored source. Derived attributes such as ``order`` are never
+inserted into raw actions. Unknown envelope, game, and action fields remain
+available.
+
+Each of ``source_data``, ``data``, and an item's ``data`` builds its copy on
+every read. Bind one to a local rather than indexing it in a loop, and read a
+single field with ``item.get(field)``, which copies nothing for a scalar.
 
 Every source action produces one item. Identical rows and repeated identifiers
 are retained. In particular, blank-type steal and block rows are not discarded
@@ -51,18 +71,28 @@ or merged. Unrecognized event types remain raw actions for later interpretation.
 Neither NBA identifier is assumed to be a stable key across corrected snapshots.
 
 ``order`` always identifies the action's original array position. ``action_id``,
-``action_number``, ``action_type``, ``sub_type``, ``period``, and ``clock`` expose
-their corresponding source fields as read-only properties. ``game_id`` comes
-from the validated response identity. Numeric clocks use ``Decimal`` independently
-of the caller's decimal precision. Other JSON numbers use normal Python integer
-and float decoding; their exact original spelling is retained in ``source_bytes``.
+``action_number``, ``action_type``, ``sub_type``, ``description``, ``period``,
+and ``clock`` expose their corresponding source fields as read-only properties;
+``get`` reaches any other recorded field. ``game_id`` comes from the validated
+response identity.
+
+``seconds_remaining`` is a ``float``, the type the shared enhanced-event
+interface uses, so V3 items mix with other providers' events in shared
+arithmetic. ``seconds_remaining_exact`` is the ``Decimal`` the clock was parsed
+to, retaining the recorded scale; keep it out of shared arithmetic, where mixing
+``Decimal`` with ``float`` raises ``TypeError``. Both are computed in an isolated
+decimal context, so the caller's precision, rounding, exponent limits and traps
+cannot round or reject a recorded clock. Other JSON numbers use normal Python
+integer and float decoding; their exact original spelling is retained in
+``source_bytes``.
 
 Validation and limits
 ---------------------
 
-Game IDs must be ten ASCII digits beginning with ``00``; this initial provider
-supports NBA records. The response must contain a ``game`` object with a matching
-``gameId`` and an ``actions`` array. Each action must provide integer
+Game IDs must be ten ASCII digits beginning with ``00`` (the package's
+``NBA_GAME_ID_PREFIX``); this initial provider supports NBA records. The
+response must contain a ``game`` object with a matching ``gameId`` and an
+``actions`` array. Each action must provide integer
 ``actionId`` and ``actionNumber`` values greater than or equal to zero, a positive
 integer ``period``, and string ``actionType``, ``subType``, ``description``, and
 ``clock`` values. Empty type and description strings remain valid recorded data.
@@ -71,11 +101,20 @@ Clocks must use ``PT<minutes>M<seconds>S`` with optional fractional seconds.
 Seconds must be less than 60, and the total must fit a 12-minute regulation
 period or a 5-minute overtime period. No integer truncation is applied.
 
+A missing or blank ``file_directory`` raises ``ValueError`` when the source
+loader is constructed, rather than silently resolving to the working directory.
 Missing files raise ``FileNotFoundError``. Invalid JSON or unsupported structure
 raises ``ValueError`` with game context; action validation also includes the
-source array index and field. Duplicate JSON keys, non-finite numbers, and numbers
-that overflow Python float decoding are rejected rather than silently replaced.
-UTF-8 files with or without a byte-order mark are accepted.
+source array index and field. That includes JSON nested too deeply for the
+decoder, which would otherwise escape as ``RecursionError``, so catching
+``ValueError`` is enough to skip one unreadable file. Duplicate JSON keys,
+non-finite numbers, and numbers that overflow Python float decoding are rejected
+rather than silently replaced. UTF-8 files with or without a byte-order mark are
+accepted.
+
+A source loader must return a ``V3PbpSourceData`` carrying the payload and the
+bytes it came from. Anything else raises ``TypeError`` instead of leaving
+``source_bytes`` quietly unset.
 
 An empty action array and a partial excerpt can be read as raw data. A successful
 load does **not** establish that the game is complete or its basketball semantics

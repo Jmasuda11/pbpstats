@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from pbpstats.resources.enhanced_pbp import StartOfPeriod
 from pbpstats.resources.enhanced_pbp.enhanced_pbp_item import EnhancedPbpItem
+from pbpstats.resources.period_clock import seconds_remaining_from_clock
 
 KEY_ATTR_MAPPER = {
     "period": "period",
@@ -104,9 +105,7 @@ class LiveEnhancedPbpItem(EnhancedPbpItem):
         """
         returns seconds remaining in period as a ``float``
         """
-        stripped = self.clock.replace("PT", "").replace("M", ":").replace("S", "")
-        split = stripped.split(":")
-        return float(split[0]) * 60 + float(split[1])
+        return seconds_remaining_from_clock(self.clock)
 
     @property
     def stripped_sub_type(self):

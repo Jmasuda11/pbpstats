@@ -40,8 +40,10 @@ class DataLoaderFactory(object):
         )
         for name, loader_cls in loaders.items():
             if hasattr(loader_cls, "resource"):
-                file_source = loaders[name.replace("Loader", "FileLoader")]
-                web_source = loaders[name.replace("Loader", "WebLoader")]
+                # A provider need not implement both sources; a missing one
+                # registers as None rather than failing every other provider.
+                file_source = loaders.get(name.replace("Loader", "FileLoader"))
+                web_source = loaders.get(name.replace("Loader", "WebLoader"))
                 loader = {
                     "loader": loader_cls,
                     "file_source": file_source,

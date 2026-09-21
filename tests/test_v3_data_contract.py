@@ -13,27 +13,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from v3_fixtures import DATA, actions, load_json, manifest_fixtures
 
 from pbpstats.data_loader.stats_nba.possessions.file import StatsNbaPossessionFileLoader
 from pbpstats.data_loader.stats_nba.possessions.loader import StatsNbaPossessionLoader
+from pbpstats.resources.period_clock import parse_period_clock
 from pbpstats.resources.possessions.possessions import Possessions
-
-DATA = Path(__file__).parent / "data"
-
-
-@functools.lru_cache(maxsize=None)
-def load_json(relative_path):
-    """Cached: callers only read the returned objects, never mutate them."""
-    return json.loads((DATA / relative_path).read_text(encoding="utf-8"))
-
-
-def actions(game_id):
-    return load_json(f"pbp/stats_v3_{game_id}.json")["game"]["actions"]
-
-
-def manifest_fixtures():
-    return load_json("v3/manifest.json")["fixtures"]
-
 
 # The manifest is the single inventory; deriving from it means a new complete
 # game is picked up by every full-game test instead of only the ones relisted.
@@ -48,9 +33,8 @@ EXPECTED_TEAM_ROWS = {"0021900001": 34, "0022400001": 32, "0042500317": 2}
 
 
 def seconds_remaining(clock):
-    """Parse a V3 ISO-8601 period clock the way LiveEnhancedPbpItem does."""
-    minutes, seconds = clock.replace("PT", "").replace("S", "").split("M")
-    return Decimal(minutes) * 60 + Decimal(seconds)
+    """Parse a V3 ISO-8601 period clock with the shared provider parser."""
+    return parse_period_clock(clock)[1]
 
 
 def v2_rows():
