@@ -1,0 +1,564 @@
+{
+  "schema_version": 1,
+  "game_id": "0021900001",
+  "context_sha256": "21f862324bf647ce3655467e9b78e794c76581eb75ad003f67ea50d80da526a1",
+  "snapshot_sha256": "571f6c548dbb433d28038aa0a5bfc8f71afe1642e4110f22a52576bb3ec59181",
+  "periods": [
+    {
+      "period": 1,
+      "home": [
+        200768,
+        201188,
+        1627783,
+        1627832,
+        1628384
+      ],
+      "away": [
+        200755,
+        201950,
+        202324,
+        1627742,
+        1628366
+      ],
+      "source": "https://www.nba.com/game/nop-vs-tor-0021900001/box-score; Q1 position markers independently agree with PBP first on-court witnesses.",
+      "witnesses": {
+        "201188": {
+          "source_index": 1,
+          "role": "actor",
+          "description": "Jump Ball Gasol vs. Favors: Tip to Ball"
+        },
+        "202324": {
+          "source_index": 1,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Gasol vs. Favors: Tip to Ball"
+        },
+        "1628366": {
+          "source_index": 1,
+          "role": "tip_recipient",
+          "description": "Jump Ball Gasol vs. Favors: Tip to Ball"
+        },
+        "1628384": {
+          "source_index": 5,
+          "role": "actor",
+          "description": "MISS Anunoby 3' Driving Layup"
+        },
+        "200755": {
+          "source_index": 6,
+          "role": "actor",
+          "description": "Redick REBOUND (Off:0 Def:1)"
+        },
+        "201950": {
+          "source_index": 7,
+          "role": "actor",
+          "description": "MISS Holiday 8' Driving Finger Roll Layup"
+        },
+        "1627832": {
+          "source_index": 8,
+          "role": "actor",
+          "description": "VanVleet REBOUND (Off:0 Def:1)"
+        },
+        "200768": {
+          "source_index": 9,
+          "role": "actor",
+          "description": "MISS Lowry 25' 3PT Running Pull-Up Jump Shot"
+        },
+        "1627742": {
+          "source_index": 17,
+          "role": "actor",
+          "description": "Ingram 16' Pullup Jump Shot (2 PTS)"
+        },
+        "1627783": {
+          "source_index": 25,
+          "role": "actor",
+          "description": "Siakam Out of Bounds - Bad Pass Turnover Turnover (P1.T2)"
+        }
+      }
+    },
+    {
+      "period": 2,
+      "home": [
+        200768,
+        201188,
+        201586,
+        1626181,
+        1628384
+      ],
+      "away": [
+        202734,
+        1626143,
+        1628404,
+        1629026,
+        1629638
+      ],
+      "source": "Reviewed PBP first on-court evidence before any entrance in this period; five independent required players per team, not inherited from the preceding period.",
+      "witnesses": {
+        "1628384": {
+          "source_index": 143,
+          "role": "actor",
+          "description": "MISS Anunoby 1' Driving Finger Roll Layup"
+        },
+        "201188": {
+          "source_index": 144,
+          "role": "actor",
+          "description": "Gasol REBOUND (Off:1 Def:1)"
+        },
+        "200768": {
+          "source_index": 146,
+          "role": "actor",
+          "description": "Lowry REBOUND (Off:1 Def:3)"
+        },
+        "1626181": {
+          "source_index": 147,
+          "role": "actor",
+          "description": "MISS Powell 26' 3PT Jump Shot"
+        },
+        "1629026": {
+          "source_index": 148,
+          "role": "actor",
+          "description": "Williams REBOUND (Off:2 Def:2)"
+        },
+        "1629638": {
+          "source_index": 149,
+          "role": "actor",
+          "description": "MISS Alexander-Walker 25' 3PT Jump Shot"
+        },
+        "201586": {
+          "source_index": 154,
+          "role": "actor",
+          "description": "Ibaka REBOUND (Off:0 Def:2)"
+        },
+        "1626143": {
+          "source_index": 159,
+          "role": "actor",
+          "description": "SUB: Melli FOR Okafor"
+        },
+        "202734": {
+          "source_index": 160,
+          "role": "actor",
+          "description": "SUB: Jackson FOR Moore"
+        },
+        "1628404": {
+          "source_index": 165,
+          "role": "actor",
+          "description": "Hart REBOUND (Off:2 Def:1)"
+        }
+      }
+    },
+    {
+      "period": 3,
+      "home": [
+        200768,
+        201188,
+        1627783,
+        1627832,
+        1628384
+      ],
+      "away": [
+        200755,
+        201950,
+        202324,
+        1627742,
+        1628366
+      ],
+      "source": "Reviewed PBP first on-court evidence before any entrance in this period; five independent required players per team, not inherited from the preceding period.",
+      "witnesses": {
+        "1627832": {
+          "source_index": 290,
+          "role": "actor",
+          "description": "VanVleet 2' Driving Finger Roll Layup (17 PTS)"
+        },
+        "201950": {
+          "source_index": 291,
+          "role": "actor",
+          "description": "Holiday 9' Driving Floating Jump Shot (4 PTS)"
+        },
+        "200755": {
+          "source_index": 292,
+          "role": "actor",
+          "description": "Redick S.FOUL (P3.T1) (T.Brown)"
+        },
+        "200768": {
+          "source_index": 293,
+          "role": "actor",
+          "description": "Lowry Free Throw 1 of 2 (9 PTS)"
+        },
+        "1627742": {
+          "source_index": 295,
+          "role": "actor",
+          "description": "Ingram 18' Jump Shot (14 PTS) (Favors 2 AST)"
+        },
+        "202324": {
+          "source_index": 295,
+          "role": "assister",
+          "description": "Ingram 18' Jump Shot (14 PTS) (Favors 2 AST)"
+        },
+        "1627783": {
+          "source_index": 298,
+          "role": "actor",
+          "description": "Siakam REBOUND (Off:2 Def:8)"
+        },
+        "1628366": {
+          "source_index": 306,
+          "role": "actor",
+          "description": "Ball 25' 3PT Jump Shot (8 PTS) (Ingram 2 AST)"
+        },
+        "201188": {
+          "source_index": 307,
+          "role": "actor",
+          "description": "Gasol 26' 3PT Jump Bank Shot (3 PTS) (Lowry 2 AST)"
+        },
+        "1628384": {
+          "source_index": 309,
+          "role": "actor",
+          "description": "Anunoby REBOUND (Off:2 Def:1)"
+        }
+      }
+    },
+    {
+      "period": 4,
+      "home": [
+        200768,
+        201586,
+        1626181,
+        1627783,
+        1629056
+      ],
+      "away": [
+        201950,
+        1628402,
+        1628404,
+        1629026,
+        1629740
+      ],
+      "source": "Reviewed PBP first on-court evidence before any entrance in this period; five independent required players per team, not inherited from the preceding period.",
+      "witnesses": {
+        "201950": {
+          "source_index": 411,
+          "role": "actor",
+          "description": "MISS Holiday 17' Pullup Jump Shot"
+        },
+        "1629056": {
+          "source_index": 412,
+          "role": "actor",
+          "description": "Davis REBOUND (Off:2 Def:3)"
+        },
+        "1627783": {
+          "source_index": 413,
+          "role": "actor",
+          "description": "MISS Siakam 7' Turnaround Hook Shot"
+        },
+        "1629026": {
+          "source_index": 415,
+          "role": "actor",
+          "description": "Williams S.FOUL (P4.T1) (E.Dalen)"
+        },
+        "200768": {
+          "source_index": 419,
+          "role": "actor",
+          "description": "Lowry S.FOUL (P3.T1) (T.Brown)"
+        },
+        "1628402": {
+          "source_index": 420,
+          "role": "actor",
+          "description": "Jackson Free Throw 1 of 2 (3 PTS)"
+        },
+        "201586": {
+          "source_index": 422,
+          "role": "actor",
+          "description": "Ibaka Out of Bounds - Bad Pass Turnover Turnover (P3.T14)"
+        },
+        "1629740": {
+          "source_index": 423,
+          "role": "actor",
+          "description": "Melli 17' Pullup Jump Shot (14 PTS)"
+        },
+        "1628404": {
+          "source_index": 425,
+          "role": "actor",
+          "description": "Hart REBOUND (Off:4 Def:3)"
+        },
+        "1626181": {
+          "source_index": 447,
+          "role": "actor",
+          "description": "Powell 25' 3PT Jump Shot (3 PTS) (Davis 2 AST)"
+        }
+      }
+    },
+    {
+      "period": 5,
+      "home": [
+        200768,
+        201188,
+        1626181,
+        1627832,
+        1628384
+      ],
+      "away": [
+        200755,
+        201950,
+        1627742,
+        1628366,
+        1629740
+      ],
+      "source": "Reviewed PBP first on-court evidence before any entrance in this period; five independent required players per team, not inherited from the preceding period.",
+      "witnesses": {
+        "201188": {
+          "source_index": 550,
+          "role": "actor",
+          "description": "Jump Ball Gasol vs. Melli: Tip to Anunoby"
+        },
+        "1629740": {
+          "source_index": 550,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Gasol vs. Melli: Tip to Anunoby"
+        },
+        "1628384": {
+          "source_index": 550,
+          "role": "tip_recipient",
+          "description": "Jump Ball Gasol vs. Melli: Tip to Anunoby"
+        },
+        "1626181": {
+          "source_index": 551,
+          "role": "actor",
+          "description": "Powell 3' Cutting Layup Shot (5 PTS) (Lowry 6 AST)"
+        },
+        "200768": {
+          "source_index": 551,
+          "role": "assister",
+          "description": "Powell 3' Cutting Layup Shot (5 PTS) (Lowry 6 AST)"
+        },
+        "200755": {
+          "source_index": 552,
+          "role": "actor",
+          "description": "Redick 25' 3PT Pullup Jump Shot (16 PTS) (Melli 2 AST)"
+        },
+        "1627742": {
+          "source_index": 555,
+          "role": "actor",
+          "description": "MISS Ingram 15' Pullup Jump Shot"
+        },
+        "1628366": {
+          "source_index": 560,
+          "role": "actor",
+          "description": "MISS Ball 21' Jump Shot"
+        },
+        "201950": {
+          "source_index": 571,
+          "role": "actor",
+          "description": "Holiday 2' Driving Finger Roll Layup (13 PTS)"
+        },
+        "1627832": {
+          "source_index": 577,
+          "role": "actor",
+          "description": "VanVleet 3PT Jump Shot (34 PTS) (Gasol 1 AST)"
+        }
+      }
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        49
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        64
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        69,
+        70,
+        71
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        75,
+        76
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        88
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        102
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        121
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        158,
+        159,
+        160
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        178,
+        179,
+        180
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        188
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        195,
+        196
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        202,
+        203
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        272
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        281,
+        282,
+        283
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        335,
+        336
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        344,
+        345
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        348
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        360,
+        361
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        368
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        399
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        445
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        450
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        464,
+        465
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        496
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        517,
+        518
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        522
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        529
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        534
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        544,
+        545
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        565
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    },
+    {
+      "source_indices": [
+        579,
+        580
+      ],
+      "source": "Reviewed contiguous substitution run with equal exact clock and period; disjoint outgoing/incoming transitions confirmed against the on-court five."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "kind": "reviewed_dom_observation",
+  "source": "https://www.nba.com/game/nop-vs-tor-0021900001/box-score",
+  "observed_on_utc": "2026-09-21",
+  "game_id": "0021900001",
+  "filters": ["Traditional", "All Periods"],
+  "title": "Pelicans @ Raptors",
+  "status": "Final/OT",
+  "columns": ["player_id_from_href", "display_name", "position_marker", "MIN", "PTS"],
+  "method": "Reviewed transcription of rendered table cells and /player/<id>/ links; team IDs come from each table's stat links. This is page-derived evidence, not a saved API response. All rows, including DNPs, are retained; separately listed inactive players are outside the active game pool. Position markers establish Q1 starters only and remain unchanged in the Q2 view. Displayed 44:60 and 25:60 are retained verbatim.",
+  "away": {
+    "name": "New Orleans Pelicans",
+    "team_id": 1610612740,
+    "points": 122,
+    "players": [
+      [201950, "Jrue Holiday", "F", "41:05", 13],
+      [1627742, "Brandon Ingram", "F", "35:06", 22],
+      [202324, "Derrick Favors", "C", "20:45", 6],
+      [200755, "JJ Redick", "G", "27:02", 16],
+      [1628366, "Lonzo Ball", "G", "24:50", 8],
+      [1628404, "Josh Hart", "", "28:10", 15],
+      [1626143, "Jahlil Okafor", "", "12:29", 8],
+      [202734, "E'Twaun Moore", "", "12:06", 5],
+      [1629638, "Nickeil Alexander-Walker", "", "11:55", 3],
+      [1629026, "Kenrich Williams", "", "18:03", 3],
+      [1629740, "Nicolo Melli", "", "19:37", 14],
+      [1628402, "Frank Jackson", "", "13:52", 9],
+      [1629637, "Jaxson Hayes", "", "DNP - Coach's Decision", null]
+    ],
+    "inactive_names": ["Darius Miller", "Josh Gray", "Zylan Cheatham", "Zion Williamson"]
+  },
+  "home": {
+    "name": "Toronto Raptors",
+    "team_id": 1610612761,
+    "points": 130,
+    "players": [
+      [1628384, "OG Anunoby", "F", "35:49", 11],
+      [1627783, "Pascal Siakam", "F", "38:08", 34],
+      [201188, "Marc Gasol", "C", "31:55", 6],
+      [200768, "Kyle Lowry", "G", "44:60", 22],
+      [1627832, "Fred VanVleet", "G", "44:20", 34],
+      [201586, "Serge Ibaka", "", "25:60", 13],
+      [1626181, "Norman Powell", "", "28:39", 5],
+      [1629056, "Terence Davis", "", "15:10", 5],
+      [1628449, "Chris Boucher", "", "DNP - Coach's Decision", null],
+      [1629608, "Dewan Hernandez", "", "DNP - Coach's Decision", null],
+      [1626169, "Stanley Johnson", "", "DNP - Coach's Decision", null],
+      [1626259, "Malcolm Miller", "", "DNP - Coach's Decision", null],
+      [1629744, "Matt Thomas", "", "DNP - Coach's Decision", null]
+    ],
+    "inactive_names": ["Oshae Brissett", "Rondae Hollis-Jefferson", "Patrick McCaw"]
+  }
+}

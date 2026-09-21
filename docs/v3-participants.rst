@@ -133,5 +133,7 @@ enough evidence to assign a foul-drawn player.
 
 In the paired 2019 fixture, all 129 recovered secondary identities match V2:
 53 assisters, 49 incoming substitutes, 11 stealers, 12 blockers, and four jump-ball
-participants. This is a bounded fixture comparison, not a claim of complete
-roster acquisition or universal participant/statistical accuracy.
+participants. Its context now comes from the reviewed full-game NBA.com
+box-score page through :doc:`v3-game-context`, including players with no PBP
+actor rows. This remains a bounded fixture comparison, not a claim of universal
+participant/statistical accuracy; the 2024 fixture still uses a test-only pool.

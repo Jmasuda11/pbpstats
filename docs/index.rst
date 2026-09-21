@@ -36,3 +36,4 @@ Contents
    v3-participants
    v3-game-context
    v3-classification
+   v3-lineups

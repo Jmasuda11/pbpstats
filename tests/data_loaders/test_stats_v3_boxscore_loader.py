@@ -98,6 +98,12 @@ def test_published_fixture_integrity_and_context():
         evidence = (DATA / fixture["evidence_path"]).read_bytes()
         assert hashlib.sha256(raw).hexdigest() == fixture["sha256"]
         assert hashlib.sha256(evidence).hexdigest() == fixture["evidence_sha256"]
+        for prefix in ("observation", "lineup_evidence"):
+            if prefix + "_path" in fixture:
+                content = (DATA / fixture[prefix + "_path"]).read_bytes()
+                assert (
+                    hashlib.sha256(content).hexdigest() == fixture[prefix + "_sha256"]
+                )
     loader = StatsNbaV3BoxscoreLoader(GAME, StatsNbaV3BoxscoreFileLoader(DATA))
     ctx = loader.context
     assert ctx.team_ids == (HOME, AWAY)
@@ -115,6 +121,7 @@ def test_published_fixture_integrity_and_context():
     assert ctx.candidates("Antetokounmpo", AWAY) == (203507, 203648)
     assert ctx.candidates("T. Antetokounmpo", AWAY) == (203648,)
     assert loader.source.boxscore_bytes == (DATA / f"{PREFIX}.json").read_bytes()
+    fixture = next(f for f in manifest["fixtures"] if f["game_id"] == GAME)
     assert fixture["sha256"] in ctx.roster_source
     assert fixture["evidence_sha256"] in ctx.roster_source
     assert not ctx.roster_complete
