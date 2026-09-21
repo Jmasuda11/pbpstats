@@ -44,9 +44,10 @@ Validation and limits
 ---------------------
 
 Game ID and unique ``actionNumber`` identify each candidate. Its period,
-exact clock, player, team, field-goal flag, three-point action type, made/missed
+clock, player, team, field-goal flag, three-point action type, made/missed
 result, and both finite legacy coordinates must agree with native V3. Equivalent
-clock spellings compare equal; coordinates have no rounding tolerance. The
+clock spellings compare equal; the bounded untimed-overtime exception below
+allows distinct clock representations. Coordinates have no rounding tolerance. The
 source's ``area`` and ``areaDetail`` must map to the same supported zone and,
 for corners, the same side. Supported areas are ``Left Corner 3``,
 ``Right Corner 3``, and ``Above the Break 3``. Details accept those labels or
@@ -58,7 +59,11 @@ dependent access instead of receiving a default zone.
 ``by_source_index`` indexes the same results by the native row index, which
 is distinct from ``actionNumber``. Each result retains both labels, a
 ``validated`` boolean, ``shot_type`` (``None`` on failure), and explicit
-``issues``. ``require_zone(source_index)`` raises for missing or unresolved
+``issues``. ``native_clock`` and ``live_clock`` retain their original strings;
+``clock_basis`` identifies ``exact`` or ``untimed_sequence`` agreement and is
+``None`` when clock evidence fails. A clock match alone cannot validate a zone
+with conflicting identities, coordinates, or labels.
+``require_zone(source_index)`` raises for missing or unresolved
 evidence; ``require_complete()`` checks every represented three-pointer, not
 whether the input covers a full game. Duplicate action numbers, an unrelated
 game, or extraneous live three-point rows fail at construction.
@@ -72,6 +77,41 @@ still require evidence. Validated labels also enable dependent
 prevent scores, possession counts, or ``base_stats`` time accounting.
 Two-point zones, team heaves, full detailed event statistics, starter evidence,
 and replay corrections are outside this additional evidence contract.
+
+Untimed G League overtime
+-------------------------
+
+The `2025-26 G League rules
+<https://gleague.nba.com/gleague-playing-rules>`_ specify untimed overtime with
+a target seven points above the tied regulation score. The recorded live
+feed explicitly marks this period with ``periodType="OVERTIME"`` and
+``isTargetScoreLastPeriod=true``, using zero clocks throughout. Native V3
+instead retains a descending counter starting at 99:00.
+
+For G League seasons starting in 2022 or later, a first-overtime clock
+mismatch can use ``clock_basis="untimed_sequence"`` only if all of the
+following evidence agrees:
+
+* Native snapshot completeness is declared, every live row identifies a
+  valid period, and neither source has a later overtime period.
+* Every live overtime row has the explicit metadata and a zero clock.
+* Both sources contain matching start/end action numbers, a tied opening
+  score, and an agreeing final score. Native clocks start at 99:00 and never
+  increase.
+* Every field-goal and free-throw attempt, including misses, appears in the
+  same order between those boundaries, with matching action number, player,
+  team, shot value/type, field-goal flag, and outcome.
+* The accumulated native scoring agrees with each live attempt's home/away
+  score and any native score supplied on those attempts. The target is first reached on the
+  last attempt, at the native period-ending clock.
+
+Missing or contradictory corroboration retains the clock error, with a
+reason identifying the failed period or scoring evidence. Individual shot
+identity, coordinate and zone-label checks still apply. This comparison
+does not derive elapsed time from the live zero clock, change native clocks,
+infer lineups, resolve replays, or replace possession validation. Timed NBA,
+WNBA, earlier G League overtime, and regulation periods keep exact-clock
+comparison.
 
 Recorded findings
 -----------------
@@ -96,15 +136,17 @@ responses. They join the native fixtures documented in :doc:`v3-leagues`.
      - 41 / 51
      - 10 conflicting or unsupported label pairs
    * - G League 2022500001
-     - 59 / 61
-     - Two overtime attempts use different clocks
+     - 61 / 61
+     - Two overtime attempts use corroborated untimed clock joins
 
 For example, WNBA action 127 in game 1022600100 has ``area="Above the Break 3"``
 and ``areaDetail="Left Corner 3"``. Action 403 records xLegacy 80 in live and
 81 in native V3. G League overtime actions 737 and 746 have a zero live clock
-while native V3 retains its descending elapsed-time counter. These records
-remain unresolved; neither labels nor clocks are silently rewritten. The
-official WNBA ``shotchartdetail`` endpoint timed out during capture, so no
+while native V3 retains its descending elapsed-time counter. Matching period
+boundaries and the full twelve-attempt scoring sequence corroborate these
+two joins; all possession start labels are available for this G League game.
+The WNBA conflicts remain unresolved, and all original labels and clocks
+remain intact. The official WNBA ``shotchartdetail`` endpoint timed out during capture, so no
 second shot-chart source resolves the label disagreements in this PR.
 Agreement is bounded to these provider snapshots, not an independent video
 audit or a claim of complete season coverage.
