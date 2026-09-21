@@ -15,6 +15,7 @@ from pbpstats.data_loader.stats_nba_v3.pbp import (
     StatsNbaV3PbpFileLoader,
     StatsNbaV3PbpLoader,
 )
+from pbpstats.data_loader.stats_nba_v3.pbp.loader import V3PbpSourceData
 
 DATA = Path(__file__).resolve().parents[1] / "data"
 GAME_ID = "0021900001"
@@ -66,7 +67,9 @@ def row(number=1, kind="Made Shot", person=1, team=HOME, description=None, **fie
 
 def raw_loader(rows, game_id=GAME_ID):
     source = SimpleNamespace(
-        load_data=lambda gid: {"game": {"gameId": game_id, "actions": rows}}
+        load_data=lambda gid: V3PbpSourceData(
+            payload={"game": {"gameId": game_id, "actions": rows}}
+        )
     )
     return StatsNbaV3PbpLoader(game_id, source)
 
@@ -249,6 +252,24 @@ def test_conflicting_associations_raise_with_source_rows(change, reason):
         associate_actions(raw_loader([row(kind="Turnover"), secondary]).items)
     assert GAME_ID in str(error.value)
     assert "source rows" in str(error.value)
+
+
+def test_association_rejects_exact_clocks_that_round_to_the_same_float():
+    primary = row(kind="Turnover", clock="PT00M02.80000000000000001S")
+    secondary = row(
+        2,
+        "",
+        4,
+        AWAY,
+        "Green STEAL (1 STL)",
+        actionNumber=1,
+        clock="PT00M02.80000000000000002S",
+    )
+    items = raw_loader([primary, secondary]).items
+    assert items[0].seconds_remaining == items[1].seconds_remaining
+    assert items[0].seconds_remaining_exact != items[1].seconds_remaining_exact
+    with pytest.raises(ValueError, match="conflicting periods or clocks"):
+        associate_actions(items)
 
 
 def test_orphan_secondary_and_duplicate_secondary_are_rejected():

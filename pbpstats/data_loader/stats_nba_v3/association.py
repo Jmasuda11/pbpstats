@@ -31,7 +31,7 @@ def _make_group(rows):
     primary = [row for row in rows if row.action_type]
     if len(primary) != 1:
         raise _error(rows, "expected exactly one typed primary action")
-    if len({(row.period, row.seconds_remaining) for row in rows}) != 1:
+    if len({(row.period, row.seconds_remaining_exact) for row in rows}) != 1:
         raise _error(rows, "action number has conflicting periods or clocks")
     secondary = {}
     for row in rows:
