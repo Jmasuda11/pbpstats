@@ -44,6 +44,10 @@ when the eligible player pool and its alias coverage are complete, and record
 the evidence in ``roster_source``. A list of actors observed in PBP alone is not
 a complete roster: a player can enter without generating an explicit actor row.
 
+The :doc:`v3-game-context` loader builds this context from offline traditional
+V3 box-score evidence, preserving player names, provenance, and an explicit
+completeness declaration. Roster completeness never establishes period starters.
+
 The context validates game/team identities, duplicate players, and roster team
 membership. It cannot independently certify the caller's provenance declaration.
 ``facts.context`` retains that context for inspection.
