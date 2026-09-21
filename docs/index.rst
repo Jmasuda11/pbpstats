@@ -37,3 +37,4 @@ Contents
    v3-game-context
    v3-classification
    v3-lineups
+   v3-possessions

@@ -40,7 +40,12 @@ class NbaPossessionLoader(object):
                 possession.next_possession = None
             elif period_start or i == 0:
                 possession.previous_possession = None
-                possession.next_possession = self.items[i + 1]
+                possession.next_possession = (
+                    self.items[i + 1]
+                    if i + 1 < len(self.items)
+                    and self.items[i + 1].period == possession.period
+                    else None
+                )
                 number = 1
             elif (
                 i == len(self.items) - 1
