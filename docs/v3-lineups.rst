@@ -94,5 +94,5 @@ in the comparison. The largest observed difference is 0.4 seconds.
 
 The 2024 game still lacks independently reviewed roster/starter evidence.
 These checks do not establish universal feed coverage or possession accuracy.
-Connection to the possession engine is the next separate PR, with foul/trip
-association, rebound/restart semantics, and possession accounting still required.
+The :doc:`v3-possessions` layer separately validates foul/trip associations
+and rebound/restart evidence before applying possession accounting.
