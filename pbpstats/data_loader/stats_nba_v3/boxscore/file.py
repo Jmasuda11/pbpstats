@@ -15,12 +15,13 @@ class StatsNbaV3BoxscoreFileLoader:
     Each result binds both files' exact bytes and paths; the source is stateless.
     """
 
-    def __init__(self, file_directory):
+    def __init__(self, file_directory, *, league_id=None):
         validate_file_directory(file_directory)
         self.file_directory = Path(file_directory)
+        self.league_id = league_id
 
     def load_data(self, game_id):
-        _validate_game_id(game_id)
+        _validate_game_id(game_id, self.league_id)
         path = self.file_directory / "game_details" / f"stats_v3_boxscore_{game_id}"
         boxscore = path.with_suffix(".json")
         evidence = path.with_suffix(".evidence.json")

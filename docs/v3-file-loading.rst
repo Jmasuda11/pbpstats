@@ -1,11 +1,12 @@
 Loading recorded Stats V3 actions
 =================================
 
-The native V3 file loader reads recorded NBA PlayByPlayV3 responses. It exposes
+The native V3 file loader reads recorded NBA, WNBA, and G League PlayByPlayV3 responses. It exposes
 validated raw actions with their original fields and order. It does not resolve
 participants, repair event sequences, infer lineups, or calculate possessions.
 The separate :doc:`v3-participants` layer associates rows and records participant
 identities using explicit game context.
+See :doc:`v3-leagues` for league parameters, clock rules, and recent fixtures.
 
 Usage
 -----
@@ -91,8 +92,8 @@ integer and float decoding; their exact original spelling is retained in
 Validation and limits
 ---------------------
 
-Game IDs must be ten ASCII digits beginning with ``00`` (the package's
-``NBA_GAME_ID_PREFIX``); this initial provider supports NBA records. The
+Game IDs must be ten ASCII digits beginning with ``00``, ``10``, or ``20``;
+league rules currently cover regular-season and playoff formats. The
 response must contain a ``game`` object with a matching ``gameId`` and an
 ``actions`` array. Each action must provide integer
 ``actionId`` and ``actionNumber`` values greater than or equal to zero, a positive
@@ -100,8 +101,9 @@ integer ``period``, and string ``actionType``, ``subType``, ``description``, and
 ``clock`` values. Empty type and description strings remain valid recorded data.
 
 Clocks must use ``PT<minutes>M<seconds>S`` with optional fractional seconds.
-Seconds must be less than 60, and the total must fit a 12-minute regulation
-period or a 5-minute overtime period. No integer truncation is applied.
+Seconds must be less than 60, and the total must fit the league's regulation
+or overtime clock, including the G League's untimed-OT counter convention
+described in :doc:`v3-leagues`. No integer truncation is applied.
 
 A missing or blank ``file_directory`` raises ``ValueError`` when the source
 loader is constructed, rather than silently resolving to the working directory.

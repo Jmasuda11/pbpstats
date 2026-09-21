@@ -1,7 +1,8 @@
 """A validated raw action; basketball interpretation belongs to enhanced events."""
 
 from pbpstats.resources.json_copy import json_copy
-from pbpstats.resources.period_clock import parse_period_clock, period_length_seconds
+from pbpstats.resources.league_rules import V3LeagueRules
+from pbpstats.resources.period_clock import parse_period_clock
 
 
 class StatsNbaV3PbpItem:
@@ -22,7 +23,8 @@ class StatsNbaV3PbpItem:
 
     __slots__ = ("_data", "_order", "_game_id", "_seconds_remaining")
 
-    def __init__(self, event, order, game_id):
+    def __init__(self, event, order, game_id, *, league_id=None):
+        rules = V3LeagueRules.for_game(game_id, league_id)
         context = f"Stats V3 game {game_id}, game.actions[{order}]"
         if not isinstance(event, dict):
             raise ValueError(f"{context}: action must be an object")
@@ -37,8 +39,8 @@ class StatsNbaV3PbpItem:
         if parsed is None:
             raise ValueError(f"{context}.clock: expected PT<minutes>M<seconds>S")
         seconds, total = parsed
-        if seconds >= 60 or total > period_length_seconds(event["period"]):
-            raise ValueError(f"{context}.clock: outside NBA period duration")
+        if seconds >= 60 or total > rules.opening_clock(event["period"]):
+            raise ValueError(f"{context}.clock: outside {rules.name} period duration")
         self._seconds_remaining = total
         self._game_id = game_id
         self._order = order

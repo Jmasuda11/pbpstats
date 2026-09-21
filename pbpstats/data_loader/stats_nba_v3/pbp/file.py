@@ -49,13 +49,14 @@ class StatsNbaV3PbpFileLoader:
     :param str file_directory: Directory in which data should be loaded from.
     """
 
-    def __init__(self, file_directory):
+    def __init__(self, file_directory, *, league_id=None):
         validate_file_directory(file_directory)
         self.file_directory = Path(file_directory)
+        self.league_id = league_id
 
     @check_file_directory
     def load_data(self, game_id):
-        _validate_game_id(game_id)
+        _validate_game_id(game_id, self.league_id)
         file_path = self.file_directory / "pbp" / f"stats_v3_{game_id}.json"
         raw = file_path.read_bytes()
         try:

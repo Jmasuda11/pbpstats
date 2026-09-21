@@ -8,6 +8,7 @@ from pbpstats.data_loader.stats_nba_v3.participants import (
     StatsNbaV3ParticipantLoader,
     V3ParticipantEvent,
 )
+from pbpstats.resources.league_rules import V3LeagueRules
 
 # Exact provider vocabulary, deliberately bounded by recorded/synthetic tests.
 # An unfamiliar shot style can retain explicit scoring facts; unfamiliar foul,
@@ -15,14 +16,18 @@ from pbpstats.data_loader.stats_nba_v3.participants import (
 SUBTYPES = {
     "Foul": {
         "Personal",
+        "Personal Take",
+        "Away From Play",
         "Shooting",
         "Loose Ball",
         "Offensive",
         "Offensive Charge",
         "Technical",
+        "Defense 3 Second",
         "Clear Path",
         "Flagrant Type 1",
         "Flagrant Type 2",
+        "Transition Take",
     },
     "Turnover": {
         "3 Second Violation",
@@ -36,16 +41,29 @@ SUBTYPES = {
         "Step Out of Bounds Turnover",
         "Traveling",
         "Shot Clock Turnover",
+        "Kicked Ball Violation",
+        "Double Dribble",
     },
-    "Violation": {"Defensive Goaltending", "Delay Of Game", "Kicked Ball", "Lane"},
+    "Violation": {
+        "Defensive Goaltending",
+        "Delay Of Game",
+        "Kicked Ball",
+        "Lane",
+        "Jump Ball",
+    },
     "Rebound": {"Normal Rebound", "Unknown"},
     "Substitution": {""},
     "Jump Ball": {""},
-    "Timeout": {"Regular"},
+    "Timeout": {"Regular", "Official", "Reset", "Coach Challenge"},
     "Instant Replay": {
         "Coach Challenge Support Ruling",
         "Replay Center",
         "Support Ruling",
+        "Ruling Stands",
+        "Coach Challenge Ruling Stands",
+        "Coach Challenge Overturn Ruling",
+        "Overturn Ruling",
+        "Challenge Changed",
     },
 }
 KINDS = {
@@ -67,6 +85,8 @@ class V3FreeThrowFacts:
     attempt: int
     total: int
     restart: str
+    points_per_attempt: int = 1
+    single_shot: bool = False
 
     @property
     def is_last_attempt(self):
@@ -143,8 +163,17 @@ def _free_throw(event):
     row = event.group.primary
     _require_scorer(event)
     match = FT_SUBTYPE.fullmatch(row.sub_type)
+    single = re.fullmatch(r"Free Throw ([1-3])PT", row.sub_type)
+    value = int(single[1]) if single else 1
+    rules = V3LeagueRules.for_game(row.game_id)
     if row.sub_type == "Free Throw Technical":
         category, attempt, total, restart = "technical", 1, 1, "resume_interrupted_play"
+    elif single:
+        if not rules.single_free_throw(row.period, row.seconds_remaining_exact):
+            raise _error(
+                event, "single-shot free throw conflicts with league/season/clock"
+            )
+        category, attempt, total, restart = "regular", 1, 1, "context_required"
     elif match:
         category = {
             None: "regular",
@@ -154,6 +183,12 @@ def _free_throw(event):
         attempt, total = int(match[2]), int(match[3])
         if attempt > total or (category == "clear_path" and total != 2):
             raise _error(event, "invalid free-throw attempt/total")
+        if total > 1 and rules.single_free_throw(
+            row.period, row.seconds_remaining_exact
+        ):
+            raise _error(
+                event, "multi-attempt trip conflicts with G League single-shot period"
+            )
         # An ordinary subtype does not identify the foul or prove the restart:
         # away-from-play/inbound/take fouls and corrections need later linkage.
         restart = (
@@ -174,8 +209,10 @@ def _free_throw(event):
         raise _error(
             event, "free-throw description lacks or contradicts outcome evidence"
         )
-    facts = V3FreeThrowFacts(category, attempt, total, restart)
-    return V3ClassifiedEvent(event, "free_throw", int(made), 1, made, "player", facts)
+    facts = V3FreeThrowFacts(category, attempt, total, restart, value, bool(single))
+    return V3ClassifiedEvent(
+        event, "free_throw", value if made else 0, value, made, "player", facts
+    )
 
 
 def classify_event(event):

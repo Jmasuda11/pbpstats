@@ -1,0 +1,501 @@
+{
+  "schema_version": 1,
+  "game_id": "1022600101",
+  "context_sha256": "5ff9010030576aefca26c4c3fea588057ac7c0e2b9c835a736e12cbd1468b60c",
+  "snapshot_sha256": "0ad476430271bc12640798dc9d71319eb96b14095b635c1bebaecb3a8c880435",
+  "periods": [
+    {
+      "period": 1,
+      "home": [
+        1627668,
+        1627673,
+        1629546,
+        1630142,
+        1631136
+      ],
+      "away": [
+        1630446,
+        1631022,
+        1642781,
+        1642785,
+        1643455
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1627673": {
+          "source_index": 1,
+          "role": "actor",
+          "description": "Jump Ball Jones vs. Austin: Tip to Astier"
+        },
+        "1631022": {
+          "source_index": 1,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Jones vs. Austin: Tip to Astier"
+        },
+        "1631136": {
+          "source_index": 1,
+          "role": "tip_recipient",
+          "description": "Jump Ball Jones vs. Austin: Tip to Astier"
+        },
+        "1629546": {
+          "source_index": 2,
+          "role": "actor",
+          "description": "Johannes Out of Bounds - Bad Pass Turnover Turnover (P1.T1)"
+        },
+        "1643455": {
+          "source_index": 3,
+          "role": "actor",
+          "description": "Dugalic 2' Cutting Layup Shot (2 PTS) (Austin 1 AST)"
+        },
+        "1630446": {
+          "source_index": 4,
+          "role": "actor",
+          "description": "Onyenwere P.FOUL (P1.T1)"
+        },
+        "1630142": {
+          "source_index": 5,
+          "role": "assister",
+          "description": "Johannes 25' 3PT Jump Shot (3 PTS) (Fiebich 1 AST)"
+        },
+        "1642785": {
+          "source_index": 9,
+          "role": "actor",
+          "description": "Citron Free Throw 1 of 2 (1 PTS)"
+        },
+        "1642781": {
+          "source_index": 15,
+          "role": "stealer",
+          "description": "Astier Bad Pass Turnover (P1.T2)"
+        },
+        "1627668": {
+          "source_index": 24,
+          "role": "actor",
+          "description": "MISS Stewart 5' Driving Layup"
+        }
+      }
+    },
+    {
+      "period": 2,
+      "home": [
+        204335,
+        1629477,
+        1629566,
+        1630142,
+        1630149
+      ],
+      "away": [
+        1630446,
+        1631022,
+        1642781,
+        1643430,
+        1643455
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1631022": {
+          "source_index": 93,
+          "role": "actor",
+          "description": "MISS Austin 16' Step Back Jump Shot"
+        },
+        "1642781": {
+          "source_index": 94,
+          "role": "actor",
+          "description": "Amoore REBOUND (Off:1 Def:0)"
+        },
+        "1629477": {
+          "source_index": 97,
+          "role": "actor",
+          "description": "Ionescu Traveling Turnover (P1.T5)"
+        },
+        "204335": {
+          "source_index": 98,
+          "role": "actor",
+          "description": "SUB: Gardner FOR Laney-Hamilton"
+        },
+        "1630142": {
+          "source_index": 99,
+          "role": "stealer",
+          "description": "Austin Bad Pass Turnover (P1.T6)"
+        },
+        "1630446": {
+          "source_index": 103,
+          "role": "actor",
+          "description": "Onyenwere REBOUND (Off:1 Def:1)"
+        },
+        "1630149": {
+          "source_index": 109,
+          "role": "actor",
+          "description": "Sabally Lost Ball Turnover (P1.T6)"
+        },
+        "1643430": {
+          "source_index": 109,
+          "role": "stealer",
+          "description": "Sabally Lost Ball Turnover (P1.T6)"
+        },
+        "1629566": {
+          "source_index": 115,
+          "role": "actor",
+          "description": "MISS Xu 24' 3PT Jump Shot"
+        },
+        "1643455": {
+          "source_index": 132,
+          "role": "actor",
+          "description": "Dugalic 4' Driving Layup (4 PTS) (Amoore 2 AST)"
+        }
+      }
+    },
+    {
+      "period": 3,
+      "home": [
+        1627668,
+        1627673,
+        1629546,
+        1630142,
+        1631136
+      ],
+      "away": [
+        1630446,
+        1631022,
+        1642781,
+        1642785,
+        1643455
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1631022": {
+          "source_index": 207,
+          "role": "actor",
+          "description": "Austin Out of Bounds - Bad Pass Turnover Turnover (P2.T9)"
+        },
+        "1643455": {
+          "source_index": 208,
+          "role": "actor",
+          "description": "Dugalic P.FOUL (P1.T1)"
+        },
+        "1630142": {
+          "source_index": 209,
+          "role": "actor",
+          "description": "MISS Fiebich 4' Reverse Layup"
+        },
+        "1630446": {
+          "source_index": 213,
+          "role": "actor",
+          "description": "MISS Onyenwere 19' Jump Shot"
+        },
+        "1627673": {
+          "source_index": 217,
+          "role": "actor",
+          "description": "Jones 2' Driving Layup (5 PTS) (Stewart 1 AST)"
+        },
+        "1627668": {
+          "source_index": 217,
+          "role": "assister",
+          "description": "Jones 2' Driving Layup (5 PTS) (Stewart 1 AST)"
+        },
+        "1642785": {
+          "source_index": 218,
+          "role": "actor",
+          "description": "Citron 26' 3PT Jump Shot (9 PTS) (Austin 3 AST)"
+        },
+        "1631136": {
+          "source_index": 219,
+          "role": "assister",
+          "description": "Jones 3' Layup (7 PTS) (Astier 3 AST)"
+        },
+        "1629546": {
+          "source_index": 222,
+          "role": "actor",
+          "description": "MISS Johannes 30' 3PT Pullup Jump Shot"
+        },
+        "1642781": {
+          "source_index": 242,
+          "role": "actor",
+          "description": "Amoore S.FOUL (P2.T3)"
+        }
+      }
+    },
+    {
+      "period": 4,
+      "home": [
+        203822,
+        204335,
+        1627668,
+        1629477,
+        1629566
+      ],
+      "away": [
+        1630446,
+        1631022,
+        1642781,
+        1642785,
+        1643455
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1642781": {
+          "source_index": 319,
+          "role": "actor",
+          "description": "Amoore S.FOUL (P3.T1)"
+        },
+        "203822": {
+          "source_index": 320,
+          "role": "actor",
+          "description": "Gardner Free Throw 1 of 2 (1 PTS)"
+        },
+        "1631022": {
+          "source_index": 322,
+          "role": "actor",
+          "description": "Austin Bad Pass Turnover (P3.T14)"
+        },
+        "1629566": {
+          "source_index": 322,
+          "role": "stealer",
+          "description": "Austin Bad Pass Turnover (P3.T14)"
+        },
+        "1629477": {
+          "source_index": 326,
+          "role": "actor",
+          "description": "Ionescu REBOUND (Off:0 Def:2)"
+        },
+        "204335": {
+          "source_index": 327,
+          "role": "actor",
+          "description": "Laney-Hamilton Lost Ball Turnover (P2.T14)"
+        },
+        "1643455": {
+          "source_index": 327,
+          "role": "stealer",
+          "description": "Laney-Hamilton Lost Ball Turnover (P2.T14)"
+        },
+        "1630446": {
+          "source_index": 331,
+          "role": "actor",
+          "description": "SUB: McMahon FOR Onyenwere"
+        },
+        "1627668": {
+          "source_index": 354,
+          "role": "blocker",
+          "description": "MISS Dugalic 3' Running Layup"
+        },
+        "1642785": {
+          "source_index": 359,
+          "role": "actor",
+          "description": "MISS Citron 3PT Jump Shot"
+        }
+      }
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        33,
+        34,
+        35
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        43,
+        44
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        57
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        61,
+        62,
+        63,
+        64
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        77
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        98
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        120,
+        121,
+        122,
+        123
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        141,
+        142,
+        143
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        146
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        163
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        181
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        195
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        244,
+        245
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        249,
+        250,
+        251
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        261
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        267
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        280
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        291,
+        292
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        303
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        312
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        331
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        335,
+        336,
+        337
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        347,
+        348,
+        349
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        364,
+        365,
+        366
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        372
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        379
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        386
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        396,
+        397,
+        398
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        401
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        404
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        409,
+        410
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    }
+  ],
+  "resolved_replays": []
+}

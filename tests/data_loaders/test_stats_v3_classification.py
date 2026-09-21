@@ -209,7 +209,7 @@ def test_explicit_three_point_value_survives_unfamiliar_style_and_missing_3pt_te
         ("Foul", "Future Foul"),
         ("Turnover", "Future Turnover"),
         ("Violation", "Future Violation"),
-        ("Instant Replay", "Overturn Ruling"),
+        ("Instant Replay", "Future Ruling"),
         ("period", "pause"),
         ("Unknown Event", ""),
         ("Heave", "Other"),

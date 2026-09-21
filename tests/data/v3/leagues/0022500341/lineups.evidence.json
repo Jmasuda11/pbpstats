@@ -1,0 +1,500 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500341",
+  "context_sha256": "898ca447856ad93e97b90d159a1ea9afe6e8304bcca33cd3e356e5163264a109",
+  "snapshot_sha256": "086ad68d2d33a75c28f91fd433d1888a719b6036bf1538c9d989ec46f259c3e7",
+  "periods": [
+    {
+      "period": 1,
+      "home": [
+        1628378,
+        1629631,
+        1630596,
+        1641772,
+        1642281
+      ],
+      "away": [
+        202687,
+        203084,
+        1628368,
+        1630170,
+        1630577
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1630596": {
+          "source_index": 1,
+          "role": "actor",
+          "description": "Jump Ball Mobley vs. Biyombo: Tip to Fox"
+        },
+        "202687": {
+          "source_index": 1,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Mobley vs. Biyombo: Tip to Fox"
+        },
+        "1628368": {
+          "source_index": 1,
+          "role": "tip_recipient",
+          "description": "Jump Ball Mobley vs. Biyombo: Tip to Fox"
+        },
+        "1630170": {
+          "source_index": 2,
+          "role": "assister",
+          "description": "Biyombo 1' Alley Oop Dunk (2 PTS) (Vassell 1 AST)"
+        },
+        "1641772": {
+          "source_index": 4,
+          "role": "actor",
+          "description": "MISS Tomlin 3PT Jump Shot"
+        },
+        "1630577": {
+          "source_index": 7,
+          "role": "actor",
+          "description": "Champagnie REBOUND (Off:1 Def:0)"
+        },
+        "1628378": {
+          "source_index": 11,
+          "role": "actor",
+          "description": "MISS Mitchell 19' Step Back Jump Shot"
+        },
+        "1642281": {
+          "source_index": 14,
+          "role": "actor",
+          "description": "Tyson REBOUND (Off:0 Def:1)"
+        },
+        "203084": {
+          "source_index": 24,
+          "role": "actor",
+          "description": "MISS Barnes 11' Fadeaway Jumper"
+        },
+        "1629631": {
+          "source_index": 49,
+          "role": "actor",
+          "description": "Hunter REBOUND (Off:0 Def:1)"
+        }
+      }
+    },
+    {
+      "period": 2,
+      "home": [
+        1628378,
+        1630596,
+        1631247,
+        1641854,
+        1642281
+      ],
+      "away": [
+        202687,
+        1628368,
+        1630322,
+        1630577,
+        1642357
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1628378": {
+          "source_index": 134,
+          "role": "actor",
+          "description": "Mitchell 10' Driving Floating Jump Shot (11 PTS)"
+        },
+        "1630322": {
+          "source_index": 135,
+          "role": "actor",
+          "description": "Waters III Bad Pass Turnover (P1.T4)"
+        },
+        "1641854": {
+          "source_index": 135,
+          "role": "stealer",
+          "description": "Waters III Bad Pass Turnover (P1.T4)"
+        },
+        "1630596": {
+          "source_index": 137,
+          "role": "actor",
+          "description": "Mobley 1' Dunk (6 PTS) (Mitchell 2 AST)"
+        },
+        "1628368": {
+          "source_index": 138,
+          "role": "actor",
+          "description": "MISS Fox 12' Pullup Jump Shot"
+        },
+        "1631247": {
+          "source_index": 139,
+          "role": "actor",
+          "description": "Travers REBOUND (Off:0 Def:1)"
+        },
+        "202687": {
+          "source_index": 142,
+          "role": "actor",
+          "description": "Biyombo Bad Pass Turnover (P1.T5)"
+        },
+        "1642357": {
+          "source_index": 145,
+          "role": "actor",
+          "description": "Jones Garcia 26' 3PT Pullup Jump Shot (3 PTS) (Fox 2 AST)"
+        },
+        "1630577": {
+          "source_index": 146,
+          "role": "stealer",
+          "description": "Mitchell Lost Ball Turnover (P2.T6)"
+        },
+        "1642281": {
+          "source_index": 161,
+          "role": "actor",
+          "description": "Tyson REBOUND (Off:0 Def:2)"
+        }
+      }
+    },
+    {
+      "period": 3,
+      "home": [
+        1628378,
+        1629631,
+        1629731,
+        1630596,
+        1642281
+      ],
+      "away": [
+        202687,
+        203084,
+        1628368,
+        1630170,
+        1630577
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1629631": {
+          "source_index": 267,
+          "role": "actor",
+          "description": "MISS Hunter 14' Pullup Jump Shot"
+        },
+        "1629731": {
+          "source_index": 268,
+          "role": "actor",
+          "description": "Wade REBOUND (Off:1 Def:0)"
+        },
+        "1630596": {
+          "source_index": 270,
+          "role": "actor",
+          "description": "Mobley S.FOUL (P1.T1) (J.Williams)"
+        },
+        "1628368": {
+          "source_index": 271,
+          "role": "actor",
+          "description": "Fox Free Throw 1 of 2 (16 PTS)"
+        },
+        "1628378": {
+          "source_index": 273,
+          "role": "assister",
+          "description": "Hunter 12' Turnaround Jump Shot (7 PTS) (Mitchell 5 AST)"
+        },
+        "203084": {
+          "source_index": 277,
+          "role": "actor",
+          "description": "MISS Barnes 25' 3PT Jump Shot"
+        },
+        "1630170": {
+          "source_index": 280,
+          "role": "actor",
+          "description": "MISS Vassell 25' 3PT Jump Shot"
+        },
+        "1642281": {
+          "source_index": 282,
+          "role": "actor",
+          "description": "Tyson 1' Cutting Layup Shot (10 PTS) (Mobley 3 AST)"
+        },
+        "202687": {
+          "source_index": 295,
+          "role": "actor",
+          "description": "SUB: Sochan FOR Biyombo"
+        },
+        "1630577": {
+          "source_index": 344,
+          "role": "actor",
+          "description": "SUB: Bryant FOR Champagnie"
+        }
+      }
+    },
+    {
+      "period": 4,
+      "home": [
+        1628378,
+        1629731,
+        1630596,
+        1641772,
+        1641854
+      ],
+      "away": [
+        1628368,
+        1629640,
+        1630170,
+        1630577,
+        1631110
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1630577": {
+          "source_index": 399,
+          "role": "actor",
+          "description": "Champagnie 13' Driving Floating Jump Shot (3 PTS) (Fox 7 AST)"
+        },
+        "1628368": {
+          "source_index": 399,
+          "role": "assister",
+          "description": "Champagnie 13' Driving Floating Jump Shot (3 PTS) (Fox 7 AST)"
+        },
+        "1641772": {
+          "source_index": 400,
+          "role": "actor",
+          "description": "Tomlin 1' Cutting Dunk Shot (10 PTS) (Mitchell 7 AST)"
+        },
+        "1628378": {
+          "source_index": 400,
+          "role": "assister",
+          "description": "Tomlin 1' Cutting Dunk Shot (10 PTS) (Mitchell 7 AST)"
+        },
+        "1629640": {
+          "source_index": 401,
+          "role": "actor",
+          "description": "Johnson 7' Driving Floating Jump Shot (14 PTS) (Fox 8 AST)"
+        },
+        "1630596": {
+          "source_index": 403,
+          "role": "actor",
+          "description": "Mobley Free Throw 1 of 2 (14 PTS)"
+        },
+        "1631110": {
+          "source_index": 406,
+          "role": "actor",
+          "description": "Sochan REBOUND (Off:5 Def:0)"
+        },
+        "1641854": {
+          "source_index": 408,
+          "role": "actor",
+          "description": "Porter Jr. REBOUND (Off:1 Def:4)"
+        },
+        "1630170": {
+          "source_index": 419,
+          "role": "actor",
+          "description": "Vassell Free Throw 1 of 2 (28 PTS)"
+        },
+        "1629731": {
+          "source_index": 430,
+          "role": "assister",
+          "description": "Tomlin 25' 3PT Jump Shot (13 PTS) (Wade 5 AST)"
+        }
+      }
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        42
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        45,
+        46,
+        47
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        68
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        80,
+        81,
+        82,
+        83
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        106
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        125
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        150
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        167,
+        168
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        174,
+        175
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        185,
+        186,
+        187
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        213,
+        214,
+        215
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        223,
+        224,
+        225
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        233
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        254
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        260
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        286
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        295
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        316,
+        317,
+        318,
+        319
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        327
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        342,
+        343,
+        344,
+        345
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        374
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        392
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        416,
+        417
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        432,
+        433,
+        434
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        447
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        454,
+        455
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        485,
+        486,
+        487,
+        488,
+        489,
+        490,
+        491,
+        492
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        495
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    }
+  ],
+  "resolved_replays": [
+    {
+      "source_index": 384,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        383,
+        385,
+        386
+      ],
+      "source": "Review of the final official native V3 snapshot at https://www.nba.com/game/0022500341/box-score: Final Jones Garcia flagrant type 1 is followed by two Wade flagrant free throws and retained Cleveland control. Player points, field goals, free throws, rebounds, fouls, assists, steals, turnovers, and minutes are separately reconciled against the published box score; this is an explicit final-snapshot assertion, not a video ruling or permission to rewrite rows."
+    }
+  ]
+}

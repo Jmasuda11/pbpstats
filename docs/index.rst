@@ -38,3 +38,4 @@ Contents
    v3-classification
    v3-lineups
    v3-possessions
+   v3-leagues

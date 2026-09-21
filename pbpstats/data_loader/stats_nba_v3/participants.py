@@ -88,6 +88,13 @@ class _Resolver:
         player = self.context.player(person_id)
         if player is not None:
             candidates.add(player.team_id)
+        bench = self.context.bench_person(person_id)
+        if bench is not None:
+            if (item.action_type, item.sub_type) != ("Foul", "Technical"):
+                raise _error(
+                    item, "bench identity is only supported on a technical foul"
+                )
+            candidates.add(bench.team_id)
         location = data.get("location", "")
         if location not in (None, "", "h", "v"):
             raise _error(item, "unrecognized team location")
@@ -171,6 +178,19 @@ class _Resolver:
                 evidence="administrative event; personId is not a player attribution",
             )
         person_id = _id(item, "personId")
+        bench = self.context.bench_person(person_id)
+        if bench is not None:
+            if not item.description.startswith(bench.name + " Foul:T.FOUL"):
+                raise _error(
+                    item, "technical foul description conflicts with bench identity"
+                )
+            return V3Participant(
+                "not_applicable",
+                team_id=bench.team_id,
+                source_indices=(item.order,),
+                name=bench.name,
+                evidence=f"non-player personId {person_id}; {bench.source}",
+            )
         if person_id in self.context.team_ids:
             return V3Participant(
                 "not_applicable",

@@ -6,6 +6,7 @@ from a native Stats ``boxScoreTraditional`` response and an explicit evidence
 sidecar. Loading is offline. Missing files raise ``FileNotFoundError``;
 malformed or conflicting evidence raises ``ValueError`` with the game and
 source locations. No roster, alias, or network fallback runs implicitly.
+See :doc:`v3-leagues` for league selection and separately sourced bench identities.
 
 This API is a direct context loader. It is not registered as a statistical
 ``Client`` Boxscore resource: statistics remain raw, unvalidated source fields.
@@ -92,7 +93,7 @@ The sidecar contains these fields:
 ``schema_version``
     Integer ``1``.
 ``game_id``
-    The same ten-digit NBA game ID as the request and response.
+    The same ten-digit NBA, WNBA, or G League game ID as the request and response.
 ``boxscore_sha256``
     Lowercase SHA-256 of the exact response bytes, including whitespace.
 ``source``

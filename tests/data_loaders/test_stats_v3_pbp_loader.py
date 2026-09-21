@@ -299,7 +299,7 @@ def test_loader_does_not_keep_an_unused_file_directory(payload):
         "21900001",
         "../../file",
         "0021900001/",
-        "1021900001",
+        "3021900001",
         "00１９０００００１",
     ],
 )
@@ -308,7 +308,7 @@ def test_invalid_game_id_is_rejected_before_source_access(game_id):
         def load_data(self, game_id):
             pytest.fail("Invalid game ID reached the source")
 
-    with pytest.raises(ValueError, match="10-digit NBA string"):
+    with pytest.raises(ValueError, match="10-digit NBA"):
         StatsNbaV3PbpLoader(game_id, UnreadableSource())
 
 

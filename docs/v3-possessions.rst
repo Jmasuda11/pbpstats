@@ -46,21 +46,28 @@ Detailed ``event_stats``, ``Possession.possession_stats``, and aggregate
 evidence contract is not implemented; an unknown foul-drawn identity is never
 filled from the free-throw shooter. Use ``base_stats`` for the supported
 accounting output. This entry point is not registered as a ``Client`` provider.
+WNBA three-point zone lookups also raise pending separate validation; this
+includes ``possession_start_type`` when its label depends on a preceding WNBA
+three-pointer. A possession's offense, boundaries, score, counts, and time
+accounting remain available without that optional label.
 
 Evidence and failure behavior
 -----------------------------
 
-The loader requires ``StatsNbaV3LineupLoader`` and currently supports NBA game
-IDs only. Complete roster and PBP declarations, validated period starters, and
+The loader requires ``StatsNbaV3LineupLoader`` and supports NBA, WNBA, and G League
+under the rules described in :doc:`v3-leagues`. Complete roster and PBP declarations, validated period starters, and
 batch evidence remain prerequisites from the earlier layers. Every supplied
 home/away score is checked against accumulated classified scoring.
 
 Free-throw trips require one compatible, unconsumed, preceding foul at the
 same exact clock and period. Attempts must run from 1 through the declared
 total with the same shooter, team, category, and clock. A technical attempt
-can intervene in a regular trip. One-shot regular trips require a matching
-and-one; non-shooting regular trips require exhausted team fouls before the
+can intervene in a regular trip. Ordinary one-point trips require a matching
+and-one; take/away-from-play awards retain the ball, and G League single-shot
+trips carry their recorded point value. Other non-shooting regular trips require exhausted team fouls before the
 foul. Required but missing trips fail, as do explicitly conflicting shooters.
+Take/away-from-play free throws require the shooter to have been on court at
+the foul; a subsequent substitution cannot establish that eligibility.
 Technical, flagrant, and clear-path attempts do not become ordinary final-shot
 possession boundaries.
 
@@ -73,9 +80,10 @@ turnover; defensive goaltending requires a matching awarded field goal.
 An interior jump requires evidence of the preceding offense.
 
 The recorded defensive lane violation between two made attempts in one trip
-is accepted; other lane rulings require additional retry/restart evidence and
+and a shooter violation following a final missed free throw awarded to the
+opponent by a team rebound are accepted; other lane rulings require additional retry/restart evidence and
 fail. Replacement-shooter exceptions, offsetting penalties, corrected or
-repeated attempts, unusual technical-foul restarts, team heaves, and other
+repeated attempts, unusual technical-foul restarts, and other
 unvalidated sequences are outside this integration's supported contract.
 Back-to-back offense groups also fail instead of receiving an implicit
 restart override. A recognized event label alone does not establish its
@@ -108,3 +116,7 @@ and-one and technical trips, retained-ball attempts, substitutions during
 trips, held balls, exact fractional thresholds, and one-possession periods
 through overtime. These checks establish the covered fixture and cases,
 not universal NBA feed coverage.
+
+The :doc:`v3-leagues` validation matrix adds current NBA, WNBA, and G League
+captures, team heaves, separately sourced bench technicals, and reviewed
+already-applied replay corrections.

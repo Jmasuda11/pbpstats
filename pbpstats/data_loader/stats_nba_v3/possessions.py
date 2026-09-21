@@ -13,6 +13,7 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3 import (
     V3JumpBall,
     V3Rebound,
     V3StartOfPeriod,
+    V3TeamHeave,
     V3Turnover,
     V3Violation,
 )
@@ -31,11 +32,17 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
         if not isinstance(lineups, StatsNbaV3LineupLoader):
             raise TypeError("V3 possession loader requires StatsNbaV3LineupLoader")
         self.game_id, self.context = lineups.game_id, lineups.context
-        if not self.game_id.startswith("00"):
-            raise ValueError("V3 possession rules currently support NBA games only")
+        self.rules = self.context.rules
         self.lineups = lineups
         self.events = []
         for i, item in enumerate(lineups.items):
+            if item.event.kind == "team_heave" and not self.rules.team_heave(
+                item.event.group.primary.period,
+                item.event.group.primary.seconds_remaining_exact,
+            ):
+                raise ValueError(
+                    f"Stats V3 game {self.game_id}: team heave conflicts with league/season/clock"
+                )
             event_class = EVENT_CLASSES.get(item.event.kind)
             if event_class is None:
                 raise ValueError(
@@ -44,7 +51,9 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 )
             self.events.append(event_class(item, i))
         self._link_and_score()
+        self._validate_replays()
         self._associate_free_throws()
+        self._validate_target_score()
         self._associate_rebounds()
         self._validate_restart_evidence()
         self._set_period_offenses()
@@ -55,6 +64,87 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
             )
         self._add_extra_attrs_to_all_possessions()
         self._validate_possessions()
+
+    def _validate_replays(self):
+        changed = {
+            event.facts.group.primary.order: event
+            for event in self.events
+            if event.facts.kind == "replay"
+            and event.facts.subtype
+            in (
+                "Overturn Ruling",
+                "Coach Challenge Overturn Ruling",
+                "Challenge Changed",
+            )
+        }
+        records = self.lineups.evidence.data.get("resolved_replays", [])
+        if not isinstance(records, list):
+            raise ValueError("resolved_replays must be an array")
+        rows = {r.order for e in self.events for r in e.facts.group.rows}
+        covered = set()
+        for record in records:
+            if not isinstance(record, dict):
+                raise ValueError("resolved replay must be an object")
+            index = record.get("source_index")
+            if type(index) is not int or index not in changed or index in covered:
+                raise ValueError("duplicate or extraneous resolved replay source_index")
+            event = changed[index]
+            if record.get("resolution") != "already_applied":
+                raise event.error(
+                    "replay correction requires an already-applied final snapshot"
+                )
+            source = record.get("source")
+            affected = record.get("affected_source_indices")
+            if not isinstance(source, str) or not source.strip():
+                raise event.error("resolved replay requires source provenance")
+            if (
+                not isinstance(affected, list)
+                or not affected
+                or any(
+                    type(i) is not int or i == index or i not in rows for i in affected
+                )
+                or len(set(affected)) != len(affected)
+            ):
+                raise event.error("resolved replay requires affected source rows")
+            covered.add(index)
+        for index in sorted(changed.keys() - covered):
+            raise changed[index].error(
+                "changed replay requires separate resolution evidence"
+            )
+
+    def _validate_target_score(self):
+        overtime = [e for e in self.events if self.rules.untimed(e.period)]
+        if not overtime:
+            return
+        start, end = overtime[0], overtime[-1]
+        if (
+            not isinstance(start, V3StartOfPeriod)
+            or len(set(start.score.values())) != 1
+        ):
+            raise start.error("target-score overtime requires a tied regulation score")
+        target = next(iter(start.score.values())) + 7
+        reached = [e for e in overtime if max(e.score.values()) >= target]
+        if not reached:
+            raise end.error("target-score overtime ended before the target was reached")
+        winner = reached[0]
+        if not (
+            isinstance(winner, V3FieldGoal)
+            or isinstance(winner, V3FreeThrow)
+            and winner.is_end_ft
+        ):
+            raise winner.error(
+                "target-score ending requires a validated winning shot or terminal free throw"
+            )
+        if (
+            len(reached) != 2
+            or reached[1] is not end
+            or not isinstance(end, V3EndOfPeriod)
+            or end.seconds_remaining != winner.seconds_remaining
+        ):
+            raise winner.error(
+                "target-score overtime must end immediately after the winning score"
+            )
+        self.overtime_target = target
 
     def _link_and_score(self):
         score = {team: 0 for team in self.context.team_ids}
@@ -72,10 +162,18 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 else None
             )
             if isinstance(event, V3StartOfPeriod):
-                fouls_to_give = {t: 4 if event.period <= 4 else 3 for t in score}
-            if event.seconds_remaining <= 120:
+                fouls_to_give = {
+                    t: self.rules.fouls_to_give(event.period) for t in score
+                }
+            if self.rules.last_two_minutes(event.period, event.seconds_remaining):
                 fouls_to_give = {t: min(n, 1) for t, n in fouls_to_give.items()}
             if isinstance(event, V3Foul):
+                if event.is_transition_take_foul and not self.rules.transition_take(
+                    event.period, event.seconds_remaining
+                ):
+                    raise event.error(
+                        "transition take foul conflicts with league/period/clock"
+                    )
                 event.fouls_to_give_before = fouls_to_give.copy()
                 if event.team_id not in score:
                     raise event.error("foul requires a game team")
@@ -180,10 +278,17 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 and (
                     foul.is_shooting_foul
                     or foul.is_technical
+                    or foul.is_defensive_3_seconds
                     or foul.is_flagrant
                     or foul.is_clear_path_foul
+                    or foul.is_transition_take_foul
+                    or foul.is_away_from_play_foul
                     or (
-                        (foul.is_personal_foul or foul.is_loose_ball_foul)
+                        (
+                            foul.is_personal_foul
+                            or foul.is_personal_take_foul
+                            or foul.is_loose_ball_foul
+                        )
                         and foul.fouls_to_give_before[foul.team_id] == 0
                     )
                 )
@@ -204,9 +309,18 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 continue
             compatible = {
                 "regular": foul.is_shooting_foul
-                or foul.is_personal_foul
-                or foul.is_loose_ball_foul,
-                "technical": foul.is_technical,
+                or (
+                    (
+                        foul.is_personal_foul
+                        or foul.is_personal_take_foul
+                        or foul.is_loose_ball_foul
+                    )
+                    and foul.fouls_to_give_before[foul.team_id] == 0
+                    and ft.total * ft.points_per_attempt == 2
+                )
+                or foul.is_transition_take_foul
+                or foul.is_away_from_play_foul,
+                "technical": foul.is_technical or foul.is_defensive_3_seconds,
                 "clear_path": foul.is_clear_path_foul,
                 "flagrant": foul.is_flagrant,
             }[ft.category]
@@ -214,22 +328,37 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 candidates.append(foul)
         if len(candidates) != 1:
             raise event.error(
-                "free-throw trip requires one unconsumed compatible preceding foul at the exact clock"
+                "free-throw trip requires one unconsumed compatible preceding foul at the exact clock, including penalty evidence for regular non-shooting trips"
             )
         foul = candidates[0]
         if (
             not event.is_technical_ft
+            and not foul.is_transition_take_foul
+            and not foul.is_away_from_play_foul
             and hasattr(foul, "player3_id")
             and foul.player3_id != event.player1_id
         ):
             raise event.error("replacement shooter requires separate validation")
-        if ft.category == "regular" and not foul.is_shooting_foul:
-            if ft.total != 2 or foul.fouls_to_give_before[foul.team_id] != 0:
+        award = ft.total * ft.points_per_attempt
+        retained = foul.is_transition_take_foul or foul.is_away_from_play_foul
+        if retained:
+            if event.player1_id not in foul.lineup.before[event.team_id]:
+                raise event.error(
+                    "retained-ball free-throw shooter was not on court at the foul"
+                )
+            if ft.category != "regular" or award != 1:
+                raise event.error(
+                    "take/away-from-play foul requires one retained-ball free throw"
+                )
+            event.is_transition_take_foul_ft = foul.is_transition_take_foul
+            event.is_away_from_play_ft = foul.is_away_from_play_foul
+        elif ft.category == "regular" and not foul.is_shooting_foul:
+            if award != 2 or foul.fouls_to_give_before[foul.team_id] != 0:
                 raise event.error("regular non-shooting trip requires penalty evidence")
         consumed.add(foul)
         event.trip_foul = foul
-        foul.number_of_fta_for_foul = ft.total
-        if ft.category == "regular" and ft.total == 1:
+        foul.number_of_fta_for_foul = award
+        if ft.category == "regular" and award == 1 and not retained:
             makes = [
                 e
                 for e in event.get_all_events_at_current_time()
@@ -265,7 +394,7 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
         pending = None
         used_shot_clocks = set()
         for event in self.events:
-            if isinstance(event, (V3FieldGoal, V3FreeThrow)):
+            if isinstance(event, (V3FieldGoal, V3FreeThrow, V3TeamHeave)):
                 if pending is not None:
                     raise event.error(
                         "missing rebound evidence for preceding missed shot"
@@ -332,7 +461,7 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     before, after = event.previous_event, event.next_event
                     # A defensive lane violation between two made attempts in
                     # one validated trip cannot cancel either made free throw.
-                    if not (
+                    between_makes = (
                         isinstance(before, V3FreeThrow)
                         and before.is_made
                         and isinstance(after, V3FreeThrow)
@@ -343,7 +472,8 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                         == after.seconds_remaining
                         and event.team_id in self.context.team_ids
                         and event.team_id != before.team_id
-                    ):
+                    )
+                    if not between_makes and not self._is_shooter_lane_award(event):
                         raise event.error(
                             "lane ruling requires separate retry/restart evidence"
                         )
@@ -372,13 +502,39 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 if len(turnovers) != 1:
                     raise event.error("offensive foul requires one matching turnover")
 
+    def _is_shooter_lane_award(self, event):
+        rebound = event.previous_event
+        if (
+            not isinstance(rebound, V3Rebound)
+            or not rebound.is_real_rebound
+            or rebound.player1_id
+        ):
+            return False
+        miss = rebound.missed_shot
+        return (
+            isinstance(miss, V3FreeThrow)
+            and not miss.is_made
+            and miss.is_end_ft
+            and rebound.previous_event is miss
+            and event.player1_id == miss.player1_id
+            and event.team_id == miss.team_id
+            and rebound.team_id == self.context.other_team(miss.team_id)
+            and event.seconds_remaining
+            == rebound.seconds_remaining
+            == miss.seconds_remaining
+            and event.next_event is not None
+            and event.next_event.seconds_remaining < event.seconds_remaining
+        )
+
     def _set_period_offenses(self):
         for start in self.events:
             if not isinstance(start, V3StartOfPeriod):
                 continue
             candidate = start.next_event
             while candidate is not None:
-                if isinstance(candidate, (V3FieldGoal, V3Turnover, V3JumpBall)) or (
+                if isinstance(
+                    candidate, (V3FieldGoal, V3Turnover, V3JumpBall, V3TeamHeave)
+                ) or (
                     isinstance(candidate, V3FreeThrow) and not candidate.is_technical_ft
                 ):
                     if isinstance(candidate, V3JumpBall) and (
@@ -408,7 +564,7 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     "back-to-back possessions require additional restart evidence"
                 )
             for event in possession.events:
-                if isinstance(event, (V3FieldGoal, V3Turnover)) or (
+                if isinstance(event, (V3FieldGoal, V3Turnover, V3TeamHeave)) or (
                     isinstance(event, V3FreeThrow) and not event.is_technical_ft
                 ):
                     if event.team_id != offense:
