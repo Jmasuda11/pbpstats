@@ -8,6 +8,8 @@ from the game ID, so the 2025-26 NBA/G League season uses ``25`` and the
 2026 WNBA season uses ``26``. Regular-season and playoff IDs are supported;
 other formats, including Showcase events, require separate rules validation.
 
+For one-call offline loading of all validated layers, see :doc:`v3-game-loading`.
+
 The same offline entry points serve all three leagues::
 
     from pbpstats.data_loader.stats_nba_v3.boxscore import (
