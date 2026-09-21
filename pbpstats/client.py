@@ -42,30 +42,30 @@ class Client(object):
         data_loader = DataLoaderFactory()
         self.settings = settings
         self.data_directory = settings.get("dir")
-        self._load_objects()
-        self._load_resources()
+        configured_loaders = []
+        # Validate every source before changing shared object classes or directories.
         for resource, value in settings.items():
             if resource in data_loader.loaders.keys():
                 resource_data_loaders = data_loader.get_data_loader(
                     value["data_provider"], resource
                 )
                 for resource_data_loader in resource_data_loaders:
-                    parent_cls_name = resource_data_loader["loader"].parent_object
-                    setattr(
-                        getattr(self, parent_cls_name),
-                        f"{resource}{DATA_LOADER_SUFFIX}",
-                        resource_data_loader["loader"],
+                    source_cls = resource_data_loader[f'{value["source"]}_source']
+                    if source_cls is None:
+                        raise ValueError(
+                            f"{resource} from {value['data_provider']} has no "
+                            f"{value['source']} source"
+                        )
+                    configured_loaders.append(
+                        (resource, resource_data_loader["loader"], source_cls)
                     )
-                    setattr(
-                        getattr(self, parent_cls_name),
-                        f"{resource}{DATA_SOURCE_SUFFIX}",
-                        resource_data_loader[f'{value["source"]}_source'],
-                    )
-                    setattr(
-                        getattr(self, parent_cls_name),
-                        resource,
-                        self.resource_dict[resource],
-                    )
+        self._load_objects()
+        self._load_resources()
+        for resource, loader_cls, source_cls in configured_loaders:
+            parent_cls = getattr(self, loader_cls.parent_object)
+            setattr(parent_cls, f"{resource}{DATA_LOADER_SUFFIX}", loader_cls)
+            setattr(parent_cls, f"{resource}{DATA_SOURCE_SUFFIX}", source_cls)
+            setattr(parent_cls, resource, self.resource_dict[resource])
 
     def _load_objects(self):
         """

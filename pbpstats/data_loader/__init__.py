@@ -57,6 +57,8 @@ from pbpstats.data_loader.stats_nba.scoreboard.web import StatsNbaScoreboardWebL
 from pbpstats.data_loader.stats_nba.shots.file import StatsNbaShotsFileLoader
 from pbpstats.data_loader.stats_nba.shots.loader import StatsNbaShotsLoader
 from pbpstats.data_loader.stats_nba.shots.web import StatsNbaShotsWebLoader
+from pbpstats.data_loader.stats_nba_v3.pbp.file import StatsNbaV3PbpFileLoader
+from pbpstats.data_loader.stats_nba_v3.pbp.loader import StatsNbaV3PbpLoader
 
 __all__ = [
     "DataNbaBoxscoreFileLoader",
@@ -110,4 +112,6 @@ __all__ = [
     "StatsNbaShotsFileLoader",
     "StatsNbaShotsLoader",
     "StatsNbaShotsWebLoader",
+    "StatsNbaV3PbpFileLoader",
+    "StatsNbaV3PbpLoader",
 ]
