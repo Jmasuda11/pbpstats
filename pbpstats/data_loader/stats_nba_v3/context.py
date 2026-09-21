@@ -22,8 +22,11 @@ class V3RosterPlayer:
     player_id: int
     team_id: int
     aliases: Tuple[str, ...]
+    name: str = ""
 
     def __post_init__(self):
+        if not isinstance(self.name, str):
+            raise ValueError("roster player name must be a string")
         if not _positive_id(self.player_id) or not _positive_id(self.team_id):
             raise ValueError("roster player and team IDs must be positive integers")
         if isinstance(self.aliases, str):

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "path": "game_details/stats_v3_boxscore_0022500165.json",
+      "game_id": "0022500165",
+      "sha256": "e9b8b43f00741889b21679fa64ef7d47db7f96c436bc4980c946da912c421a8d",
+      "evidence_path": "game_details/stats_v3_boxscore_0022500165.evidence.json",
+      "evidence_sha256": "5017da0736b47b30e5fbbf3ecffb542bc1ed83c61e2e7094e36916275d5dcf1c",
+      "kind": "published_response",
+      "source_repository": "swar/nba_api",
+      "source_commit": "0d0108875f3fc9455f67cbd6670aeb642756009f",
+      "url": "https://raw.githubusercontent.com/swar/nba_api/0d0108875f3fc9455f67cbd6670aeb642756009f/docs/nba_api/stats/endpoints/responses/boxscoretraditionalv3.json",
+      "retrieved_at_utc": "2026-09-21T01:41:23.020899+00:00",
+      "response_metadata_time": "2025-11-04T23:50:11.5011Z",
+      "home_players": 14,
+      "away_players": 15
+    }
+  ]
+}

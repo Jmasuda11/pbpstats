@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500165",
+  "boxscore_sha256": "e9b8b43f00741889b21679fa64ef7d47db7f96c436bc4980c946da912c421a8d",
+  "source": "https://raw.githubusercontent.com/swar/nba_api/0d0108875f3fc9455f67cbd6670aeb642756009f/docs/nba_api/stats/endpoints/responses/boxscoretraditionalv3.json",
+  "scope": "unknown",
+  "roster_complete": false,
+  "completeness_basis": "Published response lists 14 home and 15 away players, including two DNP entries. Original request range and eligible-player coverage were not independently verified; do not infer completeness from player count or minutes.",
+  "aliases": []
+}

@@ -26,6 +26,17 @@ one game does not establish stable cross-provider or cross-snapshot identity.
 Tests use repository-relative fixtures and do not require the original archive,
 research directory, or NBA network access.
 
+The separate `boxscore-manifest.json` inventories native V3 box-score inputs.
+`../game_details/stats_v3_boxscore_0022500165.json` is the byte-for-byte pinned
+nba_api reference (14 home and 15 away players, including DNP entries). Its
+`.evidence.json` sidecar records the source and checksum but conservatively
+declares unknown roster coverage. The response does not establish its original
+request range or independently verified eligible-player completeness. It does
+not match the existing full-game PBP fixtures. See the
+[game-context contract](../../../docs/v3-game-context.rst) for the inspection
+findings and supported aliases. Synthetic completeness declarations in tests
+must not be mistaken for a completeness claim about this recorded response.
+
 Keep source inputs unchanged when implementing repairs. Record derived order and
 participant inferences separately. Replacement snapshots need updated provenance
 and reviewed expectations, not silently updated hashes to make tests pass.

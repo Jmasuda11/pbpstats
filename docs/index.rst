@@ -34,3 +34,4 @@ Contents
    v3-data-contract
    v3-file-loading
    v3-participants
+   v3-game-context
