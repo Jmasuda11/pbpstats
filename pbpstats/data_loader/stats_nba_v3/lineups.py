@@ -17,7 +17,6 @@ from pbpstats.data_loader.stats_nba_v3.pbp.file import (
     _unique_object,
 )
 from pbpstats.resources.json_copy import json_copy
-from pbpstats.resources.period_clock import period_length_seconds
 
 
 def _digest(value):
@@ -62,6 +61,11 @@ def lineup_fingerprints(event_loader):
         )
         for e in event_loader.items
     ]
+    if context.bench_people:
+        roster["bench_people"] = [
+            dict(person_id=p.person_id, team_id=p.team_id, name=p.name, source=p.source)
+            for p in context.bench_people
+        ]
     return {"context_sha256": _digest(roster), "snapshot_sha256": _digest(events)}
 
 
@@ -134,6 +138,7 @@ class StatsNbaV3LineupLoader:
             raise TypeError("lineup loader requires V3LineupEvidence")
         self.game_id = event_loader.game_id
         self.context = event_loader.context
+        self.rules = self.context.rules
         self.evidence = evidence
         self._events = event_loader.items
         if not self.context.roster_complete or not event_loader.snapshot_complete:
@@ -174,7 +179,11 @@ class StatsNbaV3LineupLoader:
                     raise self._error(
                         "missing, repeated, or out-of-order period boundary", event
                     )
-                if clock != period_length_seconds(row.period):
+                if self.rules.untimed(row.period) and row.period != 5:
+                    raise self._error(
+                        "target-score overtime has exactly one period", event
+                    )
+                if clock != self.rules.opening_clock(row.period):
                     raise self._error("period start is not at the opening clock", event)
                 periods.append(row.period)
                 active = row.period
@@ -185,7 +194,7 @@ class StatsNbaV3LineupLoader:
                 raise self._error("clock increases within a period", event)
             previous_clock = clock
             if event.kind == "period_end":
-                if clock != 0:
+                if clock != 0 and not self.rules.untimed(row.period):
                     raise self._error("period end is not at zero", event)
                 active = None
         if not periods or active is not None:

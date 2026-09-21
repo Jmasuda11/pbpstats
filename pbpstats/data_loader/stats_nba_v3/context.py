@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Tuple
 
 from pbpstats.data_loader.stats_nba_v3.pbp.loader import _validate_game_id
+from pbpstats.resources.league_rules import V3LeagueRules
 
 
 def _name_key(name):
@@ -40,6 +41,24 @@ class V3RosterPlayer:
 
 
 @dataclass(frozen=True)
+class V3BenchPerson:
+    """Separately sourced non-player identity, usable only for technical fouls."""
+
+    person_id: int
+    team_id: int
+    name: str
+    source: str
+
+    def __post_init__(self):
+        if not _positive_id(self.person_id) or not _positive_id(self.team_id):
+            raise ValueError("bench person and team IDs must be positive integers")
+        if any(
+            not isinstance(s, str) or not s.strip() for s in (self.name, self.source)
+        ):
+            raise ValueError("bench identity requires a name and source provenance")
+
+
+@dataclass(frozen=True)
 class V3GameContext:
     game_id: str
     home_team_id: int
@@ -47,11 +66,15 @@ class V3GameContext:
     players: Tuple[V3RosterPlayer, ...] = ()
     roster_complete: bool = False
     roster_source: str = ""
+    league_id: str = None
+    bench_people: Tuple[V3BenchPerson, ...] = ()
     _players: object = field(init=False, repr=False, compare=False)
     _names: object = field(init=False, repr=False, compare=False)
 
     def __post_init__(self):
-        _validate_game_id(self.game_id)
+        object.__setattr__(
+            self, "league_id", _validate_game_id(self.game_id, self.league_id)
+        )
         teams = self.team_ids
         if any(not _positive_id(t) for t in teams) or len(set(teams)) != 2:
             raise ValueError("game context requires two distinct positive team IDs")
@@ -78,6 +101,17 @@ class V3GameContext:
         if self.roster_complete and {p.team_id for p in players} != set(teams):
             raise ValueError("a complete roster must cover both teams")
         object.__setattr__(self, "players", players)
+        people = tuple(self.bench_people)
+        seen = set(by_id) | set(teams)
+        for person in people:
+            if not isinstance(person, V3BenchPerson):
+                raise TypeError("bench_people must contain V3BenchPerson objects")
+            if person.team_id not in teams or person.person_id in seen:
+                raise ValueError(
+                    "bench identity conflicts with game roster or another identity"
+                )
+            seen.add(person.person_id)
+        object.__setattr__(self, "bench_people", people)
         object.__setattr__(self, "_players", MappingProxyType(by_id))
         object.__setattr__(
             self,
@@ -89,6 +123,10 @@ class V3GameContext:
     def team_ids(self):
         return self.home_team_id, self.away_team_id
 
+    @property
+    def rules(self):
+        return V3LeagueRules.for_game(self.game_id, self.league_id)
+
     def other_team(self, team_id):
         if team_id not in self.team_ids:
             raise ValueError("team is not part of this game context")
@@ -96,6 +134,9 @@ class V3GameContext:
 
     def player(self, player_id):
         return self._players.get(player_id)
+
+    def bench_person(self, person_id):
+        return next((p for p in self.bench_people if p.person_id == person_id), None)
 
     def candidates(self, name, team_id=None):
         if team_id is not None and team_id not in self.team_ids:

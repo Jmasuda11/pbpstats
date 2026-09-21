@@ -5,6 +5,7 @@ import json
 from typing import NamedTuple
 
 from pbpstats.data_loader.stats_nba_v3.context import (
+    V3BenchPerson,
     V3GameContext,
     V3RosterPlayer,
     _name_key,
@@ -41,8 +42,8 @@ class StatsNbaV3BoxscoreLoader:
     Raw statistics and starter-looking fields are preserved but not interpreted.
     """
 
-    def __init__(self, game_id, source_loader):
-        _validate_game_id(game_id)
+    def __init__(self, game_id, source_loader, *, league_id=None):
+        self.league_id = _validate_game_id(game_id, league_id)
         self.game_id = game_id
         source = source_loader.load_data(game_id)
         if not isinstance(source, V3BoxscoreSourceData):
@@ -200,8 +201,32 @@ class StatsNbaV3BoxscoreLoader:
             f"evidence {self.source.evidence_source} sha256={self.evidence_sha256}"
         )
         return V3GameContext(
-            self.game_id, *teams, roster, self._evidence["roster_complete"], provenance
+            self.game_id,
+            *teams,
+            roster,
+            self._evidence["roster_complete"],
+            provenance,
+            league_id=self.league_id,
+            bench_people=self._bench_people(),
         )
+
+    def _bench_people(self):
+        entries = self._evidence.get("bench_people", [])
+        if not isinstance(entries, list):
+            raise self._error("evidence.bench_people must be an array")
+        people = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise self._error("bench identity must be an object")
+            people.append(
+                V3BenchPerson(
+                    self._id(entry.get("person_id"), "bench person_id"),
+                    self._id(entry.get("team_id"), "bench team_id"),
+                    self._text(entry.get("name"), "bench name"),
+                    self._text(entry.get("source"), "bench source"),
+                )
+            )
+        return tuple(people)
 
     def require_complete_roster(self):
         """Return context or explicitly reject insufficient coverage evidence."""

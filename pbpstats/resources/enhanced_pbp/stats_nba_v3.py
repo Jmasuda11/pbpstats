@@ -27,6 +27,7 @@ from pbpstats.resources.enhanced_pbp.possession_rules import (
     JumpBallPossessionRules,
     PossessionRules,
 )
+from pbpstats.resources.league_rules import V3LeagueRules
 from pbpstats.resources.period_clock import CLOCK_PATTERN
 
 
@@ -35,6 +36,7 @@ class V3EnhancedEvent(PossessionRules, EnhancedPbpItem):
         self.lineup = lineup
         self.facts = lineup.event
         row = self.facts.group.primary
+        self.rules = V3LeagueRules.for_game(row.game_id)
         self.game_id, self.period, self.event_num = (
             row.game_id,
             row.period,
@@ -143,7 +145,6 @@ class V3FieldGoal(V3EnhancedEvent, FieldGoal):
 
 
 class V3FreeThrow(V3EnhancedEvent, FreeThrow):
-    is_ft_1pt = is_ft_2pt = is_ft_3pt = False
     is_away_from_play_ft = is_inbound_foul_ft = is_transition_take_foul_ft = False
 
     @property
@@ -163,6 +164,8 @@ class V3FreeThrow(V3EnhancedEvent, FreeThrow):
         return (
             self.facts.free_throw.category == "regular"
             and self.facts.free_throw.is_last_attempt
+            and not self.is_transition_take_foul_ft
+            and not self.is_away_from_play_ft
         )
 
     @property
@@ -196,7 +199,23 @@ class V3FreeThrow(V3EnhancedEvent, FreeThrow):
     @property
     def _trip_position(self):
         ft = self.facts.free_throw
-        return (ft.attempt, ft.total) if ft.category == "regular" else None
+        return (
+            (ft.attempt, ft.total)
+            if ft.category == "regular" and not ft.single_shot
+            else None
+        )
+
+    @property
+    def is_ft_1pt(self):
+        return self.facts.free_throw.single_shot and self.facts.shot_value == 1
+
+    @property
+    def is_ft_2pt(self):
+        return self.facts.free_throw.single_shot and self.facts.shot_value == 2
+
+    @property
+    def is_ft_3pt(self):
+        return self.facts.free_throw.single_shot and self.facts.shot_value == 3
 
     @property
     def foul_that_led_to_ft(self):
@@ -213,15 +232,23 @@ class V3FreeThrow(V3EnhancedEvent, FreeThrow):
 
 
 class V3Foul(V3EnhancedEvent, Foul):
-    is_inbound_foul = is_away_from_play_foul = is_double_foul = False
-    is_double_technical = is_defensive_3_seconds = is_delay_of_game = False
-    is_personal_block_foul = is_personal_take_foul = False
-    is_shooting_block_foul = is_transition_take_foul = False
+    is_inbound_foul = is_double_foul = False
+    is_double_technical = is_delay_of_game = False
+    is_personal_block_foul = False
+    is_shooting_block_foul = False
     number_of_fta_for_foul = None
 
     @property
     def is_personal_foul(self):
         return self.facts.subtype == "Personal"
+
+    @property
+    def is_personal_take_foul(self):
+        return self.facts.subtype == "Personal Take"
+
+    @property
+    def is_away_from_play_foul(self):
+        return self.facts.subtype == "Away From Play"
 
     @property
     def is_shooting_foul(self):
@@ -244,6 +271,10 @@ class V3Foul(V3EnhancedEvent, Foul):
         return self.facts.subtype == "Technical"
 
     @property
+    def is_defensive_3_seconds(self):
+        return self.facts.subtype == "Defense 3 Second"
+
+    @property
     def is_clear_path_foul(self):
         return self.facts.subtype == "Clear Path"
 
@@ -254,6 +285,10 @@ class V3Foul(V3EnhancedEvent, Foul):
     @property
     def is_flagrant2(self):
         return self.facts.subtype == "Flagrant Type 2"
+
+    @property
+    def is_transition_take_foul(self):
+        return self.facts.subtype == "Transition Take"
 
 
 class V3Rebound(V3EnhancedEvent, Rebound):
@@ -289,9 +324,11 @@ class V3Rebound(V3EnhancedEvent, Rebound):
 
 
 class V3Turnover(V3EnhancedEvent, Turnover):
-    is_no_turnover = (
-        is_kicked_ball
-    ) = is_offensive_goaltending = is_lane_violation = False
+    is_no_turnover = is_offensive_goaltending = is_lane_violation = False
+
+    @property
+    def is_kicked_ball(self):
+        return self.facts.subtype == "Kicked Ball Violation"
 
     @property
     def is_steal(self):
@@ -342,7 +379,11 @@ class V3Turnover(V3EnhancedEvent, Turnover):
 
 
 class V3Violation(V3EnhancedEvent, Violation):
-    is_jumpball_violation = is_double_lane_violation = False
+    is_double_lane_violation = False
+
+    @property
+    def is_jumpball_violation(self):
+        return self.facts.subtype == "Jump Ball"
 
     @property
     def is_lane_violation(self):
@@ -393,10 +434,25 @@ class V3Replay(V3EnhancedEvent, Replay):
 
 
 class V3EndOfPeriod(V3EnhancedEvent, EndOfPeriod):
-    pass
+    @property
+    def count_as_possession(self):
+        # A validated target-score ending has already counted the winning shot.
+        return False if self.rules.untimed(self.period) else super().count_as_possession
+
+
+class V3TeamHeave(V3EnhancedEvent, FieldGoal):
+    """A team miss, without a fabricated player or two/three-point value."""
+
+    is_made = is_and1 = is_make_that_does_not_end_possession = False
+    is_blocked = is_assisted = False
+    shot_value = None
+
+    def get_offense_team_id(self):
+        return self.team_id
 
 
 EVENT_CLASSES = {
+    "team_heave": V3TeamHeave,
     "field_goal": V3FieldGoal,
     "free_throw": V3FreeThrow,
     "foul": V3Foul,

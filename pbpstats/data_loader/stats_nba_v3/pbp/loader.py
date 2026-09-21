@@ -1,13 +1,10 @@
 """Validate a native V3 envelope and preserve one item per source action."""
 
-import re
 from typing import Any, NamedTuple, Optional
 
-from pbpstats import NBA_GAME_ID_PREFIX
 from pbpstats.resources.json_copy import json_copy
+from pbpstats.resources.league_rules import V3LeagueRules, validate_game_id
 from pbpstats.resources.pbp.stats_nba_v3_pbp_item import StatsNbaV3PbpItem
-
-GAME_ID_PATTERN = re.compile(rf"{NBA_GAME_ID_PREFIX}[0-9]{{8}}")
 
 
 class V3PbpSourceData(NamedTuple):
@@ -22,12 +19,8 @@ class V3PbpSourceData(NamedTuple):
     source_bytes: Optional[bytes] = None
 
 
-def _validate_game_id(game_id):
-    if not isinstance(game_id, str) or GAME_ID_PATTERN.fullmatch(game_id) is None:
-        raise ValueError(
-            "Stats V3 game_id must be a 10-digit NBA string starting with "
-            f"{NBA_GAME_ID_PREFIX}"
-        )
+def _validate_game_id(game_id, league_id=None):
+    return validate_game_id(game_id, league_id)
 
 
 class StatsNbaV3PbpLoader:
@@ -55,8 +48,9 @@ class StatsNbaV3PbpLoader:
     resource = "Pbp"
     parent_object = "Game"
 
-    def __init__(self, game_id, source_loader):
-        _validate_game_id(game_id)
+    def __init__(self, game_id, source_loader, *, league_id=None):
+        self.rules = V3LeagueRules.for_game(game_id, league_id)
+        self.league_id = self.rules.league_id
         source_data = source_loader.load_data(game_id)
         if not isinstance(source_data, V3PbpSourceData):
             raise TypeError(
@@ -74,7 +68,7 @@ class StatsNbaV3PbpLoader:
                 f"Stats V3 game {game_id}: response nests too deeply to copy"
             ) from error
         self.items = [
-            StatsNbaV3PbpItem(event, index, game_id)
+            StatsNbaV3PbpItem(event, index, game_id, league_id=self.league_id)
             for index, event in enumerate(self._source_data["game"]["actions"])
         ]
 

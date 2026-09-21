@@ -7,6 +7,7 @@ five eligible starters for each team in every represented period, and reviewed
 batch membership covering every substitution exactly once. Missing or
 conflicting evidence raises before lineups are returned. No network request,
 implicit period-starter inference, or event-order repair runs.
+Period lengths and overtime boundaries follow :doc:`v3-leagues`.
 
 Usage
 -----

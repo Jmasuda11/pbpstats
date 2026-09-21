@@ -1,0 +1,575 @@
+{
+  "schema_version": 1,
+  "game_id": "1022600100",
+  "context_sha256": "70e02aac0835bbd2b4bcc2089b25dea36e82b4754e6aedb486f68b0f52e79f51",
+  "snapshot_sha256": "79b086cf324cf3aa6b2830b47bd40df45e0c9ad03bb45870812512e37f21738a",
+  "periods": [
+    {
+      "period": 1,
+      "home": [
+        203826,
+        1627674,
+        1630442,
+        1642777,
+        1643493
+      ],
+      "away": [
+        203014,
+        204324,
+        204365,
+        1628276,
+        1628878
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1630442": {
+          "source_index": 1,
+          "role": "actor",
+          "description": "Jump Ball Mack vs. Hamby: Tip to Ogwumike"
+        },
+        "204324": {
+          "source_index": 1,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Mack vs. Hamby: Tip to Ogwumike"
+        },
+        "203014": {
+          "source_index": 1,
+          "role": "tip_recipient",
+          "description": "Jump Ball Mack vs. Hamby: Tip to Ogwumike"
+        },
+        "1628276": {
+          "source_index": 2,
+          "role": "assister",
+          "description": "Ogwumike 11' Turnaround Jump Shot (2 PTS) (Plum 1 AST)"
+        },
+        "1643493": {
+          "source_index": 3,
+          "role": "actor",
+          "description": "Brochant 24' 3PT Jump Shot (3 PTS) (Thomas 1 AST)"
+        },
+        "203826": {
+          "source_index": 3,
+          "role": "assister",
+          "description": "Brochant 24' 3PT Jump Shot (3 PTS) (Thomas 1 AST)"
+        },
+        "1642777": {
+          "source_index": 9,
+          "role": "actor",
+          "description": "Akoa Makani Out of Bounds - Bad Pass Turnover Turnover (P1.T1)"
+        },
+        "204365": {
+          "source_index": 10,
+          "role": "actor",
+          "description": "MISS Wheeler 27' 3PT Jump Shot"
+        },
+        "1627674": {
+          "source_index": 16,
+          "role": "actor",
+          "description": "Copper 3PT Jump Shot (3 PTS) (Thomas 2 AST)"
+        },
+        "1628878": {
+          "source_index": 20,
+          "role": "actor",
+          "description": "Atkins S.FOUL (P1.T1)"
+        }
+      }
+    },
+    {
+      "period": 2,
+      "home": [
+        201886,
+        1630442,
+        1642777,
+        1643493,
+        1643505
+      ],
+      "away": [
+        203014,
+        204365,
+        1630148,
+        1630996,
+        1642324
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1630442": {
+          "source_index": 98,
+          "role": "actor",
+          "description": "MISS Mack 8' Pullup Jump Shot"
+        },
+        "203014": {
+          "source_index": 99,
+          "role": "actor",
+          "description": "Ogwumike REBOUND (Off:0 Def:2)"
+        },
+        "1630996": {
+          "source_index": 100,
+          "role": "actor",
+          "description": "Burrell 8' Turnaround Hook Shot (5 PTS)"
+        },
+        "201886": {
+          "source_index": 101,
+          "role": "actor",
+          "description": "Bonner 3PT Jump Shot (3 PTS) (Mack 2 AST)"
+        },
+        "1642324": {
+          "source_index": 102,
+          "role": "actor",
+          "description": "Martin S.FOUL (P1.T1)"
+        },
+        "204365": {
+          "source_index": 104,
+          "role": "assister",
+          "description": "Burrell 27' 3PT Pullup Jump Shot (8 PTS) (Wheeler 3 AST)"
+        },
+        "1643505": {
+          "source_index": 105,
+          "role": "actor",
+          "description": "Nogic 16' Pullup Jump Shot (4 PTS)"
+        },
+        "1630148": {
+          "source_index": 107,
+          "role": "actor",
+          "description": "Park P.FOUL (P1.T2)"
+        },
+        "1643493": {
+          "source_index": 109,
+          "role": "actor",
+          "description": "Brochant P.FOUL (P1.T1)"
+        },
+        "1642777": {
+          "source_index": 113,
+          "role": "actor",
+          "description": "Akoa Makani P.FOUL (P1.T2)"
+        }
+      }
+    },
+    {
+      "period": 3,
+      "home": [
+        203826,
+        1627674,
+        1630442,
+        1642777,
+        1643493
+      ],
+      "away": [
+        203014,
+        204324,
+        204365,
+        1628276,
+        1628878
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "204324": {
+          "source_index": 198,
+          "role": "actor",
+          "description": "Hamby P.FOUL (P2.T1)"
+        },
+        "1643493": {
+          "source_index": 199,
+          "role": "actor",
+          "description": "MISS Brochant 24' 3PT Jump Shot"
+        },
+        "203014": {
+          "source_index": 200,
+          "role": "actor",
+          "description": "Ogwumike REBOUND (Off:0 Def:5)"
+        },
+        "1628276": {
+          "source_index": 201,
+          "role": "actor",
+          "description": "Plum Bad Pass Turnover (P4.T8)"
+        },
+        "1630442": {
+          "source_index": 201,
+          "role": "stealer",
+          "description": "Plum Bad Pass Turnover (P4.T8)"
+        },
+        "1642777": {
+          "source_index": 203,
+          "role": "actor",
+          "description": "Akoa Makani 2' Running Layup (5 PTS) (Mack 4 AST)"
+        },
+        "1627674": {
+          "source_index": 208,
+          "role": "actor",
+          "description": "Copper Lost Ball Turnover (P3.T9)"
+        },
+        "203826": {
+          "source_index": 211,
+          "role": "assister",
+          "description": "Copper 8' Turnaround Jump Shot (23 PTS) (Thomas 7 AST)"
+        },
+        "204365": {
+          "source_index": 215,
+          "role": "actor",
+          "description": "MISS Wheeler 25' 3PT Pullup Jump Shot"
+        },
+        "1628878": {
+          "source_index": 221,
+          "role": "actor",
+          "description": "Atkins 3' Running Pull-Up Jump Shot (5 PTS) (Plum 6 AST)"
+        }
+      }
+    },
+    {
+      "period": 4,
+      "home": [
+        203826,
+        1630442,
+        1631118,
+        1642777,
+        1643505
+      ],
+      "away": [
+        204324,
+        204365,
+        1630996,
+        1642287,
+        1643462
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "204365": {
+          "source_index": 303,
+          "role": "actor",
+          "description": "Wheeler Bad Pass Turnover (P3.T11)"
+        },
+        "1630442": {
+          "source_index": 303,
+          "role": "stealer",
+          "description": "Wheeler Bad Pass Turnover (P3.T11)"
+        },
+        "203826": {
+          "source_index": 305,
+          "role": "actor",
+          "description": "MISS Thomas 4' Driving Floating Jump Shot"
+        },
+        "204324": {
+          "source_index": 306,
+          "role": "actor",
+          "description": "Hamby REBOUND (Off:1 Def:4)"
+        },
+        "1642287": {
+          "source_index": 307,
+          "role": "actor",
+          "description": "MISS Brink 24' 3PT Jump Shot"
+        },
+        "1642777": {
+          "source_index": 309,
+          "role": "actor",
+          "description": "Akoa Makani 25' 3PT Jump Shot (8 PTS) (Thomas 8 AST)"
+        },
+        "1631118": {
+          "source_index": 311,
+          "role": "actor",
+          "description": "SUB: Copper FOR Held"
+        },
+        "1643462": {
+          "source_index": 312,
+          "role": "actor",
+          "description": "SUB: Plum FOR Gray"
+        },
+        "1630996": {
+          "source_index": 314,
+          "role": "actor",
+          "description": "MISS Burrell 16' Pullup Jump Shot"
+        },
+        "1643505": {
+          "source_index": 321,
+          "role": "actor",
+          "description": "Nogic REBOUND (Off:0 Def:1)"
+        }
+      }
+    },
+    {
+      "period": 5,
+      "home": [
+        203826,
+        1627674,
+        1630442,
+        1631118,
+        1643493
+      ],
+      "away": [
+        203014,
+        204365,
+        1628276,
+        1628878,
+        1642287
+      ],
+      "source": "Reviewed final snapshot: first on-court witnesses before entrance, conditioned on complete substitution stream. Q1 agrees with official starting positions; all player minutes reconcile with the independent box score to 0.5s. Later periods have separate witnesses.",
+      "witnesses": {
+        "1630442": {
+          "source_index": 408,
+          "role": "actor",
+          "description": "Jump Ball Mack vs. Brink: Tip to Ogwumike"
+        },
+        "1642287": {
+          "source_index": 408,
+          "role": "opposing_jumper",
+          "description": "Jump Ball Mack vs. Brink: Tip to Ogwumike"
+        },
+        "203014": {
+          "source_index": 408,
+          "role": "tip_recipient",
+          "description": "Jump Ball Mack vs. Brink: Tip to Ogwumike"
+        },
+        "1628276": {
+          "source_index": 410,
+          "role": "actor",
+          "description": "Plum P.FOUL (P3.T1)"
+        },
+        "1643493": {
+          "source_index": 411,
+          "role": "actor",
+          "description": "Brochant Bad Pass Turnover (P3.T14)"
+        },
+        "1628878": {
+          "source_index": 411,
+          "role": "stealer",
+          "description": "Brochant Bad Pass Turnover (P3.T14)"
+        },
+        "1627674": {
+          "source_index": 415,
+          "role": "actor",
+          "description": "MISS Copper 17' Pullup Jump Shot"
+        },
+        "1631118": {
+          "source_index": 421,
+          "role": "actor",
+          "description": "Held S.FOUL (P3.T2)"
+        },
+        "204365": {
+          "source_index": 433,
+          "role": "actor",
+          "description": "Wheeler 25' 3PT Pullup Jump Shot (6 PTS) (Atkins 3 AST)"
+        },
+        "203826": {
+          "source_index": 453,
+          "role": "actor",
+          "description": "Thomas REBOUND (Off:3 Def:4)"
+        }
+      }
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        37
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        46,
+        47,
+        48,
+        49
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        56
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        77,
+        78,
+        79
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        90,
+        91
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        110
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        115
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        126,
+        127,
+        128
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        141,
+        142,
+        143
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        152
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        155
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        163
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        165
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        230
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        235,
+        236,
+        237
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        252,
+        253
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        264
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        277
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        281
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        295
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        311,
+        312,
+        313
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        324
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        335,
+        336
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        346
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        355,
+        356
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        400
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        403
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    },
+    {
+      "source_indices": [
+        423
+      ],
+      "source": "Reviewed contiguous same-clock substitutions with distinct outgoing/incoming players; both lineup membership and independent player-minute totals reconcile."
+    }
+  ],
+  "resolved_replays": [
+    {
+      "source_index": 125,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        122,
+        123,
+        128
+      ],
+      "source": "Review of the final official native V3 snapshot at https://www.wnba.com/game/las-vs-phx-1022600100/box-score: Final Burrell miss and Mercury team rebound establish Phoenix control after the review. Player points, field goals, free throws, rebounds, fouls, assists, steals, turnovers, and minutes are separately reconciled against the published box score; this is an explicit final-snapshot assertion, not a video ruling or permission to rewrite rows."
+    },
+    {
+      "source_index": 251,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        249
+      ],
+      "source": "Review of the final official native V3 snapshot at https://www.wnba.com/game/las-vs-phx-1022600100/box-score: Final Ogwumike shot is recorded as three points; her three-point makes and points reconcile with the final box score. Player points, field goals, free throws, rebounds, fouls, assists, steals, turnovers, and minutes are separately reconciled against the published box score; this is an explicit final-snapshot assertion, not a video ruling or permission to rewrite rows."
+    },
+    {
+      "source_index": 437,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        434,
+        435,
+        438
+      ],
+      "source": "Review of the final official native V3 snapshot at https://www.wnba.com/game/las-vs-phx-1022600100/box-score: Final Copper miss and Sparks team rebound establish Los Angeles control; Atkins takes the next shot. Player points, field goals, free throws, rebounds, fouls, assists, steals, turnovers, and minutes are separately reconciled against the published box score; this is an explicit final-snapshot assertion, not a video ruling or permission to rewrite rows."
+    }
+  ]
+}
