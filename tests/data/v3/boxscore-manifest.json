@@ -15,6 +15,22 @@
       "response_metadata_time": "2025-11-04T23:50:11.5011Z",
       "home_players": 14,
       "away_players": 15
+    },
+    {
+      "game_id": "0021900001",
+      "kind": "reviewed_page_projection",
+      "url": "https://www.nba.com/game/nop-vs-tor-0021900001/box-score",
+      "observed_on_utc": "2026-09-21",
+      "home_players": 13,
+      "away_players": 13,
+      "path": "game_details/stats_v3_boxscore_0021900001.json",
+      "sha256": "537566400fabd180b33a7c3274e917945625a37971965d5eeeb14792cc32ad9d",
+      "evidence_path": "game_details/stats_v3_boxscore_0021900001.evidence.json",
+      "evidence_sha256": "7678fb1245620576154a95fb765c807b25652004e90297a4cce400fe2ec7e8b2",
+      "observation_path": "v3/nba_page_0021900001.json",
+      "observation_sha256": "e27c838a9a25cf3b371ced3882609fd01221b84ad1e426d97bbfa45ad38b37e0",
+      "lineup_evidence_path": "v3/lineups_0021900001.evidence.json",
+      "lineup_evidence_sha256": "400282fc7c54c675f8d585de4ba7a1df464ee758c828f56e015b6686d320841e"
     }
   ]
 }

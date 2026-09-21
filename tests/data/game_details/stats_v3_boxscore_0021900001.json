@@ -1,0 +1,278 @@
+{
+  "_provenance": "Derived from reviewed NBA.com DOM observation; NOT an API response.",
+  "boxScoreTraditional": {
+    "gameId": "0021900001",
+    "homeTeamId": 1610612761,
+    "homeTeam": {
+      "teamId": 1610612761,
+      "players": [
+        {
+          "personId": 1628384,
+          "firstName": "OG",
+          "familyName": "Anunoby",
+          "position": "F",
+          "statistics": {
+            "minutes": "35:49",
+            "points": 11
+          }
+        },
+        {
+          "personId": 1627783,
+          "firstName": "Pascal",
+          "familyName": "Siakam",
+          "position": "F",
+          "statistics": {
+            "minutes": "38:08",
+            "points": 34
+          }
+        },
+        {
+          "personId": 201188,
+          "firstName": "Marc",
+          "familyName": "Gasol",
+          "position": "C",
+          "statistics": {
+            "minutes": "31:55",
+            "points": 6
+          }
+        },
+        {
+          "personId": 200768,
+          "firstName": "Kyle",
+          "familyName": "Lowry",
+          "position": "G",
+          "statistics": {
+            "minutes": "44:60",
+            "points": 22
+          }
+        },
+        {
+          "personId": 1627832,
+          "firstName": "Fred",
+          "familyName": "VanVleet",
+          "position": "G",
+          "statistics": {
+            "minutes": "44:20",
+            "points": 34
+          }
+        },
+        {
+          "personId": 201586,
+          "firstName": "Serge",
+          "familyName": "Ibaka",
+          "position": "",
+          "statistics": {
+            "minutes": "25:60",
+            "points": 13
+          }
+        },
+        {
+          "personId": 1626181,
+          "firstName": "Norman",
+          "familyName": "Powell",
+          "position": "",
+          "statistics": {
+            "minutes": "28:39",
+            "points": 5
+          }
+        },
+        {
+          "personId": 1629056,
+          "firstName": "Terence",
+          "familyName": "Davis",
+          "position": "",
+          "statistics": {
+            "minutes": "15:10",
+            "points": 5
+          }
+        },
+        {
+          "personId": 1628449,
+          "firstName": "Chris",
+          "familyName": "Boucher",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        },
+        {
+          "personId": 1629608,
+          "firstName": "Dewan",
+          "familyName": "Hernandez",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        },
+        {
+          "personId": 1626169,
+          "firstName": "Stanley",
+          "familyName": "Johnson",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        },
+        {
+          "personId": 1626259,
+          "firstName": "Malcolm",
+          "familyName": "Miller",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        },
+        {
+          "personId": 1629744,
+          "firstName": "Matt",
+          "familyName": "Thomas",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        }
+      ]
+    },
+    "awayTeamId": 1610612740,
+    "awayTeam": {
+      "teamId": 1610612740,
+      "players": [
+        {
+          "personId": 201950,
+          "firstName": "Jrue",
+          "familyName": "Holiday",
+          "position": "F",
+          "statistics": {
+            "minutes": "41:05",
+            "points": 13
+          }
+        },
+        {
+          "personId": 1627742,
+          "firstName": "Brandon",
+          "familyName": "Ingram",
+          "position": "F",
+          "statistics": {
+            "minutes": "35:06",
+            "points": 22
+          }
+        },
+        {
+          "personId": 202324,
+          "firstName": "Derrick",
+          "familyName": "Favors",
+          "position": "C",
+          "statistics": {
+            "minutes": "20:45",
+            "points": 6
+          }
+        },
+        {
+          "personId": 200755,
+          "firstName": "JJ",
+          "familyName": "Redick",
+          "position": "G",
+          "statistics": {
+            "minutes": "27:02",
+            "points": 16
+          }
+        },
+        {
+          "personId": 1628366,
+          "firstName": "Lonzo",
+          "familyName": "Ball",
+          "position": "G",
+          "statistics": {
+            "minutes": "24:50",
+            "points": 8
+          }
+        },
+        {
+          "personId": 1628404,
+          "firstName": "Josh",
+          "familyName": "Hart",
+          "position": "",
+          "statistics": {
+            "minutes": "28:10",
+            "points": 15
+          }
+        },
+        {
+          "personId": 1626143,
+          "firstName": "Jahlil",
+          "familyName": "Okafor",
+          "position": "",
+          "statistics": {
+            "minutes": "12:29",
+            "points": 8
+          }
+        },
+        {
+          "personId": 202734,
+          "firstName": "E'Twaun",
+          "familyName": "Moore",
+          "position": "",
+          "statistics": {
+            "minutes": "12:06",
+            "points": 5
+          }
+        },
+        {
+          "personId": 1629638,
+          "firstName": "Nickeil",
+          "familyName": "Alexander-Walker",
+          "position": "",
+          "statistics": {
+            "minutes": "11:55",
+            "points": 3
+          }
+        },
+        {
+          "personId": 1629026,
+          "firstName": "Kenrich",
+          "familyName": "Williams",
+          "position": "",
+          "statistics": {
+            "minutes": "18:03",
+            "points": 3
+          }
+        },
+        {
+          "personId": 1629740,
+          "firstName": "Nicolo",
+          "familyName": "Melli",
+          "position": "",
+          "statistics": {
+            "minutes": "19:37",
+            "points": 14
+          }
+        },
+        {
+          "personId": 1628402,
+          "firstName": "Frank",
+          "familyName": "Jackson",
+          "position": "",
+          "statistics": {
+            "minutes": "13:52",
+            "points": 9
+          }
+        },
+        {
+          "personId": 1629637,
+          "firstName": "Jaxson",
+          "familyName": "Hayes",
+          "position": "",
+          "statistics": {
+            "minutes": "DNP - Coach's Decision",
+            "points": null
+          }
+        }
+      ]
+    }
+  }
+}

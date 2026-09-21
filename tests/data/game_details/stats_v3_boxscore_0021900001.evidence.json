@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "game_id": "0021900001",
+  "boxscore_sha256": "537566400fabd180b33a7c3274e917945625a37971965d5eeeb14792cc32ad9d",
+  "source": "https://www.nba.com/game/nop-vs-tor-0021900001/box-score; reviewed DOM observation and explicit field projection",
+  "scope": "full_game",
+  "roster_complete": true,
+  "completeness_basis": "Both All Periods tables include every active player, including DNP rows, and separately list inactive players; the declared pool is the 26 active players, not the season roster.",
+  "derived_from": {
+    "path": "v3/nba_page_0021900001.json",
+    "sha256": "e27c838a9a25cf3b371ced3882609fd01221b84ad1e426d97bbfa45ad38b37e0",
+    "mapping": "Player IDs from hrefs; team IDs from stat links; reviewed display names split at first space into firstName/familyName; position and minute text preserved. No initial aliases synthesized."
+  }
+}

@@ -7,6 +7,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from v3_context_fixture import recorded_boxscore
 
 from pbpstats.data_loader.stats_nba_v3.association import associate_actions
 from pbpstats.data_loader.stats_nba_v3.context import V3GameContext, V3RosterPlayer
@@ -81,8 +82,9 @@ def interpret(rows, context, snapshot_complete=True):
 
 
 def recorded_context(raw, home, away):
-    # Test-only alias pool. PBP actors are NOT a production complete-roster source.
-    # For 2019, resolved identities are independently compared with every V2 role.
+    if raw.game_id == GAME_ID:
+        return recorded_boxscore().require_complete_roster()
+    # 2024 still has a test-only pool, NOT production complete-roster evidence.
     names, teams = defaultdict(set), {}
     for action in raw.data:
         pid, tid = action["personId"], action["teamId"]

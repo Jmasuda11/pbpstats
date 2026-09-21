@@ -36,11 +36,14 @@ independently verified capture time. This fixture's original request range and
 eligible-player coverage are unverified, so its evidence declares
 ``scope="unknown"`` and ``roster_complete=false``.
 
-This game differs from the existing complete PBP fixtures. Those tests still
-use an explicitly test-only participant pool; this PR does not rebrand that
-pool as a validated roster. Integration with declared complete context uses
-synthetic evidence and synthetic PBP rows. A matching, independently reviewed
-box-score/roster snapshot remains necessary for full-game integration tests.
+For ``0021900001``, a separately reviewed `NBA.com box-score page
+<https://www.nba.com/game/nop-vs-tor-0021900001/box-score>`_ now supplies the
+matching active roster, including all six DNPs. The committed DOM observation
+and its explicit projection into the supported box-score shape are labeled
+page-derived evidence, not a captured API response. Both files are checksum
+bound. The full-game participant tests use this validated 26-player context.
+The ``0022400001`` participant test still uses an explicitly test-only pool.
+See :doc:`v3-lineups` for separate period-starter validation.
 
 Offline usage
 -------------
