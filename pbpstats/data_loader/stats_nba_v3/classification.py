@@ -23,6 +23,7 @@ SUBTYPES = {
         "Offensive",
         "Offensive Charge",
         "Technical",
+        "Hanging Technical",
         "Defense 3 Second",
         "Clear Path",
         "Flagrant Type 1",
@@ -31,6 +32,7 @@ SUBTYPES = {
     },
     "Turnover": {
         "3 Second Violation",
+        "5 Second Violation",
         "8 Second Violation",
         "Backcourt Turnover",
         "Bad Pass",
@@ -53,6 +55,7 @@ SUBTYPES = {
     },
     "Rebound": {"Normal Rebound", "Unknown"},
     "Substitution": {""},
+    "Ejection": {"Other"},
     "Jump Ball": {""},
     "Timeout": {"Regular", "Official", "Reset", "Coach Challenge"},
     "Instant Replay": {
@@ -72,6 +75,7 @@ KINDS = {
     "Violation": "violation",
     "Rebound": "rebound",
     "Substitution": "substitution",
+    "Ejection": "ejection",
     "Jump Ball": "jump_ball",
     "Timeout": "timeout",
     "Instant Replay": "replay",

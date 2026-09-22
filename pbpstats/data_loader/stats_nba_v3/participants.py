@@ -10,6 +10,7 @@ from pbpstats.data_loader.stats_nba_v3.association import (
     associate_actions,
 )
 from pbpstats.data_loader.stats_nba_v3.context import V3GameContext
+from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class V3Participant:
     source_indices: Tuple[int, ...] = ()
     evidence: str = ""
     name: Optional[str] = None
+    external_sha256: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -66,9 +68,10 @@ def _id(item, field):
 
 
 class _Resolver:
-    def __init__(self, context, snapshot_complete):
+    def __init__(self, context, snapshot_complete, jumps):
         self.context = context
         self.snapshot_complete = snapshot_complete
+        self.jumps = jumps
 
     def team(self, item):
         data = item.data
@@ -280,6 +283,24 @@ class _Resolver:
         return self.named(item, match[1], team_id, "incomingPersonId")
 
     def jump_ball(self, item, actor, team_id):
+        if item.order in self.jumps:
+            recovery = self.jumps[item.order]
+            provenance = dict(
+                source_indices=(item.order,),
+                evidence=recovery.source,
+                external_sha256=recovery.evidence_sha256,
+            )
+            return {
+                "opposing_jumper": V3Participant(
+                    "resolved",
+                    recovery.opposing_jumper,
+                    self.context.player(recovery.opposing_jumper).team_id,
+                    **provenance,
+                ),
+                "tip_recipient": V3Participant(
+                    "team", team_id=recovery.team_id, **provenance
+                ),
+            }
         match = re.fullmatch(
             r"Jump Ball (.+) vs\. (.+): Tip to (.+)", item.data["description"]
         )
@@ -350,7 +371,9 @@ class StatsNbaV3ParticipantLoader:
     possession loader and makes no claim that a snapshot is complete.
     """
 
-    def __init__(self, pbp_loader, context, *, snapshot_complete=False):
+    def __init__(
+        self, pbp_loader, context, *, snapshot_complete=False, jump_ball_evidence=None
+    ):
         if not isinstance(context, V3GameContext):
             raise TypeError("context must be a V3GameContext")
         if context.game_id != pbp_loader.game_id:
@@ -360,7 +383,17 @@ class StatsNbaV3ParticipantLoader:
         self.game_id = pbp_loader.game_id
         self.context = context
         self.snapshot_complete = snapshot_complete
-        resolver = _Resolver(context, snapshot_complete)
+        if jump_ball_evidence is not None and not isinstance(
+            jump_ball_evidence, V3JumpBallEvidence
+        ):
+            raise TypeError("jump_ball_evidence must be V3JumpBallEvidence")
+        self.jump_ball_evidence = jump_ball_evidence
+        jumps = (
+            jump_ball_evidence.bind(pbp_loader, context)
+            if jump_ball_evidence is not None
+            else {}
+        )
+        resolver = _Resolver(context, snapshot_complete, jumps)
         self.items = tuple(
             resolver.resolve(group) for group in associate_actions(pbp_loader.items)
         )

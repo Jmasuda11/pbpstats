@@ -170,9 +170,14 @@ def test_complete_declaration_cannot_turn_one_period_into_a_full_game(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "game_id,stage", [("0022500165", "possessions"), ("0022500166", "participants")]
+    "game_id,stage", [("0022500165", "possessions"), ("1022600061", "possessions")]
 )
 def test_recorded_rejections_report_the_failing_stage(game_id, stage):
     with pytest.raises(V3GameLoadError) as caught:
-        load_game(game_id, DATA / game_id, snapshot_complete=True)
+        load_game(
+            game_id,
+            DATA / game_id,
+            snapshot_complete=True,
+            lineup_evidence="lineups.review.json" if game_id == "1022600061" else None,
+        )
     assert caught.value.diagnostic.stage == stage

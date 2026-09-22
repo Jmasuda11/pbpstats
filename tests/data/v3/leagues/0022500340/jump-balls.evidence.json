@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500340",
+  "pbp_sha256": "883d19e242e83c2037d9b35260eefab75e0a63cb2d67bd75f414e31dbcc67833",
+  "live_sha256": "cd3b89d4bb7e65343530eaa43fb81e1f0d864e7428388685adef23e109b78bfb",
+  "source": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500340.json",
+  "jumps": [
+    {
+      "source_index": 1,
+      "live_source_index": 1,
+      "clock_basis": "opening_recovery",
+      "source": "Reviewed unique action number and both explicit opposing jumper IDs against the roster; live personId=0, Team recovery name, matching teamId/possession and no individual recovery ID establish team recovery only. Native opening tip time and live recovery time are bounded by the same first-period start and next event."
+    }
+  ]
+}

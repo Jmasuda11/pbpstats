@@ -55,7 +55,16 @@ def lineup_fingerprints(event_loader):
             kind=e.kind,
             rows=[dict(index=r.order, data=r.data) for r in e.group.rows],
             participants={
-                role: dict(status=p.status, player=p.player_id, team=p.team_id)
+                role: dict(
+                    status=p.status,
+                    player=p.player_id,
+                    team=p.team_id,
+                    **(
+                        {"external_sha256": p.external_sha256}
+                        if p.external_sha256
+                        else {}
+                    ),
+                )
                 for role, p in e.participants.participants.items()
             },
         )
@@ -155,6 +164,7 @@ class StatsNbaV3LineupLoader:
         starters = self._starters(data.get("periods"), periods)
         batches = self._batches(data.get("batches"))
         self.items = self._reconstruct(starters, batches)
+        self._validate_ejections()
 
     def _error(self, message, event=None):
         position = f", source rows {event.group.source_indices}" if event else ""
@@ -324,13 +334,19 @@ class StatsNbaV3LineupLoader:
         return after
 
     def _validate_on_court(self, event, lineups):
-        if event.kind in ("period_start", "period_end", "replay", "timeout"):
+        if event.kind in (
+            "period_start",
+            "period_end",
+            "replay",
+            "timeout",
+            "ejection",
+        ):
             return
         # Technicals can identify bench personnel; they do not establish who is
         # on court. Do not use them to infer starters or force a substitution.
-        if (event.kind == "foul" and event.subtype == "Technical") or (
-            event.free_throw and event.free_throw.category == "technical"
-        ):
+        if (
+            event.kind == "foul" and event.subtype in ("Technical", "Hanging Technical")
+        ) or (event.free_throw and event.free_throw.category == "technical"):
             return
         roles = event.participants.participants
         if (
@@ -341,7 +357,17 @@ class StatsNbaV3LineupLoader:
             event.participants.require_player("actor")
         if event.kind == "jump_ball":
             event.participants.require_player("opposing_jumper")
-            event.participants.require_player("tip_recipient")
+            recipient = roles["tip_recipient"]
+            if recipient.status != "team":
+                event.participants.require_player("tip_recipient")
+            elif (
+                recipient.team_id not in lineups
+                or recipient.player_id is not None
+                or not recipient.external_sha256
+            ):
+                raise self._error(
+                    "team jump recovery requires separate validated evidence", event
+                )
         for role, player in roles.items():
             if player.player_id is not None and (
                 player.team_id not in lineups
@@ -350,6 +376,42 @@ class StatsNbaV3LineupLoader:
                 raise self._error(
                     f"{role} player {player.player_id} is not on court", event
                 )
+
+    def _validate_ejections(self):
+        ejected = {}
+        for item in self.items:
+            event = item.event
+            stamp = (
+                event.group.primary.period,
+                event.group.primary.seconds_remaining_exact,
+            )
+            if event.kind == "ejection":
+                pid = event.participants.require_player("actor")
+                if self.context.player(pid) is None or pid in ejected:
+                    raise self._error(
+                        "ejection requires a roster player not already ejected", event
+                    )
+                ejected[pid] = stamp
+                continue
+            for role, participant in event.participants.participants.items():
+                if participant.player_id in ejected and not (
+                    event.kind == "substitution" and role in ("actor", "outgoing")
+                ):
+                    raise self._error(
+                        "ejected player cannot participate or re-enter", event
+                    )
+            for players in item.before.values():
+                for pid in set(players) & ejected.keys():
+                    if ejected[pid] != stamp or event.kind not in (
+                        "substitution",
+                        "replay",
+                        "timeout",
+                        "period_end",
+                    ):
+                        raise self._error(
+                            "ejected player requires explicit replacement before further play",
+                            event,
+                        )
 
     def _reconstruct(self, starters, batches):
         result, position, lineups = [], 0, None

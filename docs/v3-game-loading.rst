@@ -50,7 +50,11 @@ The data directory contains ``pbp/stats_v3_<game_id>.json``,
 ``game_details/stats_v3_boxscore_<game_id>.json``, its matching
 ``.evidence.json`` sidecar, and the reviewed lineup evidence. Explicit evidence
 paths may be absolute; relative paths resolve under this directory. Omitted
-shot evidence is not searched for automatically.
+shot evidence is not searched for automatically. Blank team-recovery jumps
+can use an explicit pair of ``jump_ball_evidence="jump-balls.evidence.json"``
+and ``jump_ball_live="pbp/live_<game_id>.json"`` arguments. Both are required
+together and retained in ``game.inputs``. See :doc:`v3-reliability` for the
+reviewed join contract; source rows are never rewritten.
 
 The box-score source labels are the canonical relative ``game_details/...``
 paths. Consequently lineup fingerprints remain valid when the bundle moves
@@ -71,7 +75,9 @@ Results and failures
 Required failures raise ``V3GameLoadError`` (a ``ValueError``) with a game ID,
 stage, code and original message. The original exception remains available
 as ``__cause__``, including ``FileNotFoundError``. Stages are configuration,
-boxscore, pbp, participants, classification, lineups, shot_zones, and possessions.
+boxscore, pbp, jump_balls, participants, classification, lineups, shot_zones,
+and possessions. The jump_balls stage reads the supplied files; conflicting
+joins fail in participants.
 The first required failure stops loading; no partial core result is returned.
 An explicitly supplied unreadable or structurally invalid shot file also
 fails, rather than silently falling back to coordinates.
@@ -91,5 +97,5 @@ successful return, meaning they passed the current validators for the supplied
 snapshot. This does not authenticate completeness declarations or establish
 universal game coverage. Detailed event statistics remain ``unavailable`` and
 are reported explicitly; this entry point does not register a full V3
-``Client`` possession provider. Five recorded full games exercise this API,
+``Client`` possession provider. Ten recorded full games exercise this API,
 including directory relocation and offline loading with optional-label gaps.

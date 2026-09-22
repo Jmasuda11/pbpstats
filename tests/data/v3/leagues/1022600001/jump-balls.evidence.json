@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "game_id": "1022600001",
+  "pbp_sha256": "b36edb52ef4da3bc3dd044e525857e4ea2be7b9bd1ea55cfcdef7100bcf09e7b",
+  "live_sha256": "bb25790839da7fa7c9f29d13227fc25921db19dbfd79f83ba385f4ba4d5e1f36",
+  "source": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600001.json",
+  "jumps": [
+    {
+      "source_index": 34,
+      "live_source_index": 34,
+      "clock_basis": "exact",
+      "source": "Reviewed unique action number and both explicit opposing jumper IDs against the roster; live personId=0, Team recovery name, matching teamId/possession and no individual recovery ID establish team recovery only. Both snapshots record the identical period and exact clock."
+    }
+  ]
+}

@@ -114,7 +114,8 @@ G League fixtures preserve original Stats V3 endpoint response bytes.
 URLs, capture times, raw capture hashes, extraction methods, and committed
 file hashes distinguish these sources. No test-only player pool is used.
 
-Four full games pass the complete pipeline with networking disabled:
+Nine recent full games pass the complete pipeline with networking disabled
+(ten including the separate 2019 baseline):
 
 .. list-table::
    :header-rows: 1
@@ -134,6 +135,21 @@ Four full games pass the complete pipeline with networking disabled:
    * - 2022500001 / December 19, 2025
      - Stockton 119, Austin 117 (target OT)
      - 214 / 106-105
+   * - 0042500317 / May 30, 2026
+     - Spurs 111, Thunder 103
+     - 186 / 92-93
+   * - 0022500166 / November 4, 2025
+     - Magic 112, Hawks 127
+     - 201 / 100-101
+   * - 0022500340 / December 5, 2025
+     - Nuggets 134, Hawks 133
+     - 212 / 106-105
+   * - 0022500001 / October 21, 2025
+     - Rockets 124, Thunder 125 (2OT)
+     - 225 / 112-111
+   * - 1022600001 / May 8, 2026
+     - Sun 75, Liberty 106
+     - 177 / 88-88
 
 For these games, independent published player totals reconcile for points,
 field goals, threes, physical free throws, assists, blocks, steals, turnovers,
@@ -150,14 +166,16 @@ validated regulation minutes: exactly five players have 153 seconds left,
 all others have zero within rounding tolerance, and Stockton makes no OT
 substitutions. The production loader performs no starter inference.
 
-Seven additional captures preserve rejection cases:
+Seven additional official live captures, retrieved September 22, 2026,
+corroborate bench identities, team jump recoveries and reviewed substitutions.
+Their original bytes, URLs and checksums are retained. See
+:doc:`v3-reliability` for the joins and separate Hartenstein overtime witness.
+Two games still preserve rejection cases:
 
 * 0022500165 (Bucks-Raptors): roster, points, and minutes reconcile, but jump
   and turnover rows 25-27 need separate control/restart evidence.
-* 0022500340 (Nuggets-Hawks), 0022500001 (Rockets-Thunder), and 1022600001
-  (Sun-Liberty): blank jump descriptions leave required participants unresolved.
-* 0042500317 (Spurs-Thunder), 0022500166 (Magic-Hawks), and 1022600061
-  (Sparks-Sun): coach technical IDs lack separately supplied bench evidence.
+* 1022600061 (Sparks-Sun): the one-shot loose-ball award at native row 297
+  needs separate award/restart validation; reviewed lineups do not establish it.
 
 These are bounded compatibility tests, not a claim of complete season
 coverage. Other lane rulings, replacement shooters, offsetting penalties,

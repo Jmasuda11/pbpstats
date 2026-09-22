@@ -433,10 +433,21 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 raise event.error("unresolved missed shot before turnover")
 
     def _rebound_placeholder_reason(self, event, pending, used_shot_clocks):
+        same_clock = event.get_all_events_at_current_time()
         shot_clocks = [
             e
-            for e in event.get_all_events_at_current_time()
+            for e in same_clock
             if isinstance(e, V3Turnover) and e.is_shot_clock_violation
+            # An intervening shot starts a different rebound sequence, even
+            # when rounded clocks coincide. Do not consume its later turnover.
+            and not any(
+                min(e.order, event.order) < other.order < max(e.order, event.order)
+                and isinstance(
+                    other,
+                    (V3FieldGoal, V3FreeThrow, V3TeamHeave, V3JumpBall, V3Turnover),
+                )
+                for other in same_clock
+            )
         ]
         if shot_clocks and event.player1_id == 0:
             if len(shot_clocks) != 1 or shot_clocks[0] in used_shot_clocks:

@@ -19,6 +19,7 @@ from pbpstats.data_loader.stats_nba_v3.boxscore import (
 )
 from pbpstats.data_loader.stats_nba_v3.classification import StatsNbaV3EventLoader
 from pbpstats.data_loader.stats_nba_v3.context import V3BenchPerson
+from pbpstats.data_loader.stats_nba_v3.game import load_game
 from pbpstats.data_loader.stats_nba_v3.lineups import (
     StatsNbaV3LineupLoader,
     V3LineupEvidence,
@@ -34,12 +35,27 @@ from pbpstats.data_loader.stats_nba_v3.possessions import StatsNbaV3PossessionLo
 from pbpstats.resources.league_rules import V3LeagueRules
 
 MANIFEST = json.loads((DATA / "manifest.json").read_bytes())["games"]
-COMPLETE = ["0022500341", "1022600100", "1022600101", "2022500001"]
+COMPLETE = [
+    "0022500341",
+    "1022600100",
+    "1022600101",
+    "2022500001",
+    "0042500317",
+    "0022500166",
+    "0022500340",
+    "0022500001",
+    "1022600001",
+]
 EXPECTED = {
     "0022500341": (494, 207, {1610612739: 102, 1610612759: 102}),
     "1022600100": (433, 177, {1611661317: 87, 1611661320: 88}),
     "1022600101": (400, 157, {1611661313: 77, 1611661322: 78}),
     "2022500001": (510, 214, {1612709890: 105, 1612709914: 106}),
+    "0042500317": (482, 186, {1610612760: 93, 1610612759: 92}),
+    "0022500166": (506, 201, {1610612737: 101, 1610612753: 100}),
+    "0022500340": (476, 212, {1610612737: 105, 1610612743: 106}),
+    "0022500001": (584, 225, {1610612760: 111, 1610612745: 112}),
+    "1022600001": (448, 177, {1611661313: 88, 1611661323: 88}),
 }
 
 
@@ -59,8 +75,14 @@ def lineups(events, evidence):
 
 
 def recorded(gid):
-    box, events = classified(gid)
-    return box, StatsNbaV3PossessionLoader(lineups(events, lineup_evidence(gid)))
+    kwargs = {}
+    if (DATA / gid / "jump-balls.evidence.json").exists():
+        kwargs = dict(
+            jump_ball_evidence="jump-balls.evidence.json",
+            jump_ball_live=f"pbp/live_{gid}.json",
+        )
+    game = load_game(gid, DATA / gid, snapshot_complete=True, **kwargs)
+    return game.boxscore, game.possessions
 
 
 def facts(rows, gid="0022500001", ctx=None):
@@ -230,7 +252,11 @@ def test_full_games_reconcile_all_player_stats_minutes_and_period_scores(gid):
 
 @pytest.mark.parametrize("gid", COMPLETE + ["0022500165"])
 def test_starters_have_separate_witnesses_and_q1_matches_box_positions(gid):
-    box, events = classified(gid)
+    box, result = recorded(gid) if gid != "0022500165" else (None, None)
+    if result is None:
+        box, events = classified(gid)
+    else:
+        events = SimpleNamespace(items=[item.event for item in result.lineups.items])
     evidence = lineup_evidence(gid)
     by_index = {e.group.primary.order: e for e in events.items}
     for side in ["home", "away"]:
@@ -242,10 +268,18 @@ def test_starters_have_separate_witnesses_and_q1_matches_box_positions(gid):
         assert evidence["periods"][0][side] == marked
     for period in evidence["periods"]:
         for pid in period["home"] + period["away"]:
+            if gid == "0022500001" and period["period"] == 5 and pid == 1628392:
+                assert period["external_witnesses"]
+                continue
             if gid == "2022500001" and period["period"] == 5 and pid == 1631342:
                 assert period["minute_residuals"][str(pid)] == "153.00"
                 continue
-            witness = period["witnesses"][str(pid)]
+            witnesses = period["witnesses"]
+            witness = (
+                next(w for w in witnesses if w["player_id"] == pid)
+                if isinstance(witnesses, list)
+                else witnesses[str(pid)]
+            )
             event = by_index[witness["source_index"]]
             assert event.group.primary.period == period["period"]
             assert event.participants.require_player(witness["role"]) == pid
@@ -300,8 +334,12 @@ def test_blank_jump_descriptions_remain_missing_evidence(gid, index):
     [("0042500317", 1627327), ("1022600061", 1642754), ("0022500166", 202427)],
 )
 def test_unsourced_bench_id_does_not_enter_the_player_roster(gid, pid):
+    box, _ = classified(gid)
+    raw = StatsNbaV3PbpLoader(gid, StatsNbaV3PbpFileLoader(DATA / gid))
     with pytest.raises(ValueError, match=f"{pid} is outside the complete roster"):
-        classified(gid)
+        StatsNbaV3ParticipantLoader(
+            raw, replace(box.context, bench_people=()), snapshot_complete=True
+        )
 
 
 def test_conflicting_jump_turnover_control_does_not_get_a_restart_override():

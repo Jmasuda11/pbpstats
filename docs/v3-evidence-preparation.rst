@@ -75,7 +75,8 @@ completeness. Neither declaration repairs missing events.
 
 For each period, a resolved on-court participant observed before any incoming
 substitution for that player is a starter witness. An outgoing substitution is
-also a witness. Technical fouls, technical free throws, replays, timeouts and
+also a witness. Technical fouls (including hanging technicals), technical
+free throws, ejections, replays, timeouts and
 period markers do not establish on-court presence. Exactly five box-score
 position markers per team can supply **first-period** starters; they are
 checked against the witnesses. Other periods require their own witnesses or
@@ -145,3 +146,9 @@ unresolved preparation decisions remain visible in the report.
 This workflow establishes only the current core validation contract. It does
 not authenticate human review, resolve optional shot-zone conflicts, implement
 detailed event statistics, or register full V3 possessions in ``Client``.
+
+``prepare_game`` also accepts the same explicit ``jump_ball_evidence`` and
+``jump_ball_live`` pair as ``load_game``; see :doc:`v3-reliability`. These files
+participate in input checksum checks before publication, and their provenance
+is bound into lineup fingerprints. Review a changed join before generating
+new lineup evidence; existing approvals are never silently refreshed.
