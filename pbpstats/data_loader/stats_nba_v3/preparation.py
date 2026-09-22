@@ -119,11 +119,17 @@ def _reviews(game_id, directory, review, fingerprints):
 def _witnesses(events):
     found, entered = {}, set()
     for event in events:
-        if event.kind in ("period_start", "period_end", "timeout", "replay"):
+        if event.kind in (
+            "period_start",
+            "period_end",
+            "timeout",
+            "replay",
+            "ejection",
+        ):
             continue
         if (
             event.kind == "foul"
-            and event.subtype == "Technical"
+            and event.subtype in ("Technical", "Hanging Technical")
             or event.free_throw
             and event.free_throw.category == "technical"
         ):
@@ -379,6 +385,8 @@ def prepare_game(
     snapshot_complete=False,
     substitution_stream_source,
     review=None,
+    jump_ball_evidence=None,
+    jump_ball_live=None,
 ):
     """Generate witnesses and a review template, then validate available evidence.
 
@@ -387,7 +395,12 @@ def prepare_game(
     Multi-row substitution batches and changed replays are never auto-approved.
     """
     directory, box, raw, events, inputs = _load_inputs(
-        game_id, data_directory, league_id, snapshot_complete
+        game_id,
+        data_directory,
+        league_id,
+        snapshot_complete,
+        jump_ball_evidence,
+        jump_ball_live,
     )
     with _stage(game_id, "preparation"):
         _text(

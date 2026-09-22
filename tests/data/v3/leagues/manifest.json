@@ -1,1 +1,263 @@
-{"schema_version":1,"games":[{"game_id":"0022500165","league_id":"00","source":"https://www.nba.com/game/0022500165/box-score","retrieved_at_utc":"2026-09-21T05:14:38.266770+00:00","html_sha256":"4ac2d6d8b0d41a944fa7de4605e50e953a0706822462c1b39627e8f451c40f07","next_data_sha256":"8f1ae6ea7b8a7902628e3e24d0074422088d82e9f49af85ea2a129943f2a9167","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"c2588d409db0910d71fd0bf1693d6a27e5002995b5a02c27298a335249949ad3","boxscore_sha256":"e7c667ebe7ed15fac2e0daa6a7d7b8d26797a5d2ccb75387f1884deaaa01b088","evidence_sha256":"e7ff553a247dafccdb354f3d14b1e757093d6747889f6ae89310380b33505216","observation_sha256":"1be29e17e3308012c7efdbf018432db4195f7c359b38a035d1b3bab65384912a","actions":510},{"game_id":"1022600001","league_id":"10","source":"https://www.wnba.com/game/con-vs-nyl-1022600001/box-score","retrieved_at_utc":"2026-09-21T05:14:41.296113+00:00","html_sha256":"e513b43391604ad491827cba2e4b1a2f4adb53643dff3cde4ae62ee0a9e67ad2","next_data_sha256":"22e012eb08f473342ef397074b28a11f3afd4f332873dd2af860417e412c33cd","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"b36edb52ef4da3bc3dd044e525857e4ea2be7b9bd1ea55cfcdef7100bcf09e7b","boxscore_sha256":"c42da7e7a0e2165783771cc94f7e6ab10547ebbe9ae47cddf48da9d6ffa02162","evidence_sha256":"472049d99aad51cf5aa54fee3fdd5655d67c9217b0bd9e9e39987d7cd6d9df15","observation_sha256":"b07a05f60d97817c317dbe108160778b910a9294ed7745ecd19783ca318f6ba7","actions":469},{"game_id":"2022500001","league_id":"20","source":"https://gleague.nba.com/game/2022500001","retrieved_at_utc":"2026-09-21T05:14:50.561943+00:00","html_sha256":"cadcdd38ad2e1d895e99accc1ea65222e8cee370ef44aaf758dca140fd96a021","next_data_sha256":"6ed6d8cf8cfe545db2f518c11c7445b8486a27ca33fa696a53654904dc5d515f","method":"Direct official stats.gleague.nba.com V3 responses and separately retrieved final game page.","pbp_sha256":"18dc92550f0faf7efa0c95725b8c8427b8c5c0d340d12749234eab491f7139a4","boxscore_sha256":"efca847d7de71f8636e57e01f0f026f9d1dfdcbdf21907fbea4b4f72156d3358","evidence_sha256":"27cbe334e19222b9252a9f315ff99fbd757041216df869554332acf8b191f0b6","observation_sha256":"3f9e8de6e07f4cd5f38c7590021955ee4c980d7bba39e26c77b1c5781190f454","actions":542,"endpoint_captures":[{"game_id":"2022500001","kind":"pbp","url":"https://stats.gleague.nba.com/stats/playbyplayv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0","retrieved_at_utc":"2026-09-21T05:14:52.708601+00:00","status":200,"content_type":"application/json; charset=utf-8","final_url":"https://stats.gleague.nba.com/stats/playbyplayv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0","file":"2022500001-pbp.json","bytes":239082,"sha256":"18dc92550f0faf7efa0c95725b8c8427b8c5c0d340d12749234eab491f7139a4","keys":["meta","game"]},{"game_id":"2022500001","kind":"box","url":"https://stats.gleague.nba.com/stats/boxscoretraditionalv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0","retrieved_at_utc":"2026-09-21T05:14:54.600188+00:00","status":200,"content_type":"application/json; charset=utf-8","final_url":"https://stats.gleague.nba.com/stats/boxscoretraditionalv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0","file":"2022500001-box.json","bytes":18517,"sha256":"efca847d7de71f8636e57e01f0f026f9d1dfdcbdf21907fbea4b4f72156d3358","keys":["meta","boxScoreTraditional"]}]},{"game_id":"0022500340","league_id":"00","source":"https://www.nba.com/game/den-vs-atl-0022500340/box-score","retrieved_at_utc":"2026-09-21T05:16:11.964800+00:00","html_sha256":"9dc1b7f176c2f795a8bc9d1fdda5bf09a03a593a4e0fdba903fbc5856164dc53","next_data_sha256":"faf4b40312eecb742797c521d3a1e27b2d192a5f650a9ca19e7161323c2a9209","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"883d19e242e83c2037d9b35260eefab75e0a63cb2d67bd75f414e31dbcc67833","boxscore_sha256":"47c12286aa58f94f8ec54df4cf874309b1878d0af04cc3f8bd0088de2b4deb96","evidence_sha256":"4b288ba3711a0acb7296cfefa7cabbb96cc579f79c0eb65d293fa4a668fd728e","observation_sha256":"0ef5940a46ffc73533ff008b1479e681fd761cf276aba77ebb11e900aba64c7c","actions":501},{"game_id":"0042500317","league_id":"00","source":"https://www.nba.com/game/0042500317/box-score","retrieved_at_utc":"2026-09-21T05:16:11.964800+00:00","html_sha256":"87d0faddc6bccd4e79abd2d050966c058b0f9c57e0787d3aff51f38ff323a273","next_data_sha256":"985b9eb928226d30f95163e4a37ec7e24c6947da1ca0a2c8474a9c5346451d24","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"708fe6c20dfc0fe22ae65239c8bca9cde062da9e2622cb2d86288a9d6b49718d","boxscore_sha256":"20e68d9a4e88e36cf7a9465021f1d1759dacc4e9a9a671a7852d292a9ac043f3","evidence_sha256":"253f96b28c07eb099e231a84bfaecef4ce52a489777b679aff0c6a4caea2be80","observation_sha256":"da209bf01aa2dcdeb45bef694e7ebe37fe4dc72f564ca68d2f57f6eeb5a6fd56","actions":507},{"game_id":"1022600100","league_id":"10","source":"https://www.wnba.com/game/las-vs-phx-1022600100/box-score","retrieved_at_utc":"2026-09-21T05:16:11.965792+00:00","html_sha256":"5c91ad759b473f446f73ca2e321d50a44eae471d2bdc74fc73d98e289d239737","next_data_sha256":"37db1201723cdd22d8cc96bb3fb3a5615c701a7c1337a01bfd9e722bc0ad7247","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"08695e62b9ae33c2380c5b8c32eabc12878b0fe69dd924266d3fdbf79de75cb0","boxscore_sha256":"2c8cf127a8763c695c28ddfeea38fab9f12d300dd36ef7c7b3707eb66a7ff690","evidence_sha256":"9df476b3acae789472c4b000a5fe8e29625666cb16b24f5117f6a6f507581a9f","observation_sha256":"2d6bde7518cf1248ada219e83df15e6ffa0715a03512981a9795a177fc895c64","actions":460},{"game_id":"0022500001","league_id":"00","source":"https://www.nba.com/game/0022500001/box-score","retrieved_at_utc":"2026-09-21T05:29:16.903715+00:00","html_sha256":"a583a6955c8f163b445b74b23e7d1ca6ff6d31d7fc0a7c9ee083323d473983c0","next_data_sha256":"86393c84121b92c1996e357a9be859faf48e966bb73a5e1326f30be5f736d24d","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c","boxscore_sha256":"025878e32a3c28766b46b0b26b5519adb1093aaa07d04bde5cd51f5c577de037","evidence_sha256":"a45361a0827b27cba023b241198862b03e3689b78ebdc06c371395da5b9bb681","observation_sha256":"f78a097976555a0ec508a30cd3d31b32430bd1e757a5034b5de11e577fea0870","actions":611},{"game_id":"1022600061","league_id":"10","source":"https://www.wnba.com/game/las-vs-con-1022600061/box-score","retrieved_at_utc":"2026-09-21T05:29:16.903715+00:00","html_sha256":"a24c06d312ccb4f837982e5ba88fc1347c70159bbead42968321a4883aa87bd9","next_data_sha256":"e6567ce9c3d1b291fdf6b62414a44f59228d093918058a050064acf99ce58383","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"12f6e758148d4bd64ec6bfca9eae0d7610dec489e9ce45369b3b814a58d8cf83","boxscore_sha256":"19206508e38c3effe58029177e81bff20b310ef510d604eb7b8500c27e69c7d8","evidence_sha256":"8429e70fffa421676f3e14600d87e20d4b9d1c0e028320158943eb45103a4b83","observation_sha256":"784e731e5990f5178d5201190b8dab459575300206b25b9112447a69618f9ed0","actions":485},{"game_id":"0022500166","league_id":"00","source":"https://www.nba.com/game/0022500166/box-score","retrieved_at_utc":"2026-09-21T05:34:33.132287+00:00","html_sha256":"eff73670a116fda4a1456402836c87e64b395d8a756ad41c794169d4de279395","next_data_sha256":"78abf6603a1cc504aca706d7e8aeb27f268c99aadcee58a8ce99d231589aa088","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"66940b783df957829fce0b8bd78a248d8fa3df8357a80b12441f50955e315e5f","boxscore_sha256":"7f9a6beeb2f716f3ac09061379bda5cb98150362cad426138833ca8214825f87","evidence_sha256":"cd5b6e6b4a9e340ab3be4783b7428d2671c9eabcf9e92f4583fc6b200cc1329e","observation_sha256":"da89fcbd1c55569d76e7f9b39d4638b0086de7fbe2acacc80b8add1e9a619104","actions":533},{"game_id":"0022500341","league_id":"00","source":"https://www.nba.com/game/0022500341/box-score","retrieved_at_utc":"2026-09-21T05:34:33.134280+00:00","html_sha256":"35bfa2c6e93e2e103c98b9b07835413892a0d60087ed570f780f2ddc3dc34a01","next_data_sha256":"2b02cacd4d3e0a497c9d81fe8e6a251be421c1bd5b974eb500cd870a3f174847","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"ad04621d655a4e5a0722efe1133e44d22329e964aad8739d3aae62040c4cd069","boxscore_sha256":"2cbee39bf1df293a6cb96b0cf6242ed1e3580de2268867af8eeb71099915ddfa","evidence_sha256":"f2fd9333751ba4a1bac9697895113f45e4aff4eb9352a11d4c94b7b993c096a0","observation_sha256":"2fd5a5a8f8e9b02033fe6e4c53987d63c2fce461cc0d4684cacaf8f11461b25b","actions":520},{"game_id":"1022600101","league_id":"10","source":"https://www.wnba.com/game/1022600101/box-score","retrieved_at_utc":"2026-09-21T05:34:33.136282+00:00","html_sha256":"2636b49c7c07ed62f6ae0cea9249949d834ab5ab0595606b95048e511342accc","next_data_sha256":"5f4ac6ef0e10c0b83bec7de9eff18efa45251034c127ea5088951ba2e8ed0392","method":"Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.","pbp_sha256":"c93fd7f493b538d652ab7b109b8f3e27ee26302322889112ae6d7a3ffd3778cc","boxscore_sha256":"3afcb4130b772437e635bf536ed8523d12e3ecd895b519474198d181ec9f6e27","evidence_sha256":"badc58ece094156f892d0ee70777e6e8b0adad9c972a90520d166834e2feab01","observation_sha256":"fff720b4b522a14109533c117d2a8938ba3292b1622f17c8da671ab11e0b8863","actions":428}]}
+{
+  "schema_version": 1,
+  "games": [
+    {
+      "game_id": "0022500165",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/0022500165/box-score",
+      "retrieved_at_utc": "2026-09-21T05:14:38.266770+00:00",
+      "html_sha256": "4ac2d6d8b0d41a944fa7de4605e50e953a0706822462c1b39627e8f451c40f07",
+      "next_data_sha256": "8f1ae6ea7b8a7902628e3e24d0074422088d82e9f49af85ea2a129943f2a9167",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "c2588d409db0910d71fd0bf1693d6a27e5002995b5a02c27298a335249949ad3",
+      "boxscore_sha256": "e7c667ebe7ed15fac2e0daa6a7d7b8d26797a5d2ccb75387f1884deaaa01b088",
+      "evidence_sha256": "e7ff553a247dafccdb354f3d14b1e757093d6747889f6ae89310380b33505216",
+      "observation_sha256": "1be29e17e3308012c7efdbf018432db4195f7c359b38a035d1b3bab65384912a",
+      "actions": 510,
+      "live_evidence": {
+        "game_id": "0022500165",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500165.json",
+        "retrieved_at_utc": "2026-09-22T03:00:35.954403+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500165.json",
+        "file": "pbp/live_0022500165.json",
+        "bytes": 432426,
+        "sha256": "1287c3efa87ac3e5df88e4622ef5c1835fd899b534dca1bfcc19d27f8d737581"
+      }
+    },
+    {
+      "game_id": "1022600001",
+      "league_id": "10",
+      "source": "https://www.wnba.com/game/con-vs-nyl-1022600001/box-score",
+      "retrieved_at_utc": "2026-09-21T05:14:41.296113+00:00",
+      "html_sha256": "e513b43391604ad491827cba2e4b1a2f4adb53643dff3cde4ae62ee0a9e67ad2",
+      "next_data_sha256": "22e012eb08f473342ef397074b28a11f3afd4f332873dd2af860417e412c33cd",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "b36edb52ef4da3bc3dd044e525857e4ea2be7b9bd1ea55cfcdef7100bcf09e7b",
+      "boxscore_sha256": "c42da7e7a0e2165783771cc94f7e6ab10547ebbe9ae47cddf48da9d6ffa02162",
+      "evidence_sha256": "472049d99aad51cf5aa54fee3fdd5655d67c9217b0bd9e9e39987d7cd6d9df15",
+      "observation_sha256": "b07a05f60d97817c317dbe108160778b910a9294ed7745ecd19783ca318f6ba7",
+      "actions": 469,
+      "live_evidence": {
+        "game_id": "1022600001",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600001.json",
+        "retrieved_at_utc": "2026-09-22T03:00:35.792681+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600001.json",
+        "file": "pbp/live_1022600001.json",
+        "bytes": 395905,
+        "sha256": "bb25790839da7fa7c9f29d13227fc25921db19dbfd79f83ba385f4ba4d5e1f36"
+      }
+    },
+    {
+      "game_id": "2022500001",
+      "league_id": "20",
+      "source": "https://gleague.nba.com/game/2022500001",
+      "retrieved_at_utc": "2026-09-21T05:14:50.561943+00:00",
+      "html_sha256": "cadcdd38ad2e1d895e99accc1ea65222e8cee370ef44aaf758dca140fd96a021",
+      "next_data_sha256": "6ed6d8cf8cfe545db2f518c11c7445b8486a27ca33fa696a53654904dc5d515f",
+      "method": "Direct official stats.gleague.nba.com V3 responses and separately retrieved final game page.",
+      "pbp_sha256": "18dc92550f0faf7efa0c95725b8c8427b8c5c0d340d12749234eab491f7139a4",
+      "boxscore_sha256": "efca847d7de71f8636e57e01f0f026f9d1dfdcbdf21907fbea4b4f72156d3358",
+      "evidence_sha256": "27cbe334e19222b9252a9f315ff99fbd757041216df869554332acf8b191f0b6",
+      "observation_sha256": "3f9e8de6e07f4cd5f38c7590021955ee4c980d7bba39e26c77b1c5781190f454",
+      "actions": 542,
+      "endpoint_captures": [
+        {
+          "game_id": "2022500001",
+          "kind": "pbp",
+          "url": "https://stats.gleague.nba.com/stats/playbyplayv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0",
+          "retrieved_at_utc": "2026-09-21T05:14:52.708601+00:00",
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "final_url": "https://stats.gleague.nba.com/stats/playbyplayv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0",
+          "file": "2022500001-pbp.json",
+          "bytes": 239082,
+          "sha256": "18dc92550f0faf7efa0c95725b8c8427b8c5c0d340d12749234eab491f7139a4",
+          "keys": [
+            "meta",
+            "game"
+          ]
+        },
+        {
+          "game_id": "2022500001",
+          "kind": "box",
+          "url": "https://stats.gleague.nba.com/stats/boxscoretraditionalv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0",
+          "retrieved_at_utc": "2026-09-21T05:14:54.600188+00:00",
+          "status": 200,
+          "content_type": "application/json; charset=utf-8",
+          "final_url": "https://stats.gleague.nba.com/stats/boxscoretraditionalv3?GameID=2022500001&StartPeriod=0&EndPeriod=0&StartRange=0&EndRange=0&RangeType=0",
+          "file": "2022500001-box.json",
+          "bytes": 18517,
+          "sha256": "efca847d7de71f8636e57e01f0f026f9d1dfdcbdf21907fbea4b4f72156d3358",
+          "keys": [
+            "meta",
+            "boxScoreTraditional"
+          ]
+        }
+      ]
+    },
+    {
+      "game_id": "0022500340",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/den-vs-atl-0022500340/box-score",
+      "retrieved_at_utc": "2026-09-21T05:16:11.964800+00:00",
+      "html_sha256": "9dc1b7f176c2f795a8bc9d1fdda5bf09a03a593a4e0fdba903fbc5856164dc53",
+      "next_data_sha256": "faf4b40312eecb742797c521d3a1e27b2d192a5f650a9ca19e7161323c2a9209",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "883d19e242e83c2037d9b35260eefab75e0a63cb2d67bd75f414e31dbcc67833",
+      "boxscore_sha256": "47c12286aa58f94f8ec54df4cf874309b1878d0af04cc3f8bd0088de2b4deb96",
+      "evidence_sha256": "4b288ba3711a0acb7296cfefa7cabbb96cc579f79c0eb65d293fa4a668fd728e",
+      "observation_sha256": "0ef5940a46ffc73533ff008b1479e681fd761cf276aba77ebb11e900aba64c7c",
+      "actions": 501,
+      "live_evidence": {
+        "game_id": "0022500340",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500340.json",
+        "retrieved_at_utc": "2026-09-22T03:00:34.065137+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500340.json",
+        "file": "pbp/live_0022500340.json",
+        "bytes": 426994,
+        "sha256": "cd3b89d4bb7e65343530eaa43fb81e1f0d864e7428388685adef23e109b78bfb"
+      }
+    },
+    {
+      "game_id": "0042500317",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/0042500317/box-score",
+      "retrieved_at_utc": "2026-09-21T05:16:11.964800+00:00",
+      "html_sha256": "87d0faddc6bccd4e79abd2d050966c058b0f9c57e0787d3aff51f38ff323a273",
+      "next_data_sha256": "985b9eb928226d30f95163e4a37ec7e24c6947da1ca0a2c8474a9c5346451d24",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "708fe6c20dfc0fe22ae65239c8bca9cde062da9e2622cb2d86288a9d6b49718d",
+      "boxscore_sha256": "20e68d9a4e88e36cf7a9465021f1d1759dacc4e9a9a671a7852d292a9ac043f3",
+      "evidence_sha256": "526f541adcd7ef892c27bb9f8c0ce44e3804b6cd1046d2bb021828ec8423b4fa",
+      "observation_sha256": "da209bf01aa2dcdeb45bef694e7ebe37fe4dc72f564ca68d2f57f6eeb5a6fd56",
+      "actions": 507,
+      "live_evidence": {
+        "game_id": "0042500317",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0042500317.json",
+        "retrieved_at_utc": "2026-09-22T03:00:34.061126+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0042500317.json",
+        "file": "pbp/live_0042500317.json",
+        "bytes": 434617,
+        "sha256": "f40b045af7769bc58c0ade17c65e0a368d0482e11a01bef6d370ded20e2e5c0d"
+      }
+    },
+    {
+      "game_id": "1022600100",
+      "league_id": "10",
+      "source": "https://www.wnba.com/game/las-vs-phx-1022600100/box-score",
+      "retrieved_at_utc": "2026-09-21T05:16:11.965792+00:00",
+      "html_sha256": "5c91ad759b473f446f73ca2e321d50a44eae471d2bdc74fc73d98e289d239737",
+      "next_data_sha256": "37db1201723cdd22d8cc96bb3fb3a5615c701a7c1337a01bfd9e722bc0ad7247",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "08695e62b9ae33c2380c5b8c32eabc12878b0fe69dd924266d3fdbf79de75cb0",
+      "boxscore_sha256": "2c8cf127a8763c695c28ddfeea38fab9f12d300dd36ef7c7b3707eb66a7ff690",
+      "evidence_sha256": "9df476b3acae789472c4b000a5fe8e29625666cb16b24f5117f6a6f507581a9f",
+      "observation_sha256": "2d6bde7518cf1248ada219e83df15e6ffa0715a03512981a9795a177fc895c64",
+      "actions": 460
+    },
+    {
+      "game_id": "0022500001",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/0022500001/box-score",
+      "retrieved_at_utc": "2026-09-21T05:29:16.903715+00:00",
+      "html_sha256": "a583a6955c8f163b445b74b23e7d1ca6ff6d31d7fc0a7c9ee083323d473983c0",
+      "next_data_sha256": "86393c84121b92c1996e357a9be859faf48e966bb73a5e1326f30be5f736d24d",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+      "boxscore_sha256": "025878e32a3c28766b46b0b26b5519adb1093aaa07d04bde5cd51f5c577de037",
+      "evidence_sha256": "a45361a0827b27cba023b241198862b03e3689b78ebdc06c371395da5b9bb681",
+      "observation_sha256": "f78a097976555a0ec508a30cd3d31b32430bd1e757a5034b5de11e577fea0870",
+      "actions": 611,
+      "live_evidence": {
+        "game_id": "0022500001",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500001.json",
+        "retrieved_at_utc": "2026-09-22T03:00:35.722588+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500001.json",
+        "file": "pbp/live_0022500001.json",
+        "bytes": 521223,
+        "sha256": "b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da"
+      }
+    },
+    {
+      "game_id": "1022600061",
+      "league_id": "10",
+      "source": "https://www.wnba.com/game/las-vs-con-1022600061/box-score",
+      "retrieved_at_utc": "2026-09-21T05:29:16.903715+00:00",
+      "html_sha256": "a24c06d312ccb4f837982e5ba88fc1347c70159bbead42968321a4883aa87bd9",
+      "next_data_sha256": "e6567ce9c3d1b291fdf6b62414a44f59228d093918058a050064acf99ce58383",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "12f6e758148d4bd64ec6bfca9eae0d7610dec489e9ce45369b3b814a58d8cf83",
+      "boxscore_sha256": "19206508e38c3effe58029177e81bff20b310ef510d604eb7b8500c27e69c7d8",
+      "evidence_sha256": "d355b7b9941ad4e90680aff5c89676d01bdd0d1b813834f790fbe9f417e74a5a",
+      "observation_sha256": "784e731e5990f5178d5201190b8dab459575300206b25b9112447a69618f9ed0",
+      "actions": 485,
+      "live_evidence": {
+        "game_id": "1022600061",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600061.json",
+        "retrieved_at_utc": "2026-09-22T03:00:34.063130+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/WNBA/liveData/playbyplay/playbyplay_1022600061.json",
+        "file": "pbp/live_1022600061.json",
+        "bytes": 400976,
+        "sha256": "e1908f6b93186017915a1576fffabdf428bc2a48892828dbae2a3b7f58a99d78"
+      }
+    },
+    {
+      "game_id": "0022500166",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/0022500166/box-score",
+      "retrieved_at_utc": "2026-09-21T05:34:33.132287+00:00",
+      "html_sha256": "eff73670a116fda4a1456402836c87e64b395d8a756ad41c794169d4de279395",
+      "next_data_sha256": "78abf6603a1cc504aca706d7e8aeb27f268c99aadcee58a8ce99d231589aa088",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "66940b783df957829fce0b8bd78a248d8fa3df8357a80b12441f50955e315e5f",
+      "boxscore_sha256": "7f9a6beeb2f716f3ac09061379bda5cb98150362cad426138833ca8214825f87",
+      "evidence_sha256": "f9388cc762fabfc745836cbfd2aa7d0cdcef4e611a35cadd0f6b4ceb5cf24760",
+      "observation_sha256": "da89fcbd1c55569d76e7f9b39d4638b0086de7fbe2acacc80b8add1e9a619104",
+      "actions": 533,
+      "live_evidence": {
+        "game_id": "0022500166",
+        "url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500166.json",
+        "retrieved_at_utc": "2026-09-22T03:00:34.062131+00:00",
+        "status": 200,
+        "final_url": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500166.json",
+        "file": "pbp/live_0022500166.json",
+        "bytes": 455906,
+        "sha256": "7ab044386aa8d59574d4986091d96434f9c44c17399e95d152e9e6e6a1f8e7a1"
+      }
+    },
+    {
+      "game_id": "0022500341",
+      "league_id": "00",
+      "source": "https://www.nba.com/game/0022500341/box-score",
+      "retrieved_at_utc": "2026-09-21T05:34:33.134280+00:00",
+      "html_sha256": "35bfa2c6e93e2e103c98b9b07835413892a0d60087ed570f780f2ddc3dc34a01",
+      "next_data_sha256": "2b02cacd4d3e0a497c9d81fe8e6a251be421c1bd5b974eb500cd870a3f174847",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "ad04621d655a4e5a0722efe1133e44d22329e964aad8739d3aae62040c4cd069",
+      "boxscore_sha256": "2cbee39bf1df293a6cb96b0cf6242ed1e3580de2268867af8eeb71099915ddfa",
+      "evidence_sha256": "f2fd9333751ba4a1bac9697895113f45e4aff4eb9352a11d4c94b7b993c096a0",
+      "observation_sha256": "2fd5a5a8f8e9b02033fe6e4c53987d63c2fce461cc0d4684cacaf8f11461b25b",
+      "actions": 520
+    },
+    {
+      "game_id": "1022600101",
+      "league_id": "10",
+      "source": "https://www.wnba.com/game/1022600101/box-score",
+      "retrieved_at_utc": "2026-09-21T05:34:33.136282+00:00",
+      "html_sha256": "2636b49c7c07ed62f6ae0cea9249949d834ab5ab0595606b95048e511342accc",
+      "next_data_sha256": "5f4ac6ef0e10c0b83bec7de9eff18efa45251034c127ea5088951ba2e8ed0392",
+      "method": "Official final game page __NEXT_DATA__.props.pageProps: playByPlay copied intact into game envelope; game teams copied intact into boxScoreTraditional envelope; these are page extracts, not endpoint captures.",
+      "pbp_sha256": "c93fd7f493b538d652ab7b109b8f3e27ee26302322889112ae6d7a3ffd3778cc",
+      "boxscore_sha256": "3afcb4130b772437e635bf536ed8523d12e3ecd895b519474198d181ec9f6e27",
+      "evidence_sha256": "badc58ece094156f892d0ee70777e6e8b0adad9c972a90520d166834e2feab01",
+      "observation_sha256": "fff720b4b522a14109533c117d2a8938ba3292b1622f17c8da671ab11e0b8863",
+      "actions": 428
+    }
+  ]
+}

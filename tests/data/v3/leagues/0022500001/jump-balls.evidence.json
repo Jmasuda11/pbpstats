@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500001",
+  "pbp_sha256": "bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+  "live_sha256": "b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da",
+  "source": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500001.json",
+  "jumps": [
+    {
+      "source_index": 292,
+      "live_source_index": 333,
+      "clock_basis": "exact",
+      "source": "Reviewed unique action number and both explicit opposing jumper IDs against the roster; live personId=0, Team recovery name, matching teamId/possession and no individual recovery ID establish team recovery only. Both snapshots record the identical period and exact clock."
+    }
+  ]
+}

@@ -9,6 +9,7 @@ from decimal import Context, localcontext
 from math import isfinite
 
 from pbpstats.resources.enhanced_pbp import (
+    Ejection,
     EndOfPeriod,
     FieldGoal,
     Foul,
@@ -278,7 +279,7 @@ class V3Foul(V3EnhancedEvent, Foul):
 
     @property
     def is_technical(self):
-        return self.facts.subtype == "Technical"
+        return self.facts.subtype in ("Technical", "Hanging Technical")
 
     @property
     def is_defensive_3_seconds(self):
@@ -425,6 +426,10 @@ class V3JumpBall(V3EnhancedEvent, JumpBall):
         return JumpBallPossessionRules.get_offense_team_id(self)
 
 
+class V3Ejection(V3EnhancedEvent, Ejection):
+    """A recorded player ejection; replacement remains an explicit substitution."""
+
+
 class V3Substitution(V3EnhancedEvent, Substitution):
     @property
     def outgoing_player_id(self):
@@ -475,4 +480,5 @@ EVENT_CLASSES = {
     "substitution": V3Substitution,
     "timeout": V3Timeout,
     "replay": V3Replay,
+    "ejection": V3Ejection,
 }

@@ -39,6 +39,7 @@ Contents
    v3-lineups
    v3-possessions
    v3-leagues
+   v3-reliability
    v3-game-loading
    v3-evidence-preparation
    v3-shot-zones

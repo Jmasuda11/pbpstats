@@ -13,6 +13,7 @@ from pbpstats.data_loader.stats_nba_v3.boxscore import (
     StatsNbaV3BoxscoreLoader,
 )
 from pbpstats.data_loader.stats_nba_v3.classification import StatsNbaV3EventLoader
+from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
 from pbpstats.data_loader.stats_nba_v3.lineups import (
     StatsNbaV3LineupLoader,
     V3LineupEvidence,
@@ -97,7 +98,14 @@ def _path(directory, supplied, default=None):
     return path if path.is_absolute() else directory / path
 
 
-def _load_inputs(game_id, data_directory, league_id, snapshot_complete):
+def _load_inputs(
+    game_id,
+    data_directory,
+    league_id,
+    snapshot_complete,
+    jump_ball_evidence=None,
+    jump_ball_live=None,
+):
     with _stage(game_id, "configuration"):
         rules = V3LeagueRules.for_game(game_id, league_id)
         validate_file_directory(data_directory)
@@ -106,6 +114,10 @@ def _load_inputs(game_id, data_directory, league_id, snapshot_complete):
                 "snapshot_complete=True requires an explicit complete-PBP declaration"
             )
         directory = Path(data_directory)
+        if (jump_ball_evidence is None) != (jump_ball_live is None):
+            raise ValueError(
+                "jump_ball_evidence and jump_ball_live must be supplied together"
+            )
     with _stage(game_id, "boxscore"):
         source = StatsNbaV3BoxscoreFileLoader(
             directory, league_id=rules.league_id
@@ -127,9 +139,15 @@ def _load_inputs(game_id, data_directory, league_id, snapshot_complete):
             StatsNbaV3PbpFileLoader(directory, league_id=rules.league_id),
             league_id=rules.league_id,
         )
+    jumps = None
+    if jump_ball_evidence is not None:
+        with _stage(game_id, "jump_balls"):
+            jumps = V3JumpBallEvidence.from_files(
+                _path(directory, jump_ball_evidence), _path(directory, jump_ball_live)
+            )
     with _stage(game_id, "participants"):
         participants = StatsNbaV3ParticipantLoader(
-            raw, box.context, snapshot_complete=True
+            raw, box.context, snapshot_complete=True, jump_ball_evidence=jumps
         )
     with _stage(game_id, "classification"):
         classified = StatsNbaV3EventLoader(participants)
@@ -145,6 +163,13 @@ def _load_inputs(game_id, data_directory, league_id, snapshot_complete):
         ),
         "pbp": _file(directory / "pbp" / f"stats_v3_{game_id}.json", raw.source_bytes),
     }
+    if jumps is not None:
+        inputs["jump_ball_evidence"] = _file(
+            _path(directory, jump_ball_evidence), jumps.review_bytes
+        )
+        inputs["jump_ball_live"] = _file(
+            _path(directory, jump_ball_live), jumps.live_bytes
+        )
     return directory, box, raw, classified, inputs
 
 
@@ -156,17 +181,26 @@ def load_game(
     lineup_evidence=None,
     snapshot_complete=False,
     shot_evidence=None,
+    jump_ball_evidence=None,
+    jump_ball_live=None,
 ):
     """Load validated possessions from recorded files without network or writes.
 
     Evidence paths are absolute or relative to ``data_directory``. Lineups
     default to ``lineups.evidence.json``; live shot evidence is optional.
+    Blank team-recovery jumps require both ``jump_ball_evidence`` (review)
+    and ``jump_ball_live`` (original live bytes); neither is auto-discovered.
     Complete PBP coverage must be explicitly declared. Required failures raise
     V3GameLoadError with a stage and cause. Unresolved optional labels return
     None plus diagnostics, while the underlying strict event accessors remain.
     """
     directory, box, raw, classified, inputs = _load_inputs(
-        game_id, data_directory, league_id, snapshot_complete
+        game_id,
+        data_directory,
+        league_id,
+        snapshot_complete,
+        jump_ball_evidence,
+        jump_ball_live,
     )
     with _stage(game_id, "lineups"):
         path = _path(directory, lineup_evidence, "lineups.evidence.json")
