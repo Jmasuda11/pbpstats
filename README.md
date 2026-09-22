@@ -1,8 +1,8 @@
-# pbpstats (Jmasuda11 fork)
+# pbpstats (fork)
 
 A package to scrape and parse NBA, WNBA and G-League play-by-play data.
 
-This is the [Jmasuda11 fork](https://github.com/Jmasuda11/pbpstats) of [dblackrun/pbpstats](https://github.com/dblackrun/pbpstats), including native V3 game loading and evidence preparation.
+This is a [fork](https://github.com/Jmasuda11/pbpstats) of [dblackrun/pbpstats](https://github.com/dblackrun/pbpstats), including native V3 game loading and evidence preparation.
 
 # Features
 
