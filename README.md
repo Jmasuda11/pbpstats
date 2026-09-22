@@ -1,8 +1,11 @@
-[![PyPI version](https://badge.fury.io/py/pbpstats.svg)](https://badge.fury.io/py/pbpstats)
+# pbpstats (Jmasuda11 fork)
 
 A package to scrape and parse NBA, WNBA and G-League play-by-play data.
 
+This is the [Jmasuda11 fork](https://github.com/Jmasuda11/pbpstats) of [dblackrun/pbpstats](https://github.com/dblackrun/pbpstats), including native V3 game loading and evidence preparation.
+
 # Features
+
 * Adds lineup on floor for all events
 * Adds detailed data for each possession including start time, end time, score margin, how the previous possession ended
 * Shots, rebounds and assists broken down by shot zone
@@ -12,23 +15,29 @@ A package to scrape and parse NBA, WNBA and G-League play-by-play data.
 * Fixes order of events for some common cases in which events are out of order
 
 # Installation
-Tested on Python >=3.8
-```
-pip install pbpstats
+
+Tested on Python 3.8–3.12. Install this fork directly from GitHub (Git must be installed):
+
+```bash
+pip install git+https://github.com/Jmasuda11/pbpstats.git
 ```
 
 # Resources
-[Documentation](https://pbpstats.readthedocs.io/en/latest/)
+
+- [Fork: loading a V3 game offline](docs/v3-game-loading.rst)
+- [Fork: preparing V3 game evidence](docs/v3-evidence-preparation.rst)
+- [Upstream documentation](https://pbpstats.readthedocs.io/en/latest/)
 
 # Local Development
-Using [poetry](https://python-poetry.org/) for package managment. Install it first if it is not install on your system.
 
-`git clone https://github.com/dblackrun/pbpstats.git`
+Using [poetry](https://python-poetry.org/) for package management. Install it first if it is not installed on your system.
+
+`git clone https://github.com/Jmasuda11/pbpstats.git`
 
 `cd pbpstats`
 
-Develop using `develop` branch:
-`git checkout develop`
+Develop using the `main` branch:
+`git checkout main`
 
 Install dependencies:
 
