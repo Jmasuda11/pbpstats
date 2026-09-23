@@ -29,8 +29,17 @@ SUBTYPES = {
         "Flagrant Type 1",
         "Flagrant Type 2",
         "Transition Take",
+        "Double Personal",
+        "Double Technical",
+        "Delay Technical",
+        "Bench",
+        "Flopping",
+        "Excess Timeout Technical",
+        "Too Many Players Technical",
+        "Non-Unsportsmanlike Technical",
     },
     "Turnover": {
+        "",  # Explicit turnover, unspecified cause; never V2's no-turnover code.
         "3 Second Violation",
         "5 Second Violation",
         "8 Second Violation",
@@ -45,18 +54,30 @@ SUBTYPES = {
         "Shot Clock Turnover",
         "Kicked Ball Violation",
         "Double Dribble",
+        "Palming Turnover",
+        "Offensive Goaltending",
+        "Inbound Turnover",
+        "Discontinue Dribble",
+        "Lane Violation",
+        "Illegal Assist Turnover",
+        "Too Many Players Turnover",
+        "Excess Timeout Turnover",
+        "Punched Ball Turnover",
+        "10 Second Violaton",
+        "Jump Ball Violation",
     },
     "Violation": {
         "Defensive Goaltending",
         "Delay Of Game",
         "Kicked Ball",
         "Lane",
+        "Double Lane",
         "Jump Ball",
     },
     "Rebound": {"Normal Rebound", "Unknown"},
     "Substitution": {""},
     "Ejection": {"Other"},
-    "Jump Ball": {""},
+    "Jump Ball": {"", "Coach Challenge"},
     "Timeout": {"Regular", "Official", "Reset", "Coach Challenge"},
     "Instant Replay": {
         "Coach Challenge Support Ruling",
@@ -67,6 +88,7 @@ SUBTYPES = {
         "Coach Challenge Overturn Ruling",
         "Overturn Ruling",
         "Challenge Changed",
+        "Altercation Ruling",
     },
 }
 KINDS = {
@@ -80,7 +102,7 @@ KINDS = {
     "Timeout": "timeout",
     "Instant Replay": "replay",
 }
-FT_SUBTYPE = re.compile(r"Free Throw(?: (Clear Path|Flagrant))? ([1-3]) of ([1-3])")
+FT_SUBTYPE = re.compile(r"Free Throw(?: (Clear Path|Flagrant|Technical))? ([1-3]) of ([1-3])")
 
 
 @dataclass(frozen=True)
@@ -183,11 +205,12 @@ def _free_throw(event):
             None: "regular",
             "Clear Path": "clear_path",
             "Flagrant": "flagrant",
+            "Technical": "technical",
         }[match[1]]
         attempt, total = int(match[2]), int(match[3])
         if attempt > total or (category == "clear_path" and total != 2):
             raise _error(event, "invalid free-throw attempt/total")
-        if total > 1 and rules.single_free_throw(
+        if category != "technical" and total > 1 and rules.single_free_throw(
             row.period, row.seconds_remaining_exact
         ):
             raise _error(
@@ -196,6 +219,7 @@ def _free_throw(event):
         # An ordinary subtype does not identify the foul or prove the restart:
         # away-from-play/inbound/take fouls and corrections need later linkage.
         restart = (
+            "resume_interrupted_play" if category == "technical" else
             "context_required" if category == "regular" else "shooting_team_retains"
         )
     else:

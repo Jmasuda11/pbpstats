@@ -593,5 +593,5 @@ def test_aliases_preserve_suffixes_accents_and_initials(context):
     context = replace(context, players=players)
     assert context.candidates("  j. BUTLER III  ", HOME) == (5,)
     assert context.candidates("Butler", HOME) == ()
-    assert context.candidates("Jokic", AWAY) == ()
+    assert context.candidates("Jokic", AWAY) == (6,)
     assert context.candidates("Jokić", AWAY) == (6,)

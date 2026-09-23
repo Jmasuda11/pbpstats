@@ -6,6 +6,14 @@ native V3 responses, then ``prepare_game`` to identify missing lineup evidence.
 Both operate offline and support NBA, WNBA and G League through the same league
 parameters as :doc:`v3-game-loading`.
 
+The examples below use the default strict mode. Pass ``use_v2_rules=True`` to
+both preparation and loading for sequential substitutions, final-snapshot
+replays, bounded period-order repairs and reconciled event-derived scores.
+Non-blocking adaptations appear in ``preparation.notices`` and the report's
+``notices`` array; only ``diagnostics`` prevent ``ready``. The mode, validation
+requirements and source-preservation guarantees are described in
+:doc:`v3-game-loading`.
+
 Import recorded files
 ---------------------
 

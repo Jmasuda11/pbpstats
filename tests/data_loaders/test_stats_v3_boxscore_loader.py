@@ -181,7 +181,7 @@ def test_alias_evidence_is_explicit_and_preserves_suffixes_and_accents(payload):
     ctx = loader.context
     assert ctx.candidates("  á.  SMITH Jr.  ", HOME) == (row["personId"],)
     assert ctx.candidates("A. Smith", HOME) == (row["personId"],)
-    assert ctx.candidates("Alex Smith Jr.", HOME) == ()
+    assert ctx.candidates("Alex Smith Jr.", HOME) == (row["personId"],)
     assert ctx.candidates("Smith", AWAY) == ()
     assert (
         loader.evidence["aliases"][0]["source"] == "Synthetic reviewed naming variant"

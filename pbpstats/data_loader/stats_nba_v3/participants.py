@@ -9,7 +9,7 @@ from pbpstats.data_loader.stats_nba_v3.association import (
     V3EventGroup,
     associate_actions,
 )
-from pbpstats.data_loader.stats_nba_v3.context import V3GameContext
+from pbpstats.data_loader.stats_nba_v3.context import V3GameContext, _name_key
 from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
 
 
@@ -68,10 +68,25 @@ def _id(item, field):
 
 
 class _Resolver:
-    def __init__(self, context, snapshot_complete, jumps):
+    def __init__(self, context, snapshot_complete, jumps, rows=()):
         self.context = context
         self.snapshot_complete = snapshot_complete
         self.jumps = jumps
+        self.substitution_aliases = {}
+        if snapshot_complete and context.roster_complete:
+            for row in rows:
+                if row.action_type != "Substitution":
+                    continue
+                match = re.fullmatch(r"SUB: (.+) FOR (.+)", row.description)
+                player = context.player(_id(row, "personId"))
+                if not match or player is None:
+                    continue
+                team = self.team(row)
+                known = context.candidates(match[2], team)
+                if known and player.player_id not in known:
+                    raise _error(row, "outgoing substitution name contradicts personId")
+                key = (_name_key(match[2]), player.player_id)
+                self.substitution_aliases.setdefault(key, []).append(row.order)
 
     def team(self, item):
         data = item.data
@@ -93,9 +108,10 @@ class _Resolver:
             candidates.add(player.team_id)
         bench = self.context.bench_person(person_id)
         if bench is not None:
-            if (item.action_type, item.sub_type) != ("Foul", "Technical"):
+            if not ((item.action_type == "Foul" and item.sub_type in ("Technical", "Double Technical"))
+                    or (item.action_type == "Ejection" and item.sub_type == "Other")):
                 raise _error(
-                    item, "bench identity is only supported on a technical foul"
+                    item, "bench identity is only supported on a technical foul or ejection"
                 )
             candidates.add(bench.team_id)
         location = data.get("location", "")
@@ -132,6 +148,15 @@ class _Resolver:
 
     def named(self, item, name, team_id=None, field=None):
         candidates = self.context.candidates(name, team_id) if name else ()
+        alias_rows = []
+        additional = set()
+        for (alias, pid), indices in self.substitution_aliases.items():
+            if (name and alias == _name_key(name) and pid not in candidates
+                    and (team_id is None or self.context.player(pid).team_id == team_id)):
+                additional.add(pid)
+                alias_rows.extend(indices)
+        candidates = tuple(sorted(set(candidates) | additional))
+        source_indices = tuple(sorted({item.order, *alias_rows}))
         explicit = self.explicit(item, field, team_id) if field else None
         if explicit is not None:
             if (
@@ -148,6 +173,8 @@ class _Resolver:
             evidence = "description and both game rosters"
         else:
             evidence = "description and team roster"
+        if alias_rows:
+            evidence += "; name bound to explicit outgoing personId at substitution rows " + str(sorted(set(alias_rows)))
         if not self.context.roster_complete:
             status, evidence = "unresolved", "incomplete roster coverage"
         elif len(candidates) == 1:
@@ -157,7 +184,7 @@ class _Resolver:
                 pid,
                 self.context.player(pid).team_id,
                 candidates,
-                (item.order,),
+                source_indices,
                 evidence,
                 name,
             )
@@ -167,7 +194,7 @@ class _Resolver:
             status,
             team_id=team_id,
             candidates=candidates,
-            source_indices=(item.order,),
+            source_indices=source_indices,
             evidence=evidence,
             name=name,
         )
@@ -183,7 +210,9 @@ class _Resolver:
         person_id = _id(item, "personId")
         bench = self.context.bench_person(person_id)
         if bench is not None:
-            if not item.description.startswith(bench.name + " Foul:T.FOUL"):
+            label = "DOUBLE.TECHNICAL.FOUL" if item.sub_type == "Double Technical" else "T.FOUL"
+            prefix = bench.name + (" Ejection:" if item.action_type == "Ejection" else " Foul:" + label)
+            if not item.description.startswith(prefix):
                 raise _error(
                     item, "technical foul description conflicts with bench identity"
                 )
@@ -229,7 +258,14 @@ class _Resolver:
             raise _error(row, f"{role} must belong to the opposing team")
         participant = self.explicit(row, "personId", secondary_team)
         if participant is None:
-            raise _error(row, f"{role} requires an explicit player ID")
+            # The 2025 team-heave feed zeros the blocker ID as well as the
+            # shooter ID. Its opposing-team location and unique roster name
+            # still provide an attributable block, without inventing a shooter.
+            if role == "block" and group.primary.action_type == "Heave":
+                match = re.fullmatch(r"(.+) BLOCK \([0-9]+ BLK\)", row.description)
+                participant = self.named(row, match[1] if match else None, secondary_team)
+            else:
+                raise _error(row, f"{role} requires an explicit player ID")
         if participant.player_id == actor.player_id:
             raise _error(row, f"{role} cannot identify the primary actor")
         return participant
@@ -326,6 +362,19 @@ class _Resolver:
             "tip_recipient": self.named(item, match[3]),
         }
 
+    def double_foul(self, item, actor, team_id):
+        if item.sub_type == "Double Personal":
+            pattern = r"\s*Foul\s*:\s*Double Personal - (.+) \([0-9]+ PF\), (.+) \([0-9]+ PF\) \([^()]+\)"
+        else:
+            pattern = r"Double Technical - (.+), (.+) \([^()]+\)"
+        match = re.fullmatch(pattern, item.description)
+        if not match or team_id is None:
+            return V3Participant("unresolved", source_indices=(item.order,),
+                                 evidence="double-foul opponent is not identified by a supported description")
+        if actor.player_id not in self.context.candidates(match[1], team_id):
+            raise _error(item, "double-foul first name conflicts with personId")
+        return self.named(item, match[2], self.context.other_team(team_id))
+
     def resolve(self, group):
         item = group.primary
         team_id = self.team(item)
@@ -333,7 +382,7 @@ class _Resolver:
         roles = {"actor": actor}
         if item.action_type == "Made Shot":
             roles["assister"] = self.assister(item, team_id)
-        elif item.action_type == "Missed Shot":
+        elif item.action_type == "Missed Shot" or (item.action_type == "Heave" and group.block is not None):
             roles["blocker"] = self.secondary(group, actor, team_id, "block")
         elif item.action_type == "Turnover":
             roles["stealer"] = self.secondary(group, actor, team_id, "steal")
@@ -343,6 +392,8 @@ class _Resolver:
         elif item.action_type == "Jump Ball":
             roles.update(self.jump_ball(item, actor, team_id))
         elif item.action_type == "Foul":
+            if item.sub_type in ("Double Personal", "Double Technical"):
+                roles["other_fouler"] = self.double_foul(item, actor, team_id)
             roles["foul_drawn"] = self.explicit(
                 item,
                 "foulDrawnPersonId",
@@ -393,7 +444,7 @@ class StatsNbaV3ParticipantLoader:
             if jump_ball_evidence is not None
             else {}
         )
-        resolver = _Resolver(context, snapshot_complete, jumps)
+        resolver = _Resolver(context, snapshot_complete, jumps, pbp_loader.items)
         self.items = tuple(
             resolver.resolve(group) for group in associate_actions(pbp_loader.items)
         )

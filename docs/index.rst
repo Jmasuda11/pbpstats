@@ -42,4 +42,5 @@ Contents
    v3-reliability
    v3-game-loading
    v3-evidence-preparation
+   v3-season-2025-validation
    v3-shot-zones
