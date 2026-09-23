@@ -11,7 +11,10 @@ from pbpstats.resources.league_rules import V3LeagueRules
 
 
 def _name_key(name):
-    return " ".join(unicodedata.normalize("NFKC", name).casefold().split())
+    # Official descriptions omit marks present in roster names (Doncic/Dončić).
+    # Keep every colliding ID: folding must never pick one of two candidates.
+    normalized = unicodedata.normalize("NFKD", name).casefold()
+    return " ".join("".join(c for c in normalized if not unicodedata.combining(c)).split())
 
 
 def _positive_id(value):
@@ -98,6 +101,20 @@ class V3GameContext:
             by_id[player.player_id] = player
             for name in player.aliases:
                 names[_name_key(name)].add(player.player_id)
+                # The official full name plus its family-name alias also binds
+                # the given name (Hansen Yang / Yang -> Hansen). This uses two
+                # existing roster facts, not a fuzzy prefix or a player override.
+                full_name = _name_key(player.name)
+                suffix = " " + _name_key(name)
+                if full_name.endswith(suffix):
+                    given = full_name[:-len(suffix)]
+                    names[given].add(player.player_id)
+                    # A written period marks an explicit abbreviation: Jay.
+                    # Williams versus Jal. Williams, or St. versus Se. Curry.
+                    # Single-letter forms still require an explicit alias.
+                    # Union all matches rather than choosing a first candidate.
+                    for length in range(2, len(given)):
+                        names[given[:length] + "." + suffix].add(player.player_id)
         if self.roster_complete and {p.team_id for p in players} != set(teams):
             raise ValueError("a complete roster must cover both teams")
         object.__setattr__(self, "players", players)

@@ -330,6 +330,88 @@ def test_technical_foul_on_bench_player_does_not_change_lineup():
     assert 8 not in result.items[1].after[HOME]
 
 
+def jones_context(*ids):
+    ctx = context()
+    return replace(
+        ctx,
+        players=tuple(
+            replace(p, aliases=p.aliases + ("Jones",)) if p.player_id in ids else p
+            for p in ctx.players
+        ),
+    )
+
+
+def jones_tip(clock="PT12M00S", period=1):
+    return row(
+        "Jump Ball", "", clock, 1, HOME,
+        "Jump Ball Player1 vs. Player11: Tip to Jones", period,
+    )
+
+
+@pytest.mark.parametrize("on_court,bench", [(2, 6), (2, 16), (12, 6), (12, 16)])
+def test_opening_tip_searches_on_court_players_across_both_teams(on_court, bench):
+    loader = events([start(), jones_tip(), end()], ctx=jones_context(on_court, bench))
+    original = loader.items[1].participants.participants["tip_recipient"]
+    assert original.status == "ambiguous"
+    result = load(loader, evidence(loader))
+    recipient = result.items[1].event.participants.participants["tip_recipient"]
+    assert recipient.status == "resolved" and recipient.player_id == on_court
+    assert recipient.candidates == (on_court,)
+    assert recipient.team_id == (HOME if on_court == 2 else AWAY)
+    assert "on court before source row 1" in recipient.evidence
+    assert result.evidence.sha256 in recipient.evidence
+    # The review binds the original roster facts, not its own derived result.
+    assert loader.items[1].participants.participants["tip_recipient"] is original
+    assert original.candidates == tuple(sorted((on_court, bench)))
+
+
+@pytest.mark.parametrize("second", [3, 12])
+def test_two_jones_players_on_court_stay_ambiguous(second):
+    loader = events([start(), jones_tip(), end()], ctx=jones_context(2, second))
+    with pytest.raises(ValueError, match="tip_recipient is ambiguous"):
+        load(loader, evidence(loader))
+
+
+def test_tip_does_not_choose_a_bench_player_when_no_name_matches_on_court():
+    loader = events([start(), jones_tip(), end()], ctx=jones_context(6, 16))
+    with pytest.raises(ValueError, match="tip_recipient is unresolved"):
+        load(loader, evidence(loader))
+
+
+def test_tip_resolution_uses_substitution_order_even_at_the_same_clock():
+    loader = events(
+        [start(), jones_tip("PT10M00S"), sub(2, 6),
+         jones_tip("PT10M00S"), end()], ctx=jones_context(2, 6),
+    )
+    result = load(loader, evidence(loader, batches=[[2]]))
+    assert result.items[1].event.participants.require_player("tip_recipient") == 2
+    assert result.items[3].event.participants.require_player("tip_recipient") == 6
+    assert result.items[2].event.participants.require_player("incoming") == 6
+    assert 6 not in result.items[2].before[HOME]
+
+
+def test_tip_resolution_uses_each_periods_separate_starting_lineup():
+    loader = events(
+        [start(), jones_tip(), end(), start(2), jones_tip(period=2), end(2)],
+        ctx=jones_context(2, 6),
+    )
+    periods = [period_evidence(), period_evidence(2, home=[1, 3, 4, 5, 6])]
+    result = load(loader, evidence(loader, periods=periods))
+    assert result.items[1].event.participants.require_player("tip_recipient") == 2
+    assert result.items[4].event.participants.require_player("tip_recipient") == 6
+
+
+def test_assist_names_are_resolved_from_the_shooting_teams_on_court_players():
+    basket = dict(shot(1), description="Player1 Jump Shot (2 PTS) (Jones 1 AST)")
+    loader = events([start(), basket, end()], ctx=jones_context(2, 6, 12))
+    result = load(loader, evidence(loader))
+    assist = result.items[1].event.participants.participants["assister"]
+    assert assist.player_id == 2 and assist.candidates == (2,)
+    with pytest.raises(ValueError, match="assister cannot be the primary actor"):
+        loader = events([start(), basket, end()], ctx=jones_context(1, 6))
+        load(loader, evidence(loader))
+
+
 def test_snapshot_and_roster_fingerprints_reject_stale_evidence():
     loader = events([start(), shot(1), end()])
     data = evidence(loader)

@@ -55,6 +55,13 @@ optional label.
 Evidence and failure behavior
 -----------------------------
 
+The following describes the default strict mode. When the lineup loader uses
+``use_v2_rules=True``, the possession loader inherits the V2-derived behavior
+documented in :doc:`v3-game-loading`: recorded replacement FT shooters, passive
+lane markers, trips ended by recorded turnovers, known-team jump outcomes,
+reconciled scoring and final-snapshot replay handling. No source row is edited
+and no injury, missing participant or FT attempt is invented.
+
 The loader requires ``StatsNbaV3LineupLoader`` and supports NBA, WNBA, and G League
 under the rules described in :doc:`v3-leagues`. Complete roster and PBP declarations, validated period starters, and
 batch evidence remain prerequisites from the earlier layers. Every supplied

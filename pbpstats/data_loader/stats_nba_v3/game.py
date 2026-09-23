@@ -29,6 +29,7 @@ from pbpstats.data_loader.stats_nba_v3.shot_zones import (
     V3LiveShotEvidence,
 )
 from pbpstats.resources.league_rules import V3LeagueRules
+from pbpstats.data_loader.stats_nba_v3.v2_rules import reconcile_scoring
 
 
 @dataclass(frozen=True)
@@ -183,6 +184,7 @@ def load_game(
     shot_evidence=None,
     jump_ball_evidence=None,
     jump_ball_live=None,
+    use_v2_rules=False,
 ):
     """Load validated possessions from recorded files without network or writes.
 
@@ -193,6 +195,10 @@ def load_game(
     Complete PBP coverage must be explicitly declared. Required failures raise
     V3GameLoadError with a stage and cause. Unresolved optional labels return
     None plus diagnostics, while the underlying strict event accessors remain.
+    ``use_v2_rules=True`` enables bounded V2 ordering repairs, final-snapshot
+    replay handling and derived scores. Team and player points must then
+    reconcile against the box score; supplied score discrepancies are retained
+    as diagnostics. Use the same mode when preparing lineup evidence.
     """
     directory, box, raw, classified, inputs = _load_inputs(
         game_id,
@@ -205,7 +211,7 @@ def load_game(
     with _stage(game_id, "lineups"):
         path = _path(directory, lineup_evidence, "lineups.evidence.json")
         evidence = V3LineupEvidence.from_file(path)
-        lineups = StatsNbaV3LineupLoader(classified, evidence)
+        lineups = StatsNbaV3LineupLoader(classified, evidence, use_v2_rules=use_v2_rules)
         inputs["lineups"] = _file(path, evidence.source_bytes)
     zones = None
     if shot_evidence is not None:
@@ -216,6 +222,9 @@ def load_game(
             inputs["shot_zones"] = _file(path, source.source_bytes)
     with _stage(game_id, "possessions"):
         possessions = StatsNbaV3PossessionLoader(lineups, shot_zones=zones)
+    if use_v2_rules:
+        with _stage(game_id, "scoring"):
+            reconcile_scoring(box, possessions.events)
     diagnostics = [
         V3Diagnostic(
             "event_stats",
@@ -223,6 +232,7 @@ def load_game(
             "Detailed V3 event statistics are unavailable; use possessions.base_stats.",
         )
     ]
+    diagnostics.extend(V3Diagnostic(**d) for d in lineups.diagnostics + possessions.diagnostics)
     if zones is not None:
         diagnostics.extend(
             V3Diagnostic(
@@ -246,6 +256,7 @@ def load_game(
                 )
             )
     capabilities = dict(
+        processing_rules="v2" if use_v2_rules else "strict",
         possessions="complete",
         lineups="complete",
         base_stats="complete",
