@@ -76,17 +76,17 @@ def v3_inputs(case):
     return rows
 
 
-def load_v3(rows):
+def load_v3(rows, game_id=GAME):
     from pbpstats.data_loader.stats_nba_v3 import StatsNbaV3PossessionLoader, V3Context
 
-    source = json.dumps({"game": {"gameId": GAME, "actions": rows}}).encode()
+    source = json.dumps({"game": {"gameId": game_id, "actions": rows}}).encode()
     roster = {
         p: {"team_id": team, "names": [f"Player{p}"]}
         for team, players in ((HOME, range(1, 9)), (AWAY, range(11, 19)))
         for p in players
     }
     context = V3Context(
-        GAME, (HOME, AWAY), roster,
+        game_id, (HOME, AWAY), roster,
         {rows[0]["period"]: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]}},
         "Independent controlled team-heave context", hashlib.sha256(source).hexdigest(),
     )

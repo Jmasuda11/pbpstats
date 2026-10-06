@@ -1,4 +1,4 @@
-"""Fetch one NBA game from stats.nba.com, parse it into possessions, save JSON.
+"""Fetch one NBA or WNBA game from the stats API, parse possessions, save JSON.
 
 The adapter never touches the network. This module requests the V3
 play-by-play and box score, binds the adapter's context to those exact bytes,
@@ -22,8 +22,9 @@ from .names import add_actor_aliases, add_unaccented_names, require
 from .possessions import StatsNbaV3PossessionLoader
 from .starters import V3EvidenceRequired, V3StarterBoxscore
 
-STATS_URL = "https://stats.nba.com/stats/"
-# stats.nba.com rejects pbpstats' older default headers; these follow nba_api.
+# The original's own league hosts, keyed by game ID prefix.
+STATS_URLS = {"00": "https://stats.nba.com/stats/", "10": "https://stats.wnba.com/stats/"}
+# The stats API rejects pbpstats' older default headers; these follow nba_api.
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
@@ -47,15 +48,23 @@ def get(url, params, session=None):
     )
 
 
+def stats_url(game_id):
+    """Stats API base URL for a supported league; nothing is requested otherwise."""
+    if not isinstance(game_id, str) or game_id[:2] not in STATS_URLS:
+        raise V3DecodeError("Only NBA and WNBA game IDs are supported")
+    return STATS_URLS[game_id[:2]]
+
+
 def fetch_game(game_id, session=None):
     """Raw V3 play-by-play and box score responses for one game."""
+    base = stats_url(game_id)
     pbp = get(
-        STATS_URL + "playbyplayv3",
+        base + "playbyplayv3",
         dict(GameID=game_id, StartPeriod=0, EndPeriod=0),
         session,
     )
     box = get(
-        STATS_URL + "boxscoretraditionalv3",
+        base + "boxscoretraditionalv3",
         dict(
             GameID=game_id,
             StartPeriod=0,
@@ -259,7 +268,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("game_id", help="Ten-character NBA game ID, e.g. 0022500001")
+    parser.add_argument(
+        "game_id", help="Ten-character NBA or WNBA game ID, e.g. 0022500001"
+    )
     parser.add_argument("-o", "--output", type=Path, help="JSON file to write")
     parser.add_argument("--pbp", type=Path, help="Saved playbyplayv3 response")
     parser.add_argument(

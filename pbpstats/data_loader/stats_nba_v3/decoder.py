@@ -32,10 +32,10 @@ class V3Context:
         if hashlib.sha256(source_bytes).hexdigest() != self.pbp_sha256:
             raise V3DecodeError("Context does not match the raw PBP hash")
         if not isinstance(self.game_id, str) or not re.fullmatch(
-            r"00\d{8}", self.game_id
+            r"(00|10)\d{8}", self.game_id
         ):
             raise V3DecodeError(
-                "Initial compatibility adapter supports NBA game IDs only"
+                "Compatibility adapter supports NBA and WNBA game IDs only"
             )
         if (
             len(self.team_ids) != 2
@@ -192,6 +192,10 @@ FLAGRANT_FREE_THROWS = {
 }
 CLEAR_PATH_FREE_THROWS = {(1, 2): 25, (2, 2): 26}
 TECHNICAL_FREE_THROWS = {(1, 2): 21, (2, 2): 22}
+# Recorded only in the paired WNBA 2025 exports (tests/parity/paired-season-wnba-2025.json),
+# so they decode for WNBA games alone; NBA games still reject them.
+WNBA_TIMEOUTS = {"Official": 4, "Reset": 6}
+WNBA_CLEAR_PATH_FREE_THROWS = {(1, 1): 40}
 # Every supported subtype has recorded evidence in shot-vocabulary.json, and
 # the paired 2024-25 exports record exactly these codes. Other codes once used
 # for the same labels are historical (unresolved_aliases). No generic fallback.
@@ -270,6 +274,17 @@ class DecodedV3:
         context.validate(source_bytes)
         self.source_bytes = bytes(source_bytes)
         self.context = context
+        wnba = context.game_id.startswith("10")
+        self.timeouts = {**TIMEOUTS, **WNBA_TIMEOUTS} if wnba else TIMEOUTS
+        self.clear_path_free_throws = (
+            {**CLEAR_PATH_FREE_THROWS, **WNBA_CLEAR_PATH_FREE_THROWS}
+            if wnba
+            else CLEAR_PATH_FREE_THROWS
+        )
+        # WNBA 2025 V2 names a fouled player for its one blank-subtype foul.
+        self.fouls_without_fouled_player = (
+            FOULS_WITHOUT_FOULED_PLAYER - {""} if wnba else FOULS_WITHOUT_FOULED_PLAYER
+        )
         try:
             self.payload = json.loads(source_bytes)
         except ValueError as error:
@@ -552,14 +567,17 @@ class DecodedV3:
                 code = 16
             elif match:
                 category, attempt, total = match[1], int(match[2]), int(match[3])
-                if attempt > total or category == "Clear Path" and total != 2:
+                if attempt > total or (
+                    category == "Clear Path"
+                    and (attempt, total) not in self.clear_path_free_throws
+                ):
                     raise V3DecodeError("Invalid free throw numbering")
                 if category == "Technical":
                     if (attempt, total) not in TECHNICAL_FREE_THROWS:
                         raise V3DecodeError("Unsupported technical attempt pattern")
                     code = TECHNICAL_FREE_THROWS[attempt, total]
                 elif category == "Clear Path":
-                    code = CLEAR_PATH_FREE_THROWS[attempt, total]
+                    code = self.clear_path_free_throws[attempt, total]
                 elif (
                     category == "Flagrant" and (attempt, total) in FLAGRANT_FREE_THROWS
                 ):
@@ -610,7 +628,7 @@ class DecodedV3:
                 self.unknown_attribution.append(
                     dict(event_num=row["actionNumber"], role="double_foul_opponent")
                 )
-            elif kind == "Foul" and subtype not in FOULS_WITHOUT_FOULED_PLAYER:
+            elif kind == "Foul" and subtype not in self.fouls_without_fouled_player:
                 self.unknown_attribution.append(
                     dict(event_num=row["actionNumber"], role="foul_drawn")
                 )
@@ -655,8 +673,8 @@ class DecodedV3:
             )
         elif kind == "period" and subtype in ("start", "end"):
             event["EVENTMSGTYPE"] = 12 if subtype == "start" else 13
-        elif kind == "Timeout" and subtype in TIMEOUTS:
-            event.update(EVENTMSGTYPE=9, EVENTMSGACTIONTYPE=TIMEOUTS[subtype])
+        elif kind == "Timeout" and subtype in self.timeouts:
+            event.update(EVENTMSGTYPE=9, EVENTMSGACTIONTYPE=self.timeouts[subtype])
         elif kind == "Instant Replay" and subtype in REPLAYS:
             event.update(EVENTMSGTYPE=18, EVENTMSGACTIONTYPE=REPLAYS[subtype])
         elif kind == "Ejection" and subtype in EJECTIONS:
@@ -671,9 +689,11 @@ class DecodedV3:
         from .team_heave import TEAM_HEAVE_VERSION
 
         # Trust the feed's explicit classification; do not reclassify player shots
-        # using distance/time thresholds or infer who attempted the shot.
+        # using distance/time thresholds or infer who attempted the shot. Team
+        # heaves are recorded NBA facts from 2025-26; WNBA has no such evidence.
         if (
-            int(self.context.game_id[3:5]) < 25
+            not self.context.game_id.startswith("00")
+            or int(self.context.game_id[3:5]) < 25
             or row["subType"] != "Team Field Goal Attempt"
             or row["personId"] != 0
             or any(type(row.get(k)) is not int or row[k] != 0

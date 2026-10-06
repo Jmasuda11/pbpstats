@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "season": "WNBA 2025 regular season",
+  "source": "https://github.com/shufinskiy/nba_data",
+  "revision": "e829d4678be1e075f99e5d41a1c5f97089be446b",
+  "basis": "Two community CSV exports of the same games: PlayByPlayV2 and PlayByPlayV3, collected by the pinned loading-utils.R (load_playbyplayv2/load_playbyplayv3) and concatenated by build_dataset.R. Neither is raw HTTP JSON, an NBA-hosted archive or a behavioral oracle. Pairing records factual event correspondence only; behavior is still decided by the unchanged original engine.",
+  "archives": {
+    "v2": {
+      "path": "tests/parity/data/nba_data/wnba_nbastats_2025.tar.xz",
+      "format": "v2-csv-tar-xz",
+      "bytes": 1556040,
+      "sha256": "579c7a46faa92493dbf426d37392b5c22dbc0c15ab8f455b5bc6189bf1c92032",
+      "git_blob_sha1": "b875023c04a02afc1e6d3cfd458601be46c075d1",
+      "member": "wnba_nbastats_2025.csv",
+      "member_sha256": "52077a8f41707486bfc0c7c84260e494905bd0ca56ba926c82245682c53c2be8",
+      "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/wnba_nbastats_2025.tar.xz",
+      "retrieved_utc": "2026-10-06"
+    },
+    "v3": {
+      "path": "tests/parity/data/nba_data/wnba_nbastatsv3_2025.tar.xz",
+      "format": "v3-csv-tar-xz",
+      "bytes": 1615224,
+      "sha256": "141f65aa0ff97f306fbf980ee31a2be92e76d80bae12ee681324b6867db5f91c",
+      "git_blob_sha1": "02b99dc4ba7a6c9853e48de0e5804b928845f919",
+      "member": "wnba_nbastatsv3_2025.csv",
+      "member_sha256": "07d55215da21b8139bac17d9f0da582c39d2fcf44abbe58bdb699fd1ef5c7fbe",
+      "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/wnba_nbastatsv3_2025.tar.xz",
+      "retrieved_utc": "2026-10-06"
+    }
+  },
+  "provenance_files": {
+    "tests/parity/data/nba_data/loading-utils.R": "520bc64e32761876c6f2ca6cbcdb63c3f0637c6513f3d84ecb0845955ae46aaf",
+    "tests/parity/data/nba_data/build_dataset.R": "de10b41780d0ffe42a1a590e04612029ca3d63df5a0d83fd3b38d3dc0604d8cd",
+    "tests/parity/data/nba_data/README.md": "646fba3e21464fac92afe6c286637a55d5f68456487052be22be1d5a145c3687",
+    "tests/parity/data/nba_data/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  "fidelity_witness": {
+    "reference": "repository",
+    "path": "tests/parity/data/wnba/stats_v3_1022500001.json",
+    "sha256": "9ec61eb2bd23d28ce9940a203945c00d6970c225e91d9ae09ffaceba7bff5b37",
+    "bytes": 199786,
+    "game_id": "1022500001",
+    "url": "https://stats.wnba.com/stats/playbyplayv3?EndPeriod=0&GameID=1022500001&StartPeriod=0",
+    "retrieved_utc": "2026-10-06",
+    "basis": "Separately recorded stats.wnba.com V3 JSON response for a game also present in the V3 export. Typed export rows must equal its actions after the declared normalization."
+  },
+  "normalization": {
+    "game_id": "Exports drop leading zeros; restore the ten-character identity.",
+    "v3_integers": [
+      "actionId",
+      "actionNumber",
+      "isFieldGoal",
+      "period",
+      "personId",
+      "pointsTotal",
+      "shotDistance",
+      "shotValue",
+      "teamId",
+      "videoAvailable",
+      "xLegacy",
+      "yLegacy"
+    ],
+    "v3_padding": "The same strip of surrounding whitespace from actionType and subType as for the NBA export; the WNBA export has no padded values, so it changes nothing."
+  }
+}

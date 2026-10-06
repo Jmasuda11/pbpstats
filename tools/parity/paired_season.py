@@ -1,4 +1,6 @@
-"""Pair the pinned 2024-25 PlayByPlayV2 and V3 exports event by event.
+"""Pair pinned PlayByPlayV2 and V3 season exports event by event.
+
+Seasons: the NBA 2024-25 and WNBA 2025 regular seasons (``--season``).
 
 The pairing records facts only: event correspondence, the V2 code recorded for
 each V3 label, clocks, actors, same-instant ordering and information that one
@@ -23,13 +25,21 @@ from tools.parity.reference import ROOT, digest, prepare_reference
 
 MANIFEST = "tests/parity/paired-season-evidence.json"
 EXPECTED = "tests/parity/paired-season-2024.json"
+# Paired seasons by name: (evidence manifest, pinned facts).
+SEASONS = {
+    "nba-2024": (MANIFEST, EXPECTED),
+    "wnba-2025": (
+        "tests/parity/paired-season-evidence-wnba-2025.json",
+        "tests/parity/paired-season-wnba-2025.json",
+    ),
+}
 CLOCK = re.compile(r"PT(\d+)M(\d+(?:\.\d+)?)S")
 JUMP_BALL = re.compile(r"Jump Ball (?:\(CC\) )?(.+?) vs\. (.+?): Tip to (.*)")
 
 
-@lru_cache(maxsize=1)
-def manifest():
-    return json.loads((ROOT / MANIFEST).read_bytes())
+@lru_cache(maxsize=None)
+def manifest(name="nba-2024"):
+    return json.loads((ROOT / SEASONS[name][0]).read_bytes())
 
 
 def git_blob_sha1(data):
@@ -69,10 +79,10 @@ def v3_action(row, integers):
     return action
 
 
-@lru_cache(maxsize=1)
-def season():
+@lru_cache(maxsize=None)
+def season(name="nba-2024"):
     """Return ({game_id: v2 rows}, {game_id: typed v3 actions}, padding counts)."""
-    evidence = manifest()
+    evidence = manifest(name)
     for path, expected in evidence["provenance_files"].items():
         if digest((ROOT / path).read_bytes()) != expected:
             raise ValueError("Provenance file changed: " + path)
@@ -91,14 +101,19 @@ def season():
     return dict(v2), dict(v3), dict(padding)
 
 
-def fidelity_witness():
+def fidelity_witness(name="nba-2024"):
     """Compare one exported game with its separately recorded JSON response."""
-    witness = manifest()["fidelity_witness"]
-    raw = (prepare_reference(witness["reference"]) / witness["path"]).read_bytes()
+    witness = manifest(name)["fidelity_witness"]
+    root = (
+        ROOT
+        if witness["reference"] == "repository"
+        else prepare_reference(witness["reference"])
+    )
+    raw = (root / witness["path"]).read_bytes()
     if digest(raw) != witness["sha256"]:
         raise ValueError("Fidelity witness changed")
     recorded = json.loads(raw)["game"]
-    exported = season()[1][witness["game_id"]]
+    exported = season(name)[1][witness["game_id"]]
     return recorded["gameId"] == witness["game_id"] and recorded["actions"] == exported
 
 
@@ -426,15 +441,17 @@ def decoder_comparison(v3, facts):
     return result
 
 
-def report():
-    v2, v3, padding = season()
+def report(name="nba-2024"):
+    v2, v3, padding = season(name)
     facts, details = pair(v2, v3)
     facts["export_padding"] = dict(sorted(padding.items()))
-    facts["fidelity_witness_matches"] = fidelity_witness()
+    facts["fidelity_witness_matches"] = fidelity_witness(name)
     return {
         "schema_version": 1,
-        "scope": "paired 2024-25 export facts; not an adapter acceptance result",
-        "evidence_manifest_sha256": digest((ROOT / MANIFEST).read_bytes()),
+        "scope": "paired {} export facts; not an adapter acceptance result".format(
+            manifest(name)["season"]
+        ),
+        "evidence_manifest_sha256": digest((ROOT / SEASONS[name][0]).read_bytes()),
         "facts": facts,
         "decoder_comparison": decoder_comparison(v3, facts),
         "details": details,
@@ -443,22 +460,21 @@ def report():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--output", type=Path, default=ROOT / ".parity/paired-season-2024.json"
-    )
+    parser.add_argument("--season", choices=sorted(SEASONS), default="nba-2024")
+    parser.add_argument("--output", type=Path, help="Default: .parity/<pinned facts name>")
     parser.add_argument(
         "--write-expected",
         action="store_true",
-        help="Explicitly replace the pinned facts in " + EXPECTED,
+        help="Explicitly replace the season's pinned facts",
     )
     args = parser.parse_args()
-    result = report()
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
+    expected = SEASONS[args.season][1]
+    output = args.output or ROOT / ".parity" / Path(expected).name
+    result = report(args.season)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding="utf-8")
     if args.write_expected:
-        (ROOT / EXPECTED).write_text(
+        (ROOT / expected).write_text(
             json.dumps(result["facts"], indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )

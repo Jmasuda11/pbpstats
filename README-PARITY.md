@@ -57,6 +57,8 @@ The [paired 2024-25 season evidence](docs/v3-paired-season-evidence.md) adds the
 
 The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,047 research passes.
 
+The [WNBA 2025 paired season](docs/v3-wnba-2025.md) extends the same evidence to the WNBA. All 110,003 events in 286 games pair one-to-one, and the decoder produces the recorded V2 code for all 154 labels, three of them WNBA-only. With equivalent facts, all 167 games that both sides complete are identical. Run it with `--season wnba-2025` on `paired_season` and `season_differential`.
+
 ## Fetch a game and save possessions as JSON
 
 From the checkout root:
@@ -65,7 +67,7 @@ From the checkout root:
 .\.venv\Scripts\python.exe -m pbpstats.data_loader.stats_nba_v3.web 0022500521 -o game.json --save-responses raw
 ```
 
-This requests `playbyplayv3` and `boxscoretraditionalv3` from stats.nba.com, builds the adapter's context from the box score, parses the game with the original engine and writes the possessions as JSON. `--save-responses` keeps the raw responses used. To parse saved responses offline instead, pass `--pbp FILE --boxscore FILE`. Offline, a game that needs a period-start box score stops and names that request.
+This requests `playbyplayv3` and `boxscoretraditionalv3` from stats.nba.com, or stats.wnba.com for a WNBA game ID, builds the adapter's context from the box score, parses the game with the original engine and writes the possessions as JSON. `--save-responses` keeps the raw responses used. To parse saved responses offline instead, pass `--pbp FILE --boxscore FILE`. Offline, a game that needs a period-start box score stops and names that request.
 
 How the context and starters are built:
 
@@ -110,12 +112,12 @@ Games are rejected rather than guessed when V3 lacks a fact or the original reje
 
 ## Current adapter
 
-`pbpstats.data_loader.stats_nba_v3.StatsNbaV3PossessionLoader` accepts V3 source bytes and a `V3Context` containing source provenance, a matching PBP hash, two NBA teams, a recorded roster with names, and any explicitly supplied period starters. Omitted periods use original event inference and scoped starter overrides, with optional `starter_boxscores={period: V3StarterBoxscore(...)}` for recorded interval responses when recovery is needed. It builds the **original** Stats enhanced-event classes through their factory and reuses original enhancement, order repairs, possession decisions and attribution.
+`pbpstats.data_loader.stats_nba_v3.StatsNbaV3PossessionLoader` accepts V3 source bytes and a `V3Context` containing source provenance, a matching PBP hash, an NBA or WNBA game ID with its two teams, a recorded roster with names, and any explicitly supplied period starters. Omitted periods use original event inference and scoped starter overrides, with optional `starter_boxscores={period: V3StarterBoxscore(...)}` for recorded interval responses when recovery is needed. It builds the **original** Stats enhanced-event classes through their factory and reuses original enhancement, order repairs, possession decisions and attribution.
 
 The original loader's repair input is a temporary in-memory constructor projection. Source bytes, raw rows and per-event source indices remain separate. File-writing repair hooks record diagnostics instead. Optional `V3Overrides` supplies recorded legacy bad-possession/boundary correction files; optional `V3EventOrder` supplies a recorded provider response for the original ordering fallback. Both require provenance and the exact PBP hash. Missing provider evidence still blocks recovery without making a network call. Existing V2 loaders are untouched.
 
 The [starter recovery continuation](docs/v3-starter-recovery-progress.md) documents 70 matching declared observations, including 29 new full-loader starter cases, exact exception classes/messages/context, scoped overrides, repairs and selected HTTP/JSON failures. Broader source/API and ingestion behavior remain open gates. The [initial exception checkpoint](docs/v3-exception-parity-progress.md) preserves the earlier 41-case results.
 
-This is an **experimental, bounded NBA adapter**, not the replacement for Cheeseburger's game API. Unknown event vocabulary/participants fail explicitly. Detailed statistics are unavailable at the adapter's aggregate API until attribution completeness is implemented; original event objects are exposed for compatibility research and their direct statistics must not be treated as complete V3 outputs. `full_game_validated` stays false because schedule, official-box validation and the full evidence contract are not implemented here.
+This is an **experimental, bounded NBA and WNBA adapter**, not the replacement for Cheeseburger's game API. Unknown event vocabulary/participants fail explicitly. Detailed statistics are unavailable at the adapter's aggregate API until attribution completeness is implemented; original event objects are exposed for compatibility research and their direct statistics must not be treated as complete V3 outputs. `full_game_validated` stays false because schedule, official-box validation and the full evidence contract are not implemented here.
 
 Synthetic sequence checks explicitly bypass full source-order and alternating-possession validation, matching the original synthetic worker's scope. The recorded-game checks run both validations. Passing a synthetic case is not a full-game acceptance claim.

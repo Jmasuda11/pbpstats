@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "scope": "Live stats.wnba.com responses recorded unchanged: the WNBA 2025 export's fidelity witness and the fetch tool's offline WNBA test. Not ingestion captures.",
+  "files": [
+    {
+      "game_id": "1022500001",
+      "path": "tests/parity/data/wnba/stats_v3_1022500001.json",
+      "url": "https://stats.wnba.com/stats/playbyplayv3?EndPeriod=0&GameID=1022500001&StartPeriod=0",
+      "retrieved_utc": "2026-10-06",
+      "bytes": 199786,
+      "sha256": "9ec61eb2bd23d28ce9940a203945c00d6970c225e91d9ae09ffaceba7bff5b37"
+    },
+    {
+      "game_id": "1022500001",
+      "path": "tests/parity/data/wnba/stats_v3_boxscore_1022500001.json",
+      "url": "https://stats.wnba.com/stats/boxscoretraditionalv3?EndPeriod=0&EndRange=0&GameID=1022500001&RangeType=0&StartPeriod=0&StartRange=0",
+      "retrieved_utc": "2026-10-06",
+      "bytes": 16189,
+      "sha256": "048d471136d7b34fd398ff6ea7ae7a3c9ef19d86282d20ddef10d3f1ca82bfba"
+    }
+  ]
+}

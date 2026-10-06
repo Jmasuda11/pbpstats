@@ -9,13 +9,14 @@ All results were executed locally. The branch is pushed to `origin/feat/v3-parit
 | Check | Result | Scope |
 | --- | --- | --- |
 | Untouched original suite against the candidate | 116 pass; the same two known fixture failures | Only the earlier starter I/O split changes an original file |
-| Parity tests | 796 pass | Harness, adapter, vocabulary, exceptions, corpus, paired season, season differential and the fetch tool |
+| Parity tests | 811 pass | Harness, adapter, vocabulary, exceptions, corpus, paired seasons, season differential, WNBA and the fetch tool |
 | Paired 2024-25 exports | 574,358 of 574,358 events pair one-to-one; period, actor and team agree on every event | [Paired season evidence](v3-paired-season-evidence.md) |
 | Decoder against recorded V2 codes | 188 of 188 labels | Was 156 matching, 8 different and 24 rejected; every table entry is checked |
 | Full games, equivalent facts | **937 of 937 comparable games identical** | Floored clocks plus V2 within-instant order; fouled player excluded as a declared gap |
 | Full games, V3 order and floored clocks | 565 identical; credited counts equal in all 937 | 69 possessions in 61 games credit a different lineup |
 | Full games, exact V3 | Decisions differ in 746 games; +414 credited possessions (+0.22%) | Tenth-of-a-second clocks in final seconds |
 | 2025-26 corpus audit | 1,047 research passes; 183 blocked; no crashes | Was 521 on October 5, and 189 in the October 3 document |
+| WNBA 2025 paired season | 154 of 154 labels decode to the recorded code; **167 of 167 comparable games identical** with equivalent facts | [WNBA support](v3-wnba-2025.md); three WNBA-only codes |
 
 The season comparison is in [the season differential](v3-season-differential.md); the decoding evidence is in [the paired season evidence](v3-paired-season-evidence.md).
 
@@ -39,6 +40,12 @@ The season comparison is in [the season differential](v3-season-differential.md)
   - `python -m pbpstats.data_loader.stats_nba_v3.web GAME_ID -o game.json` fetches `playbyplayv3` and `boxscoretraditionalv3`, builds the context from the box score and writes the possessions as JSON. Usage is in [README-PARITY](../README-PARITY.md#fetch-a-game-and-save-possessions-as-json).
   - When starter recovery needs the original's period-start box score, the adapter raises `V3EvidenceRequired` with the exact request. The tool fetches it, records it as evidence and parses again.
   - Offline over the 2025-26 captures, it parses 1,038 games, each with the corpus audit's credited possessions. Live fetches of `0022500089` and `0022500521` also match; the second needed its period-5 box score.
+- **WNBA:**
+  - The adapter accepts WNBA game IDs, and the fetch tool requests them from `stats.wnba.com`.
+  - Three codes recorded only in WNBA data decode for WNBA games alone: official and reset timeouts, and a one-shot clear-path free throw.
+  - The paired 2025 exports and the season differential support `--season wnba-2025`.
+  - Live, 8 of 12 WNBA 2026 playoff games parse with final scores equal to the box score. The other 4 are rejected for declared reasons.
+  - Details are in [WNBA support](v3-wnba-2025.md).
 - **CI line endings:** the reference and prior checks now pin each Git tree and the committed bytes of each file. 197 reference and 231 prior file hashes, and one shot-vocabulary source hash, were re-pinned from CRLF to committed bytes. Each old hash was checked against the CRLF extraction that produced it.
 
 ## Remaining work
@@ -56,7 +63,7 @@ The season comparison is in [the season differential](v3-season-differential.md)
 4. **Integration.**
    - Confirm the parity workflow passes remotely with the line-ending fix.
    - Integrate with `Client` and the data-loader factory. Web and file loading and box-score context building now exist in `stats_nba_v3.web`.
-   - Support WNBA and G League.
+   - Support G League; it needs its own paired evidence, starting with its one-shot free-throw subtypes. WNBA is supported.
    - Settle the detailed-statistics capability gate.
    - Migrate Cheeseburger with versioned imports.
 

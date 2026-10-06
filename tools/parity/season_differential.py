@@ -154,7 +154,7 @@ def season_names(v3):
     return index, names
 
 
-def v3_context(game_id, actions, season_index=None):
+def v3_context(game_id, actions, season_index=None, season="2024-25"):
     """Teams and roster from V3 actors and their own descriptions.
 
     A substitute who never acts in this game is named only in the description.
@@ -203,11 +203,11 @@ def v3_context(game_id, actions, season_index=None):
         "team_ids": list(teams),
         "roster": {str(identity): facts for identity, facts in roster.items()},
         "season_bound_substitutes": season_bound,
-        "source": "Paired 2024-25 V3 export; roster from V3 actors only",
+        "source": "Paired {} V3 export; roster from V3 actors only".format(season),
     }
 
 
-def prepare(folder, game_ids, v2, v3):
+def prepare(folder, game_ids, v2, v3, season="2024-25"):
     """Write every worker input; return unavailable contexts and season bindings."""
     unavailable, bound = {}, {}
     season_index = season_names(v3)
@@ -223,7 +223,7 @@ def prepare(folder, game_ids, v2, v3):
             )
             (folder / "v2/game_details" / name).write_bytes(canonical(payload))
         try:
-            context = v3_context(game_id, v3[game_id], season_index)
+            context = v3_context(game_id, v3[game_id], season_index, season)
         except ValueError as error:
             unavailable[game_id] = dict(
                 category="v3_context: " + getattr(error, "code", "error"),
@@ -588,8 +588,11 @@ def summarize(rows):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--season", default="nba-2024", help="nba-2024 or wnba-2025")
     parser.add_argument(
-        "--output", type=Path, default=ROOT / ".parity/season-differential-2024.json"
+        "--output",
+        type=Path,
+        help="Default: .parity/season-differential-2024.json (NBA) or -<season>.json",
     )
     parser.add_argument("--games", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--limit", type=int, help="Compare only the first N games")
@@ -605,10 +608,16 @@ def main():
         args.side, args.output = args.worker, args.records
         return run_worker(args)
 
-    from tools.parity.paired_season import MANIFEST, season
+    from tools.parity.paired_season import SEASONS, manifest, season
     from tools.parity.reference import prepare_reference
 
-    v2, v3, _ = season()
+    if args.season not in SEASONS:
+        parser.error("--season must be one of " + ", ".join(sorted(SEASONS)))
+    if args.output is None:
+        suffix = "2024" if args.season == "nba-2024" else args.season
+        args.output = ROOT / ".parity/season-differential-{}.json".format(suffix)
+    label = manifest(args.season)["season"]
+    v2, v3, _ = season(args.season)
     game_ids = sorted(set(v2) & set(v3))
     if args.game:
         game_ids = [g for g in game_ids if g in set(args.game)]
@@ -618,7 +627,7 @@ def main():
     (ROOT / ".parity").mkdir(exist_ok=True)
     folder = Path(tempfile.mkdtemp(prefix="season-", dir=ROOT / ".parity"))
     try:
-        unavailable, bound = prepare(folder, game_ids, v2, v3)
+        unavailable, bound = prepare(folder, game_ids, v2, v3, label)
         (folder / "games-v2.json").write_text(json.dumps(game_ids), encoding="utf-8")
         v3_games = [g for g in game_ids if g not in unavailable]
         (folder / "games-v3.json").write_text(json.dumps(v3_games), encoding="utf-8")
@@ -670,7 +679,8 @@ def main():
         report = dict(
             schema_version=1,
             scope="Original V2 engine on the V2 export versus the V3 adapter on the paired V3 export; research comparison, not acceptance",
-            evidence_manifest_sha256=digest((ROOT / MANIFEST).read_bytes()),
+            season=label,
+            evidence_manifest_sha256=digest((ROOT / SEASONS[args.season][0]).read_bytes()),
             shared_inputs=[
                 "Shot coordinates for the original's shot-chart files come from the V3 export (xLegacy/yLegacy); the pinned evidence has no V2 shot chart."
             ],

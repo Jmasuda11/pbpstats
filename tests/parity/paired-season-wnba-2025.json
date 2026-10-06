@@ -1,0 +1,1807 @@
+{
+  "games": 286,
+  "games_in_both": 286,
+  "join": {
+    "actor_teams_equal": 110003,
+    "actors_equal": 110003,
+    "games_exact_event_set": 286,
+    "periods_equal": 110003,
+    "v2_events": 110003,
+    "v2_only": 0,
+    "v2_rows": 110003,
+    "v3_only": 0,
+    "v3_primary": 110003,
+    "v3_rows": 116471,
+    "v3_secondary": 6468
+  },
+  "v2_duplicate_rows": [],
+  "clocks": {
+    "equal": 98277,
+    "other": 0,
+    "v2_floor_of_fractional_v3": 11726
+  },
+  "secondary_roles": {
+    "block_matches_v2_player3": 2247,
+    "blocks": 2247,
+    "steal_matches_v2_player2": 4221,
+    "steals": 4221
+  },
+  "codes": [
+    {
+      "actionType": "Ejection",
+      "subType": "Other",
+      "v2": [
+        {
+          "event_type": 11,
+          "action_type": 4,
+          "events": 12
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 0,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Away From Play",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 6,
+          "events": 33
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Clear Path",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 9,
+          "events": 8
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Defense 3 Second",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 17,
+          "events": 61
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Delay Technical",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 18,
+          "events": 2
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Double Personal",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 10,
+          "events": 3
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Double Technical",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 16,
+          "events": 15
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Flagrant Type 1",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 14,
+          "events": 48
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Flagrant Type 2",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 15,
+          "events": 2
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Loose Ball",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 3,
+          "events": 576
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Offensive",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 4,
+          "events": 788
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Offensive Charge",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 26,
+          "events": 85
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Personal",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 1,
+          "events": 3794
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Personal Take",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 28,
+          "events": 128
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Shooting",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 2,
+          "events": 4478
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Technical",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 11,
+          "events": 139
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Too Many Players Technical",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 30,
+          "events": 2
+        }
+      ]
+    },
+    {
+      "actionType": "Foul",
+      "subType": "Transition Take",
+      "v2": [
+        {
+          "event_type": 6,
+          "action_type": 31,
+          "events": 43
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 1 of 1",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 10,
+          "events": 1128
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 1 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 11,
+          "events": 4295
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 1 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 13,
+          "events": 131
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 2 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 12,
+          "events": 4285
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 2 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 14,
+          "events": 131
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw 3 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 15,
+          "events": 130
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Clear Path 1 of 1",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 40,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Clear Path 1 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 25,
+          "events": 7
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Clear Path 2 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 26,
+          "events": 7
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 1 of 1",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 20,
+          "events": 7
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 1 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 18,
+          "events": 32
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 1 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 27,
+          "events": 11
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 2 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 19,
+          "events": 32
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 2 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 28,
+          "events": 11
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Flagrant 3 of 3",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 29,
+          "events": 11
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Technical",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 16,
+          "events": 198
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Technical 1 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 21,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Free Throw",
+      "subType": "Free Throw Technical 2 of 2",
+      "v2": [
+        {
+          "event_type": 3,
+          "action_type": 22,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Altercation Ruling",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 2,
+          "events": 10
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Coach Challenge Overturn Ruling",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 5,
+          "events": 188
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Coach Challenge Ruling Stands",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 6,
+          "events": 59
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Coach Challenge Support Ruling",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 4,
+          "events": 68
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Overturn Ruling",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 1,
+          "events": 128
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Ruling Stands",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 3,
+          "events": 67
+        }
+      ]
+    },
+    {
+      "actionType": "Instant Replay",
+      "subType": "Support Ruling",
+      "v2": [
+        {
+          "event_type": 18,
+          "action_type": 0,
+          "events": 193
+        }
+      ]
+    },
+    {
+      "actionType": "Jump Ball",
+      "subType": "",
+      "v2": [
+        {
+          "event_type": 10,
+          "action_type": 0,
+          "events": 768
+        }
+      ]
+    },
+    {
+      "actionType": "Jump Ball",
+      "subType": "Coach Challenge",
+      "v2": [
+        {
+          "event_type": 10,
+          "action_type": 1,
+          "events": 21
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Alley Oop Layup shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 43,
+          "events": 23
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Cutting Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 99,
+          "events": 36
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Cutting Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 98,
+          "events": 1559
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Bank Hook Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 93,
+          "events": 16
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Dunk Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 9,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 75,
+          "events": 373
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Floating Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 102,
+          "events": 181
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Floating Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 101,
+          "events": 411
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Hook Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 57,
+          "events": 75
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 6,
+          "events": 2234
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Driving Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 73,
+          "events": 150
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Fadeaway Bank shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 83,
+          "events": 15
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Fadeaway Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 63,
+          "events": 141
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 71,
+          "events": 17
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Floating Jump shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 78,
+          "events": 128
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Hook Bank Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 67,
+          "events": 5
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Hook Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 3,
+          "events": 90
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Jump Bank Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 66,
+          "events": 49
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 1,
+          "events": 4030
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 5,
+          "events": 1176
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Pullup Jump shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 79,
+          "events": 1903
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Putback Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 72,
+          "events": 638
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 44,
+          "events": 151
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Alley Oop Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 100,
+          "events": 3
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 76,
+          "events": 89
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 2,
+          "events": 411
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 41,
+          "events": 1363
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Pull-Up Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 103,
+          "events": 255
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Running Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 74,
+          "events": 34
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Step Back Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 104,
+          "events": 3
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Step Back Jump shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 80,
+          "events": 499
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Tip Layup Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 97,
+          "events": 108
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Bank Hook Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 96,
+          "events": 19
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Bank shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 85,
+          "events": 50
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Fadeaway Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 105,
+          "events": 12
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Fadeaway shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 86,
+          "events": 217
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Hook Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 58,
+          "events": 121
+        }
+      ]
+    },
+    {
+      "actionType": "Made Shot",
+      "subType": "Turnaround Jump Shot",
+      "v2": [
+        {
+          "event_type": 1,
+          "action_type": 47,
+          "events": 340
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Alley Oop Layup shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 43,
+          "events": 18
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Cutting Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 99,
+          "events": 17
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Cutting Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 98,
+          "events": 601
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Bank Hook Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 93,
+          "events": 24
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 75,
+          "events": 243
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Floating Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 102,
+          "events": 221
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Floating Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 101,
+          "events": 782
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Hook Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 57,
+          "events": 86
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 6,
+          "events": 2498
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Driving Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 73,
+          "events": 134
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Fadeaway Bank shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 83,
+          "events": 18
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Fadeaway Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 63,
+          "events": 272
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 71,
+          "events": 9
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Floating Jump shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 78,
+          "events": 216
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Hook Bank Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 67,
+          "events": 8
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Hook Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 3,
+          "events": 122
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Jump Bank Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 66,
+          "events": 47
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 1,
+          "events": 7472
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 5,
+          "events": 964
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Pullup Jump shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 79,
+          "events": 3403
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Putback Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 72,
+          "events": 422
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 44,
+          "events": 95
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Alley Oop Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 100,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Finger Roll Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 76,
+          "events": 37
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 2,
+          "events": 632
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 41,
+          "events": 734
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Pull-Up Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 103,
+          "events": 342
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Running Reverse Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 74,
+          "events": 26
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Step Back Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 104,
+          "events": 5
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Step Back Jump shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 80,
+          "events": 887
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Tip Layup Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 97,
+          "events": 100
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Bank Hook Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 96,
+          "events": 27
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Bank shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 85,
+          "events": 44
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Fadeaway Bank Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 105,
+          "events": 8
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Fadeaway shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 86,
+          "events": 325
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Hook Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 58,
+          "events": 158
+        }
+      ]
+    },
+    {
+      "actionType": "Missed Shot",
+      "subType": "Turnaround Jump Shot",
+      "v2": [
+        {
+          "event_type": 2,
+          "action_type": 47,
+          "events": 611
+        }
+      ]
+    },
+    {
+      "actionType": "Rebound",
+      "subType": "Normal Rebound",
+      "v2": [
+        {
+          "event_type": 4,
+          "action_type": 1,
+          "events": 1078
+        }
+      ]
+    },
+    {
+      "actionType": "Rebound",
+      "subType": "Unknown",
+      "v2": [
+        {
+          "event_type": 4,
+          "action_type": 0,
+          "events": 22751
+        }
+      ]
+    },
+    {
+      "actionType": "Substitution",
+      "subType": "",
+      "v2": [
+        {
+          "event_type": 8,
+          "action_type": 0,
+          "events": 12066
+        }
+      ]
+    },
+    {
+      "actionType": "Timeout",
+      "subType": "Coach Challenge",
+      "v2": [
+        {
+          "event_type": 9,
+          "action_type": 7,
+          "events": 97
+        }
+      ]
+    },
+    {
+      "actionType": "Timeout",
+      "subType": "Official",
+      "v2": [
+        {
+          "event_type": 9,
+          "action_type": 4,
+          "events": 448
+        }
+      ]
+    },
+    {
+      "actionType": "Timeout",
+      "subType": "Regular",
+      "v2": [
+        {
+          "event_type": 9,
+          "action_type": 1,
+          "events": 2077
+        }
+      ]
+    },
+    {
+      "actionType": "Timeout",
+      "subType": "Reset",
+      "v2": [
+        {
+          "event_type": 9,
+          "action_type": 6,
+          "events": 168
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 0,
+          "events": 1
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "3 Second Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 8,
+          "events": 36
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "5 Second Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 9,
+          "events": 17
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "8 Second Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 10,
+          "events": 18
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Backcourt Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 13,
+          "events": 47
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Bad Pass",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 1,
+          "events": 2909
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Discontinue Dribble",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 7,
+          "events": 12
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Double Dribble",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 6,
+          "events": 26
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Inbound Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 12,
+          "events": 10
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Jump Ball Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 18,
+          "events": 8
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Kicked Ball Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 19,
+          "events": 4
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Lane Violation",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 17,
+          "events": 10
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Lost Ball",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 2,
+          "events": 1370
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Offensive Foul Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 37,
+          "events": 883
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Out of Bounds - Bad Pass Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 45,
+          "events": 1095
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Out of Bounds Lost Ball Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 40,
+          "events": 371
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Palming Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 21,
+          "events": 6
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Shot Clock Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 11,
+          "events": 560
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Step Out of Bounds Turnover",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 39,
+          "events": 141
+        }
+      ]
+    },
+    {
+      "actionType": "Turnover",
+      "subType": "Traveling",
+      "v2": [
+        {
+          "event_type": 5,
+          "action_type": 4,
+          "events": 452
+        }
+      ]
+    },
+    {
+      "actionType": "Violation",
+      "subType": "Delay Of Game",
+      "v2": [
+        {
+          "event_type": 7,
+          "action_type": 1,
+          "events": 80
+        }
+      ]
+    },
+    {
+      "actionType": "Violation",
+      "subType": "Jump Ball",
+      "v2": [
+        {
+          "event_type": 7,
+          "action_type": 4,
+          "events": 36
+        }
+      ]
+    },
+    {
+      "actionType": "Violation",
+      "subType": "Kicked Ball",
+      "v2": [
+        {
+          "event_type": 7,
+          "action_type": 5,
+          "events": 247
+        }
+      ]
+    },
+    {
+      "actionType": "Violation",
+      "subType": "Lane",
+      "v2": [
+        {
+          "event_type": 7,
+          "action_type": 3,
+          "events": 5
+        }
+      ]
+    },
+    {
+      "actionType": "period",
+      "subType": "end",
+      "v2": [
+        {
+          "event_type": 13,
+          "action_type": 0,
+          "events": 1150
+        }
+      ]
+    },
+    {
+      "actionType": "period",
+      "subType": "start",
+      "v2": [
+        {
+          "event_type": 12,
+          "action_type": 0,
+          "events": 1150
+        }
+      ]
+    }
+  ],
+  "order": {
+    "events_in_reordered_instants": 2245,
+    "events_moved": 494,
+    "games_different": 226,
+    "games_identical": 60,
+    "games_with_cross_instant_difference": 0,
+    "instants_reordered": 485
+  },
+  "reordered_instant_kinds": {
+    "Foul|Double Technical": 1,
+    "Foul|Flagrant Type 1": 3,
+    "Foul|Loose Ball": 19,
+    "Foul|Personal": 56,
+    "Foul|Personal Take": 8,
+    "Foul|Shooting": 318,
+    "Foul|Technical": 3,
+    "Free Throw|Free Throw 1 of 1": 3,
+    "Free Throw|Free Throw 1 of 2": 378,
+    "Free Throw|Free Throw 1 of 3": 18,
+    "Free Throw|Free Throw 2 of 2": 375,
+    "Free Throw|Free Throw 2 of 3": 18,
+    "Free Throw|Free Throw 3 of 3": 17,
+    "Free Throw|Free Throw Flagrant 1 of 2": 3,
+    "Free Throw|Free Throw Flagrant 2 of 2": 3,
+    "Free Throw|Free Throw Technical": 4,
+    "Instant Replay|Altercation Ruling": 2,
+    "Instant Replay|Coach Challenge Overturn Ruling": 2,
+    "Instant Replay|Coach Challenge Ruling Stands": 1,
+    "Instant Replay|Coach Challenge Support Ruling": 2,
+    "Instant Replay|Overturn Ruling": 3,
+    "Instant Replay|Ruling Stands": 3,
+    "Instant Replay|Support Ruling": 1,
+    "Jump Ball|": 6,
+    "Made Shot|Fadeaway Jump Shot": 1,
+    "Made Shot|Jump Shot": 3,
+    "Made Shot|Putback Layup Shot": 37,
+    "Made Shot|Tip Layup Shot": 8,
+    "Made Shot|Turnaround Bank shot": 1,
+    "Missed Shot|Driving Floating Jump Shot": 1,
+    "Missed Shot|Driving Layup Shot": 1,
+    "Missed Shot|Jump Bank Shot": 1,
+    "Missed Shot|Jump Shot": 5,
+    "Missed Shot|Layup Shot": 7,
+    "Missed Shot|Pullup Jump shot": 2,
+    "Missed Shot|Putback Layup Shot": 9,
+    "Missed Shot|Running Pull-Up Jump Shot": 1,
+    "Missed Shot|Running Reverse Layup Shot": 1,
+    "Missed Shot|Tip Layup Shot": 8,
+    "Rebound|Normal Rebound": 104,
+    "Rebound|Unknown": 154,
+    "Substitution|": 624,
+    "Timeout|Coach Challenge": 1,
+    "Timeout|Official": 2,
+    "Timeout|Regular": 7,
+    "Turnover|Lane Violation": 2,
+    "Turnover|Lost Ball": 4,
+    "Turnover|Offensive Foul Turnover": 2,
+    "Turnover|Shot Clock Turnover": 3,
+    "Turnover|Step Out of Bounds Turnover": 1,
+    "Turnover|Traveling": 1,
+    "Violation|Delay Of Game": 3,
+    "Violation|Kicked Ball": 1,
+    "Violation|Lane": 2,
+    "period|start": 1
+  },
+  "v3_information_gaps": {
+    "v2_fouls": 10206,
+    "v2_fouls_with_fouled_player": 10002,
+    "v3_blank_jump_balls": 54,
+    "with_v2_opposing_jumper": 54,
+    "with_v2_recipient_or_team": 54
+  },
+  "held_ball_turnovers": {
+    "games": 100,
+    "later_clock": 46,
+    "occurrences": 125,
+    "same_clock": 79,
+    "v2_lost_ball_turnover_with_stealer": 125,
+    "v2_other": 0
+  },
+  "export_padding": {},
+  "fidelity_witness_matches": true
+}

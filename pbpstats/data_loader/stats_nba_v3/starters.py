@@ -6,6 +6,7 @@ import hashlib
 
 import requests
 
+from pbpstats import NBA_STRING
 from pbpstats.resources.enhanced_pbp.stats_nba.start_of_period import StatsStartOfPeriod
 
 from .decoder import V3DecodeError
@@ -123,7 +124,10 @@ class StarterRecovery:
         starters = start._get_period_starters_from_period_events(
             None, ignore_missing_starters=True
         )
-        corrections = self.overrides.get(start.game_id, {}).get(start.period, {})
+        # As in the original, IntDecoder keeps only leading-zero NBA game IDs as
+        # strings, so other leagues' override games are keyed by int(game_id).
+        game_id = start.game_id if start.league == NBA_STRING else int(start.game_id)
+        corrections = self.overrides.get(game_id, {}).get(start.period, {})
         # Preserve the original rule: only a team with a non-five inferred set
         # consults the override. A later failure sends the whole period to the
         # boxscore fallback, including any team already corrected here.
