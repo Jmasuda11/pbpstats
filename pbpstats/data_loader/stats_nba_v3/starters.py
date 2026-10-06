@@ -11,6 +11,18 @@ from pbpstats.resources.enhanced_pbp.stats_nba.start_of_period import StatsStart
 from .decoder import V3DecodeError
 
 
+class V3EvidenceRequired(V3DecodeError):
+    """Evidence the original would have requested over the network.
+
+    Carries the exact request so a caller can record that response and pass it
+    back as V3StarterBoxscore; the adapter itself never makes the request.
+    """
+
+    def __init__(self, message, *, period, url, params):
+        super().__init__(message)
+        self.period, self.url, self.params = period, url, deepcopy(params)
+
+
 @dataclass(frozen=True)
 class V3StarterBoxscore:
     """Recorded response for one exact original period-start boxscore request.
@@ -129,10 +141,14 @@ class StarterRecovery:
         start = self.start
         evidence = self.boxscores.get(start.period)
         if evidence is None:
-            raise V3DecodeError(
+            url, params = start._get_starter_boxscore_request()
+            raise V3EvidenceRequired(
                 "Original starter recovery requires recorded boxscore evidence for period {}".format(
                     start.period
-                )
+                ),
+                period=start.period,
+                url=url,
+                params=params,
             )
         response = evidence.response_for(start)
         self.diagnostics.append(

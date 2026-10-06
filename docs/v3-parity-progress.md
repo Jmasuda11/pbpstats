@@ -9,7 +9,7 @@ All results were executed locally. The branch is pushed to `origin/feat/v3-parit
 | Check | Result | Scope |
 | --- | --- | --- |
 | Untouched original suite against the candidate | 116 pass; the same two known fixture failures | Only the earlier starter I/O split changes an original file |
-| Parity tests | 791 pass | Harness, adapter, vocabulary, exceptions, corpus, paired season and season differential |
+| Parity tests | 796 pass | Harness, adapter, vocabulary, exceptions, corpus, paired season, season differential and the fetch tool |
 | Paired 2024-25 exports | 574,358 of 574,358 events pair one-to-one; period, actor and team agree on every event | [Paired season evidence](v3-paired-season-evidence.md) |
 | Decoder against recorded V2 codes | 188 of 188 labels | Was 156 matching, 8 different and 24 rejected; every table entry is checked |
 | Full games, equivalent facts | **937 of 937 comparable games identical** | Floored clocks plus V2 within-instant order; fouled player excluded as a declared gap |
@@ -35,6 +35,10 @@ The season comparison is in [the season differential](v3-season-differential.md)
   - *Comparison tool:* it separates observation failures from rejections, stops sibling workers when one fails, streams records, and compares double-foul participants.
   - *Tooling:* both tools share one roster-from-actors helper, and the recorded-evidence fixture manifest no longer lists one path with two hashes.
   - Every 2025-26 corpus outcome is unchanged.
+- **Fetch, parse and save:**
+  - `python -m pbpstats.data_loader.stats_nba_v3.web GAME_ID -o game.json` fetches `playbyplayv3` and `boxscoretraditionalv3`, builds the context from the box score and writes the possessions as JSON. Usage is in [README-PARITY](../README-PARITY.md#fetch-a-game-and-save-possessions-as-json).
+  - When starter recovery needs the original's period-start box score, the adapter raises `V3EvidenceRequired` with the exact request. The tool fetches it, records it as evidence and parses again.
+  - Offline over the 2025-26 captures, it parses 1,038 games, each with the corpus audit's credited possessions. Live fetches of `0022500089` and `0022500521` also match; the second needed its period-5 box score.
 - **CI line endings:** the reference and prior checks now pin each Git tree and the committed bytes of each file. 197 reference and 231 prior file hashes, and one shot-vocabulary source hash, were re-pinned from CRLF to committed bytes. Each old hash was checked against the CRLF extraction that produced it.
 
 ## Remaining work
@@ -51,7 +55,7 @@ The season comparison is in [the season differential](v3-season-differential.md)
 3. **Recovery evidence.** Some games need recorded data.nba.com order or boxscore starter responses for the original's fallbacks. The comparison has 83 order and 16 starter cases with V2's order; the 2025-26 corpus has 3 order cases.
 4. **Integration.**
    - Confirm the parity workflow passes remotely with the line-ending fix.
-   - Provide a public loader: `Client` and data-loader factory integration, web and file loaders, and context building inside the package.
+   - Integrate with `Client` and the data-loader factory. Web and file loading and box-score context building now exist in `stats_nba_v3.web`.
    - Support WNBA and G League.
    - Settle the detailed-statistics capability gate.
    - Migrate Cheeseburger with versioned imports.

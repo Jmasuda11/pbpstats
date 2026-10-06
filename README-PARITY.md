@@ -57,6 +57,57 @@ The [paired 2024-25 season evidence](docs/v3-paired-season-evidence.md) adds the
 
 The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,047 research passes.
 
+## Fetch a game and save possessions as JSON
+
+From the checkout root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pbpstats.data_loader.stats_nba_v3.web 0022500521 -o game.json --save-responses raw
+```
+
+This requests `playbyplayv3` and `boxscoretraditionalv3` from stats.nba.com, builds the adapter's context from the box score, parses the game with the original engine and writes the possessions as JSON. `--save-responses` keeps the raw responses used. To parse saved responses offline instead, pass `--pbp FILE --boxscore FILE`. Offline, a game that needs a period-start box score stops and names that request.
+
+How the context and starters are built:
+
+- **Roster:** box-score names, plus the play-by-play's own ID-bound actor names, description aliases and unaccented variants.
+- **Starters:** the original's own inference. If inference needs its period-start box score, the tool fetches the original's exact `boxscoretraditionalv2` request and records it as evidence.
+- **Unresolved names:** only when the roster alone can't resolve a description name, such as a tip to one of two same-named players, does the tool retry with the box score's first-period starters as on-court evidence. The JSON then lists them under `supplied_period_starters`.
+- **Missing names:** a description name the box score lacks, such as a given name, needs a reviewed `--alias PERSON_ID=NAME`.
+
+The JSON has:
+
+- **Per game:** final score, credited possessions per team, capabilities, diagnostics and source URLs with SHA-256 hashes.
+- **Per possession:** period, number, offense and defense, start and end clock, start score margin, start type, whether it counts, and the lineups the original credits.
+- **Per event:** type, clock, description, team, players, score, lineups and V3 source rows.
+
+Detailed per-player statistics stay gated, as the adapter's capabilities state.
+
+From Python, with the checkout root as the working directory or on `PYTHONPATH`:
+
+```python
+import json
+
+from pbpstats.data_loader.stats_nba_v3 import web
+
+raw = web.fetch_game("0022500521")
+loader = web.load_game(
+    "0022500521", raw["pbp"], raw["boxscore"], raw["pbp_url"],
+    fetch_boxscore=lambda period, url, params: web.get(url, params),
+)
+with open("game.json", "w", encoding="utf-8") as f:
+    json.dump(web.possessions_json(loader), f, indent=2)
+```
+
+Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,038 games, all with the same credited possessions as the corpus audit. The rest are:
+
+- 97 team-won jump balls;
+- 51 alternation failures;
+- 20 names that need an alias or an on-court witness;
+- 3 order-fallback cases;
+- 1 heave;
+- 3 games needing the period-start box score, which is fetched when online;
+- 17 captures without the inputs.
+
 ## Current adapter
 
 `pbpstats.data_loader.stats_nba_v3.StatsNbaV3PossessionLoader` accepts V3 source bytes and a `V3Context` containing source provenance, a matching PBP hash, two NBA teams, a recorded roster with names, and any explicitly supplied period starters. Omitted periods use original event inference and scoped starter overrides, with optional `starter_boxscores={period: V3StarterBoxscore(...)}` for recorded interval responses when recovery is needed. It builds the **original** Stats enhanced-event classes through their factory and reuses original enhancement, order repairs, possession decisions and attribution.
