@@ -390,10 +390,9 @@ def save_game(
         reviewed_correction=overrides.source if overrides else None,
     )
     temporary = output.with_name(output.name + ".tmp")  # never a partial file
-    temporary.write_text(
-        json.dumps(possessions_json(loader, sources), indent=indent),
-        encoding="utf-8",
-        newline="\n",
+    # Bytes keep LF line endings on every platform and Python version.
+    temporary.write_bytes(
+        json.dumps(possessions_json(loader, sources), indent=indent).encode("utf-8")
     )
     temporary.replace(output)
     return loader
