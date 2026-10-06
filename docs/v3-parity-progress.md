@@ -4,7 +4,7 @@
 
 The adapter decodes V3 rows into the original Stats event classes; the original engine makes every enhancement, possession and attribution decision. Paired 2024-25 V2/V3 season exports now give direct evidence for decoding and a full-game comparison against the original on real games. The October 3 checkpoint is preserved in the linked continuation documents.
 
-All results were executed locally. The branch is pushed to `origin/feat/v3-parity`. The parity workflow's first remote run, on `6ca73ed`, failed at its reference check, because the pinned hashes had been computed from Windows (CRLF) checkouts. They now pin committed bytes, and the parity workflow has passed remotely since `20f280a`. The upstream `CI` workflow runs a bare `python -m pytest` through tox on Python 3.8–3.11, which collects the whole suite. It failed on every push on the upstream suite's two known fixture failures, which fail on the original too. The root `conftest.py` now marks exactly those two as strict expected failures, so that workflow can pass but still fails if either changes.
+All results were executed locally. The branch is pushed to `origin/feat/v3-parity`. The parity workflow's first remote run, on `6ca73ed`, failed at its reference check, because the pinned hashes had been computed from Windows (CRLF) checkouts. They now pin committed bytes, and the parity workflow has passed remotely since `20f280a`. The upstream `CI` workflow runs a bare `python -m pytest` through tox on Python 3.8–3.11, which collects the whole suite. It failed on every push on the upstream suite's two known fixture failures, which fail on the original too. The root `conftest.py` now marks exactly those two as strict expected failures, so that workflow passes but still fails if either changes. Both workflows pass remotely on Python 3.8–3.12 since `c4331cc`.
 
 | Check | Result | Scope |
 | --- | --- | --- |
@@ -64,7 +64,6 @@ The season comparison is in [the season differential](v3-season-differential.md)
    - Both need evidence beyond the V3 stats feed, such as live play-by-play, which only 1 of 1,230 captures includes.
 3. **Recovery evidence.** Some games need recorded data.nba.com order or boxscore starter responses for the original's fallbacks. The comparison has 83 order and 16 starter cases with V2's order; the 2025-26 corpus has 3 order cases.
 4. **Integration.**
-   - Confirm the upstream `CI` workflow passes remotely with the expected-failure markers.
    - Integrate with `Client` and the data-loader factory. Web and file loading and box-score context building now exist in `stats_nba_v3.web`.
    - Support G League; it needs its own paired evidence, starting with its one-shot free-throw subtypes. WNBA is supported.
    - Settle the detailed-statistics capability gate.
