@@ -2,3 +2,5 @@
 # pinned SHA-256 values, so git must never convert their line endings.
 tests/parity/data/** -text
 tests/parity/*.json -text
+# The frozen synthetic-scenario encoder is pinned the same way.
+tools/parity/scenarios.py -text
