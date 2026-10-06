@@ -1,0 +1,29 @@
+name: Parser parity
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  original-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install isolated comparison dependencies
+        run: python -m pip install -r tools/parity/requirements-py312.txt
+      - name: Record the unchanged upstream failures
+        run: python -m tools.parity.baseline_tests
+      - name: Fetch the pinned previous implementation for independent comparison
+        run: git fetch --no-tags https://github.com/Jmasuda11/pbpstats.git 95e4dd5bda36c8d87d0c443a0298628cacccfa02
+      - name: Check the candidate and the comparison harness
+        run: python -B -m pytest -q -p no:cacheprovider tests/parity
+      - name: Run original regression tests against the candidate package
+        run: python -B -m tools.parity.baseline_tests --candidate .
+      - name: Reproduce the previous implementation's known differences
+        run: python -m tools.parity.known_differences

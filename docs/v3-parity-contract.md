@@ -1,0 +1,52 @@
+# V3 compatibility contract
+
+The original V2 implementation at `e7ccf2fb6326da630a3cf1665aac964a1e108f4c` is the primary behavioral oracle. Its observable quirks are preserved for compatibility. The previous V3 attempt at `95e4dd5bda36c8d87d0c443a0298628cacccfa02` is a comparison subject, not the specification. The earlier audit used `05a5f02a844b9e055e9edd470d73c8479fa061cf`, which already contained initial V3 work and legacy changes.
+
+## Required boundaries
+
+| Layer | Required observations | Where a difference belongs |
+| --- | --- | --- |
+| Source facts | Raw bytes, row membership/order, period, exact clock, participant roles, scoring facts, roster/starters and overrides | Source change, missing evidence, or decoding error |
+| Enhanced events | Event links, current lineups, score, type predicates, foul/FT and shot/rebound associations, efficiency attribution, offense, ending and counting decisions | Shared behavior unless facts differ |
+| Possessions | Exact event membership, period-local number/links, offense, start/end time, start margin/type, count flag, player/opponent lineup credits and time records | Shared behavior unless facts differ |
+| Failures and recovery | Failure conditions, exception type/module/message, validation order, scoped overrides, repair attempts and recovery outputs | Compare declared failures separately; matching rejections never count as accepted games |
+| Detailed statistics | Event/player/team/lineup statistics and explicit attribution completeness | A separate capability gate; possession parity is insufficient |
+| Ingestion | Versioned evidence, raw hashes, parser revision, adapter version, capabilities, diagnostics, publication checks | Integration contract |
+
+Numeric normalization equates integral floats with integers and retains fractional seconds. It does not truncate clocks, discard mismatched participants, remove extra events, or exclude failed games. Missing zero entries in a defaultdict score are normalized against the known two teams. Missing optional properties and failed property access remain observable in the report; identical unavailable properties do not prove statistical completeness.
+
+Synthetic scenarios have independently encoded V2 and V3 inputs and explicit starters. Their V2 worker executes original event enhancement and possession methods; it does not exercise original starter inference, source-order repair, alternation validation, or full source loading. Archived V2 tests use the original full file loader, with temporary copies because legacy repairs can write to the cache. The paired historical test uses separately recorded V3 context. No worker can connect to a network.
+
+The first harness snapshots decoding inputs and selected computed properties. Its explicit inventory is in `tools/parity/snapshot.py`; it must grow before claiming exhaustive enhanced-event or statistics coverage. Synthetic field-goal coordinates are absent in the inherited scenario set, so dependent start-type properties can be unavailable. Their exceptions are retained, not counted as validated shot-zone labels.
+
+## Initial differences
+
+| Case | Classification | Compatibility decision |
+| --- | --- | --- |
+| Technical foul after a substitution between regular FTs | Behavioral: original uses nearest same-clock foul for efficiency attribution; prior V3 uses the linked trip foul | Original selector in compatibility behavior; correcting it is a separate change |
+| Held ball within the first possession | Behavioral: original misses a boundary that prior V3 adds using initial offense | Preserve the original decision in compatibility behavior |
+| 2019 paired game, Q1/Q3 final possessions | Source facts: V2 starts at 2 seconds; V3 at 2.8/2.1 seconds | Preserve V3 fractions; explain the two extra credits |
+| 2019 paired game, events 171/172 | Source facts: FT/lane-marker order differs | Retain source lineage and report membership/order differences; no blanket sort by event number |
+| Unknown foul-drawn identity | Missing evidence | Do not turn unknown attribution into a complete zero statistic |
+| Two upstream free-throw unit fixtures omit game_id | Legacy baseline test defect | Record the exact failures independently; do not modify the oracle |
+| Prior V3 unavailable assister/placeholder properties | Contract differences, including incomplete synthetic attribution descriptions | Preserve diagnostics; counts alone cannot certify the event contract |
+| Inherited synthetic flagrant FT codes 19/20 for a two-attempt trip | Shared input-encoding defect, missed by the original snapshot inventory | Keep historical fixtures frozen; new independently verified 18/19 cases assert FT action codes, predicates and direct statistics; correct the adapter |
+| New league events such as team-only heaves | Extension beyond the original contract | Explicit league/season behavior and evidence, separate from the legacy baseline |
+| Provider ordering omits or duplicates V3 events | Source-integrity restriction | Reject rather than silently dropping/duplicating recorded rows as the legacy fallback can do; equivalent complete provider inputs must still match |
+| `Possession.get_team_ids` scanning a neighbouring possession that contains a replay event | Legacy defect: the original guards team-less events only in the current possession, and replay events never have a team in V2 or V3, so it raises `AttributeError`. Reached in 2025-26 game `0022500861`, by a lone jump-ball possession after a replay review | Guarded in the adapter's `V3Possession` (decided October 6, 2026; capability `defect_guards`). It returns the original's identical list wherever the original returns, so it changes only runs that crashed. Original files and the V2 path are unchanged |
+| Omitted V3 starter periods | Shared recovery with offline evidence | Run original inference → scoped overrides → recorded interval-boxscore selection; 29 full-loader cases compare the chain. Missing/stale recordings and invalid explicit context retain adapter-specific evidence errors, with the original inference failure chained when applicable |
+
+## Gates
+
+1. Reference source and fixture hashes must match the manifest. Never regenerate them automatically to repair a failed test.
+2. Every worker must import the requested package from its explicit directory and report its implementation hashes.
+3. Original V2 versus candidate V2 must preserve all comparable observations. A rejection on either side is not a passing game comparison. The separate exception suite may match a predeclared failure only when both implementations raise the expected class with identical diagnostics; an identical unexpected crash fails. Its result never establishes game acceptance.
+4. V3 must match shared decisions on complete equivalent inputs. Historical inputs with different facts require individually described expectations.
+5. Corpus reports include accepted, rejected, missing and mismatched games. Historical validation labels are retained as previous outcomes, never relabeled as new candidate successes.
+6. A release additionally requires full-game evidence, supported-stat reconciliation, API/integration checks and versioned migration. This harness alone does not authorize or perform backfilling.
+
+## Ownership of implementation
+
+Retain the original V2 loader, event classes and possession engine. First determine whether V3 can construct the same enhanced classes through their existing constructors. Keep any constructor-field projection local to the adapter and retain native evidence; it is not a synthetic historical V2 recording. Extract shared rules only when direct reuse is insufficient and an independent differential regression proves unchanged behavior. The starter class now separates request construction, HTTP-response handling and selection so V2 live I/O and V3 recorded I/O call the same methods; the pinned oracle remains unchanged, and both original regression and full-loader differential tests verify the extraction.
+
+V3 decoding owns source fields, grouping and participant evidence. The existing enhanced classes own contextual basketball decisions. Independent validation reports unsupported/contradictory evidence without silently choosing alternate possession results.

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "scope": "NBA 2025 season ID-bound actor aliases; no inferred names",
+  "observations": [
+    {
+      "season_id_prefix": "00225",
+      "source_game_id": "0022500089",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500089.json",
+      "sha256": "4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c",
+      "source_index": 78,
+      "row": {
+        "actionNumber": 110,
+        "clock": "PT04M18.00S",
+        "period": 1,
+        "teamId": 1610612757,
+        "teamTricode": "POR",
+        "personId": 1642905,
+        "playerName": "Yang",
+        "playerNameI": "H. Yang",
+        "xLegacy": 0,
+        "yLegacy": 0,
+        "shotDistance": 0,
+        "shotResult": "",
+        "isFieldGoal": 0,
+        "scoreHome": "",
+        "scoreAway": "",
+        "pointsTotal": 0,
+        "location": "h",
+        "description": "SUB: Thybulle FOR Hansen",
+        "actionType": "Substitution",
+        "subType": "",
+        "videoAvailable": 0,
+        "shotValue": 0,
+        "actionId": 79
+      },
+      "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
+      "capture_path": "bundle/pbp/stats_v3_0022500089.json"
+    }
+  ]
+}

@@ -1,0 +1,916 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500001",
+  "context_sha256": "8a7624b5bca588e482e8bbf9eb3bf79be250608b2bfa550061a0c5a75a0b3520",
+  "snapshot_sha256": "b68779795ac2686b0150b548a6710f6c36ff74f301a5d7f8b1a4b5a37f4db770",
+  "periods": [
+    {
+      "period": 1,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c; Q1 uses exactly-five box-score position markers where available; boxscore sha256=025878e32a3c28766b46b0b26b5519adb1093aaa07d04bde5cd51f5c577de037",
+      "witnesses": [
+        {
+          "player_id": 1631096,
+          "team_id": 1610612760,
+          "source_index": 1,
+          "role": "actor"
+        },
+        {
+          "player_id": 203500,
+          "team_id": 1610612745,
+          "source_index": 1,
+          "role": "opposing_jumper"
+        },
+        {
+          "player_id": 1641708,
+          "team_id": 1610612745,
+          "source_index": 1,
+          "role": "tip_recipient"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 2,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641717,
+          "team_id": 1610612760,
+          "source_index": 3,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629652,
+          "team_id": 1610612760,
+          "source_index": 4,
+          "role": "assister"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 5,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628983,
+          "team_id": 1610612760,
+          "source_index": 15,
+          "role": "actor"
+        },
+        {
+          "player_id": 201142,
+          "team_id": 1610612745,
+          "source_index": 17,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628392,
+          "team_id": 1610612760,
+          "source_index": 25,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1628392,
+        1628983,
+        1629652,
+        1631096,
+        1641717
+      ],
+      "away": [
+        201142,
+        203500,
+        1630578,
+        1631095,
+        1641708
+      ]
+    },
+    {
+      "period": 2,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+      "witnesses": [
+        {
+          "player_id": 1631096,
+          "team_id": 1610612760,
+          "source_index": 123,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641708,
+          "team_id": 1610612745,
+          "source_index": 124,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628392,
+          "team_id": 1610612760,
+          "source_index": 125,
+          "role": "actor"
+        },
+        {
+          "player_id": 1642349,
+          "team_id": 1610612760,
+          "source_index": 126,
+          "role": "assister"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 127,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629006,
+          "team_id": 1610612745,
+          "source_index": 133,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630598,
+          "team_id": 1610612760,
+          "source_index": 134,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631106,
+          "team_id": 1610612745,
+          "source_index": 137,
+          "role": "actor"
+        },
+        {
+          "player_id": 1627936,
+          "team_id": 1610612760,
+          "source_index": 142,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 191,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1627936,
+        1628392,
+        1630598,
+        1631096,
+        1642349
+      ],
+      "away": [
+        1629006,
+        1630578,
+        1631095,
+        1631106,
+        1641708
+      ]
+    },
+    {
+      "period": 3,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+      "witnesses": [
+        {
+          "player_id": 1631096,
+          "team_id": 1610612760,
+          "source_index": 250,
+          "role": "actor"
+        },
+        {
+          "player_id": 201142,
+          "team_id": 1610612745,
+          "source_index": 251,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 252,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641717,
+          "team_id": 1610612760,
+          "source_index": 253,
+          "role": "actor"
+        },
+        {
+          "player_id": 203500,
+          "team_id": 1610612745,
+          "source_index": 254,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629652,
+          "team_id": 1610612760,
+          "source_index": 256,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641708,
+          "team_id": 1610612745,
+          "source_index": 260,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628983,
+          "team_id": 1610612760,
+          "source_index": 266,
+          "role": "actor"
+        },
+        {
+          "player_id": 1627936,
+          "team_id": 1610612760,
+          "source_index": 271,
+          "role": "stealer"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 278,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1627936,
+        1628983,
+        1629652,
+        1631096,
+        1641717
+      ],
+      "away": [
+        201142,
+        203500,
+        1630578,
+        1631095,
+        1641708
+      ]
+    },
+    {
+      "period": 4,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+      "witnesses": [
+        {
+          "player_id": 1642263,
+          "team_id": 1610612745,
+          "source_index": 374,
+          "role": "actor"
+        },
+        {
+          "player_id": 1627936,
+          "team_id": 1610612760,
+          "source_index": 375,
+          "role": "actor"
+        },
+        {
+          "player_id": 1642349,
+          "team_id": 1610612760,
+          "source_index": 376,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 377,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631096,
+          "team_id": 1610612760,
+          "source_index": 378,
+          "role": "assister"
+        },
+        {
+          "player_id": 1629006,
+          "team_id": 1610612745,
+          "source_index": 379,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630598,
+          "team_id": 1610612760,
+          "source_index": 381,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 383,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628392,
+          "team_id": 1610612760,
+          "source_index": 388,
+          "role": "assister"
+        },
+        {
+          "player_id": 203500,
+          "team_id": 1610612745,
+          "source_index": 394,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1627936,
+        1628392,
+        1630598,
+        1631096,
+        1642349
+      ],
+      "away": [
+        203500,
+        1629006,
+        1630578,
+        1631095,
+        1642263
+      ]
+    },
+    {
+      "period": 5,
+      "source": "Reviewed separate OT1 starter evidence: live row 558 explicitly substitutes Hartenstein in at 5:00 before period start row 560, and live row 575 names him as foulDrawnPersonId at 3:43, with no intervening substitution involving him; the other nine starters have native pre-entrance on-court witnesses. Source: pbp/live_0022500001.json; independent full-game minutes must reconcile.",
+      "witnesses": [
+        {
+          "player_id": 1631096,
+          "team_id": 1610612760,
+          "source_index": 482,
+          "role": "actor"
+        },
+        {
+          "player_id": 203500,
+          "team_id": 1610612745,
+          "source_index": 482,
+          "role": "opposing_jumper"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 482,
+          "role": "tip_recipient"
+        },
+        {
+          "player_id": 1641708,
+          "team_id": 1610612745,
+          "source_index": 483,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628983,
+          "team_id": 1610612760,
+          "source_index": 485,
+          "role": "actor"
+        },
+        {
+          "player_id": 201142,
+          "team_id": 1610612745,
+          "source_index": 486,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629652,
+          "team_id": 1610612760,
+          "source_index": 490,
+          "role": "assister"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 495,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641717,
+          "team_id": 1610612760,
+          "source_index": 502,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1628392,
+        1628983,
+        1629652,
+        1631096,
+        1641717
+      ],
+      "away": [
+        201142,
+        203500,
+        1630578,
+        1631095,
+        1641708
+      ],
+      "external_witnesses": [
+        {
+          "player_id": 1628392,
+          "live_source_indices": [
+            558,
+            560,
+            575
+          ],
+          "role": "incoming before period start and foul_drawn after start"
+        }
+      ]
+    },
+    {
+      "period": 6,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c",
+      "witnesses": [
+        {
+          "player_id": 1628392,
+          "team_id": 1610612760,
+          "source_index": 545,
+          "role": "actor"
+        },
+        {
+          "player_id": 203500,
+          "team_id": 1610612745,
+          "source_index": 545,
+          "role": "opposing_jumper"
+        },
+        {
+          "player_id": 1631095,
+          "team_id": 1610612745,
+          "source_index": 545,
+          "role": "tip_recipient"
+        },
+        {
+          "player_id": 1642263,
+          "team_id": 1610612745,
+          "source_index": 546,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629652,
+          "team_id": 1610612760,
+          "source_index": 547,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628983,
+          "team_id": 1610612760,
+          "source_index": 549,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630578,
+          "team_id": 1610612745,
+          "source_index": 550,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641717,
+          "team_id": 1610612760,
+          "source_index": 552,
+          "role": "actor"
+        },
+        {
+          "player_id": 1627936,
+          "team_id": 1610612760,
+          "source_index": 562,
+          "role": "actor"
+        },
+        {
+          "player_id": 201142,
+          "team_id": 1610612745,
+          "source_index": 564,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        1627936,
+        1628392,
+        1628983,
+        1629652,
+        1641717
+      ],
+      "away": [
+        201142,
+        203500,
+        1630578,
+        1631095,
+        1642263
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        48
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        56
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        61
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        72
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        75
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        84,
+        85
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [87, 88, 89, 90] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        87,
+        88,
+        89,
+        90
+      ]
+    },
+    {
+      "source_indices": [
+        92
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        115,
+        116,
+        117,
+        118
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [121, 122, 123, 124, 125, 126, 127, 128] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        121,
+        122,
+        123,
+        124,
+        125,
+        126,
+        127,
+        128
+      ]
+    },
+    {
+      "source_indices": [
+        151,
+        152,
+        153,
+        154
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [169, 170, 171, 172, 173, 174, 175, 176] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176
+      ]
+    },
+    {
+      "source_indices": [
+        182,
+        183,
+        184
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [204, 205, 206, 207, 208, 209] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        204,
+        205,
+        206,
+        207,
+        208,
+        209
+      ]
+    },
+    {
+      "source_indices": [
+        191
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        200
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        206
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        213
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        226
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        234
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        237,
+        238
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [267, 268, 269, 270] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        267,
+        268,
+        269,
+        270
+      ]
+    },
+    {
+      "source_indices": [
+        244
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        279
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        302,
+        303,
+        304
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [343, 344, 345, 346, 347, 348] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        343,
+        344,
+        345,
+        346,
+        347,
+        348
+      ]
+    },
+    {
+      "source_indices": [
+        324
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        343,
+        344,
+        345
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [388, 389, 390, 391, 392, 393] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        388,
+        389,
+        390,
+        391,
+        392,
+        393
+      ]
+    },
+    {
+      "source_indices": [
+        356
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        362,
+        363
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [411, 412, 413, 414] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        411,
+        412,
+        413,
+        414
+      ]
+    },
+    {
+      "source_indices": [
+        393
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        396
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        403,
+        404
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [466, 467, 468, 469] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        466,
+        467,
+        468,
+        469
+      ]
+    },
+    {
+      "source_indices": [
+        411,
+        412
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [476, 477, 478, 479] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        476,
+        477,
+        478,
+        479
+      ]
+    },
+    {
+      "source_indices": [
+        428
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        437
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        445,
+        446
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [514, 515, 516, 517] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        514,
+        515,
+        516,
+        517
+      ]
+    },
+    {
+      "source_indices": [
+        469,
+        470,
+        471
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [538, 539, 540, 541, 542, 543] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        538,
+        539,
+        540,
+        541,
+        542,
+        543
+      ]
+    },
+    {
+      "source_indices": [
+        475,
+        476,
+        477
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [547, 548, 549, 550, 551, 552] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        547,
+        548,
+        549,
+        550,
+        551,
+        552
+      ]
+    },
+    {
+      "source_indices": [
+        494
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        500
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        524
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        531
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        536,
+        537
+      ],
+      "source": "Reviewed disjoint simultaneous transition: explicit outgoing/incoming identities in one uninterrupted live substitution run, rows [619, 620, 621, 622] of pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da), agree with these contiguous native substitutions; no player is both incoming and outgoing. Independent box-score minutes must also reconcile.",
+      "live_source_indices": [
+        619,
+        620,
+        621,
+        622
+      ]
+    },
+    {
+      "source_indices": [
+        539
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        586
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        594
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        601
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        603
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "source_indices": [
+        607
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Reviewed final native snapshot: every in-period native substitution has an explicit outgoing/incoming pair at the same period and clock within one uninterrupted official live substitution run in pbp/live_0022500001.json (sha256=b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da); separately validate each player minute.; PBP sha256=bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    }
+  ],
+  "resolved_replays": [
+    {
+      "source_index": 82,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        80,
+        83,
+        86
+      ],
+      "source": "Reviewed already-applied outcome in the captured final native snapshot: The final Sheppard shooting foul awards two Gilgeous-Alexander free throws, one made and one missed. This records the final snapshot, not an independently viewed video ruling; all published player totals, minutes and period scores must also reconcile."
+    },
+    {
+      "source_index": 225,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        222,
+        223,
+        227
+      ],
+      "source": "Reviewed already-applied outcome in the captured final native snapshot: The final Williams miss and Rockets team rebound award Houston control; Thompson takes the next shot. This records the final snapshot, not an independently viewed video ruling; all published player totals, minutes and period scores must also reconcile."
+    },
+    {
+      "source_index": 454,
+      "resolution": "already_applied",
+      "affected_source_indices": [
+        451,
+        452,
+        455
+      ],
+      "source": "Reviewed already-applied outcome in the captured final native snapshot: The final Thompson lost-ball turnover credits a Gilgeous-Alexander steal; Gilgeous-Alexander takes the next shot. This records the final snapshot, not an independently viewed video ruling; all published player totals, minutes and period scores must also reconcile."
+    }
+  ]
+}

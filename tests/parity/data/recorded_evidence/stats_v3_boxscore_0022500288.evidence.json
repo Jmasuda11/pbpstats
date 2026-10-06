@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500288",
+  "boxscore_sha256": "1a6fb8c0f53ef4fad4804b2e4443c2c8bf77b5a7a0af06f68f5058eb24b02d64",
+  "source": "https://www.nba.com/game/0022500288/box-score; extracted from __NEXT_DATA__.props.pageProps, not an endpoint capture",
+  "scope": "full_game",
+  "roster_complete": true,
+  "completeness_basis": "Both official full-game team player arrays retained, including DNP rows; Final source status; both teams match; contiguous periods with opening/closing markers; final scores reconcile",
+  "aliases": [],
+  "bench_people": []
+}

@@ -89,10 +89,8 @@ class StartOfPeriod(metaclass=abc.ABCMeta):
         elif self.game_id[0:2] == WNBA_GAME_ID_PREFIX:
             return WNBA_STRING
 
-    def _get_starters_from_boxscore_request(self):
-        """
-        makes request to boxscore url for time from period start to first event to get period starters
-        """
+    def _get_starter_boxscore_request(self):
+        """Build the original request independently of its transport."""
         base_url = (
             f"https://stats.{self.league_url_part}.com/stats/boxscoretraditionalv2"
         )
@@ -121,15 +119,28 @@ class StartOfPeriod(metaclass=abc.ABCMeta):
             "StartRange": start_range,
             "EndRange": end_range,
         }
-        starters_by_team = {}
+        return base_url, params
+
+    def _get_starters_from_boxscore_request(self):
+        """Request the original period-start interval and select its starters."""
+        base_url, params = self._get_starter_boxscore_request()
         response = requests.get(
             base_url, params, headers=HEADERS, timeout=REQUEST_TIMEOUT
         )
+        return self._get_starters_from_boxscore_http_response(response)
+
+    def _get_starters_from_boxscore_http_response(self, response):
+        """Handle recorded or live responses with identical status/JSON rules."""
         if response.status_code == 200:
             response_json = response.json()
         else:
             response.raise_for_status()
 
+        return self._get_starters_from_boxscore_response(response_json)
+
+    def _get_starters_from_boxscore_response(self, response_json):
+        """Select starters with the original sorting and validation behavior."""
+        starters_by_team = {}
         headers = response_json["resultSets"][0]["headers"]
         rows = response_json["resultSets"][0]["rowSet"]
         players = [dict(zip(headers, row)) for row in rows]

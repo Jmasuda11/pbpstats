@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "season": "NBA 2024-25 regular season",
+  "source": "https://github.com/shufinskiy/nba_data",
+  "revision": "e829d4678be1e075f99e5d41a1c5f97089be446b",
+  "basis": "Two community CSV exports of the same games: PlayByPlayV2 and PlayByPlayV3, collected by the pinned loading-utils.R (load_playbyplayv2/load_playbyplayv3) and concatenated by build_dataset.R. Neither is raw HTTP JSON, an NBA-hosted archive or a behavioral oracle. Pairing records factual event correspondence only; behavior is still decided by the unchanged original engine.",
+  "archives": {
+    "v2": {
+      "path": "tests/parity/data/nba_data/nbastats_2024.tar.xz",
+      "format": "v2-csv-tar-xz",
+      "bytes": 8583784,
+      "sha256": "8f370da00ad0a6d4157921bd161d56ea32647a165d906516f2b36384a6a4989a",
+      "git_blob_sha1": "acda11afb5fdb4cbee610e62b66e19915ef3de22",
+      "member": "nbastats_2024.csv",
+      "member_sha256": "a345b2b6fdacededd9521cac7b174aba5bd821efb1ad60acaf3748c12937e756",
+      "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2024.tar.xz",
+      "retrieved_utc": "2026-10-03"
+    },
+    "v3": {
+      "path": "tests/parity/data/nba_data/nbastatsv3_2024.tar.xz",
+      "format": "v3-csv-tar-xz",
+      "bytes": 8781060,
+      "sha256": "38fb8bfb43be8db3d47576600f32f25d89cc3cc05ebac77a51f4db42faf0b841",
+      "git_blob_sha1": "7d4cd35da84aa43f677364c3e56a050038f5c850",
+      "member": "nbastatsv3_2024.csv",
+      "member_sha256": "90e1eae98ecc45050c117904fd53354ab5e04cc5ea19f4778958fe9c8c2104eb",
+      "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastatsv3_2024.tar.xz",
+      "retrieved_utc": "2026-10-05"
+    }
+  },
+  "provenance_files": {
+    "tests/parity/data/nba_data/loading-utils.R": "520bc64e32761876c6f2ca6cbcdb63c3f0637c6513f3d84ecb0845955ae46aaf",
+    "tests/parity/data/nba_data/build_dataset.R": "de10b41780d0ffe42a1a590e04612029ca3d63df5a0d83fd3b38d3dc0604d8cd",
+    "tests/parity/data/nba_data/README.md": "646fba3e21464fac92afe6c286637a55d5f68456487052be22be1d5a145c3687",
+    "tests/parity/data/nba_data/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  "fidelity_witness": {
+    "reference": "prior",
+    "path": "tests/data/pbp/stats_v3_0022400001.json",
+    "sha256": "0af1b3e7e9d75e8a8c29cb465b202192863fcb21df9cf46aebda122093870914",
+    "game_id": "0022400001",
+    "basis": "Separately recorded V3 JSON response for a game also present in the V3 export. Typed export rows must equal its actions after the declared normalization."
+  },
+  "normalization": {
+    "game_id": "Exports drop leading zeros; restore the ten-character identity.",
+    "v3_integers": ["actionId", "actionNumber", "isFieldGoal", "period", "personId", "pointsTotal", "shotDistance", "shotValue", "teamId", "videoAvailable", "xLegacy", "yLegacy"],
+    "v3_padding": "The export right-pads some actionType values and blank subTypes with spaces; the recorded JSON witness has none. Strip surrounding whitespace from actionType and subType only. All other text is kept verbatim."
+  }
+}

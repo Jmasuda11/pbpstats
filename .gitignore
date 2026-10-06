@@ -1,4 +1,6 @@
 __pycache__/
+.venv/
+.parity/
 .pytest_cache/
 .vscode/
 .coverage

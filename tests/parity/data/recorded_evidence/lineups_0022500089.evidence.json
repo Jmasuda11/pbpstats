@@ -1,0 +1,572 @@
+{
+  "schema_version": 1,
+  "game_id": "0022500089",
+  "context_sha256": "18f26f1450dc7af4bbd98b01417bed63a3880881e97d2c75104aff133aa7834b",
+  "snapshot_sha256": "51d5825281b7766b15f279caab6ff69deec302c4906856629fb97f00d8324fa1",
+  "periods": [
+    {
+      "period": 1,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c; Q1 uses exactly-five box-score position markers where available; boxscore sha256=910f8240df28558fd0286e0773d43cb3077dc9e0cada044e8df33b7905a96dcd",
+      "witnesses": [
+        {
+          "player_id": 1642270,
+          "team_id": 1610612757,
+          "source_index": 1,
+          "role": "actor"
+        },
+        {
+          "player_id": 203497,
+          "team_id": 1610612750,
+          "source_index": 1,
+          "role": "opposing_jumper"
+        },
+        {
+          "player_id": 1630166,
+          "team_id": 1610612757,
+          "source_index": 1,
+          "role": "tip_recipient"
+        },
+        {
+          "player_id": 201950,
+          "team_id": 1610612757,
+          "source_index": 2,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630162,
+          "team_id": 1610612750,
+          "source_index": 3,
+          "role": "actor"
+        },
+        {
+          "player_id": 203944,
+          "team_id": 1610612750,
+          "source_index": 4,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628978,
+          "team_id": 1610612750,
+          "source_index": 13,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631101,
+          "team_id": 1610612757,
+          "source_index": 15,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641739,
+          "team_id": 1610612757,
+          "source_index": 15,
+          "role": "assister"
+        },
+        {
+          "player_id": 1630183,
+          "team_id": 1610612750,
+          "source_index": 31,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        201950,
+        1630166,
+        1631101,
+        1641739,
+        1642270
+      ],
+      "away": [
+        203497,
+        203944,
+        1628978,
+        1630162,
+        1630183
+      ]
+    },
+    {
+      "period": 2,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c",
+      "witnesses": [
+        {
+          "player_id": 1641740,
+          "team_id": 1610612750,
+          "source_index": 124,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629680,
+          "team_id": 1610612757,
+          "source_index": 125,
+          "role": "actor"
+        },
+        {
+          "player_id": 1629675,
+          "team_id": 1610612750,
+          "source_index": 125,
+          "role": "blocker"
+        },
+        {
+          "player_id": 1628978,
+          "team_id": 1610612750,
+          "source_index": 129,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630166,
+          "team_id": 1610612757,
+          "source_index": 132,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641739,
+          "team_id": 1610612757,
+          "source_index": 132,
+          "role": "assister"
+        },
+        {
+          "player_id": 201144,
+          "team_id": 1610612750,
+          "source_index": 133,
+          "role": "actor"
+        },
+        {
+          "player_id": 201950,
+          "team_id": 1610612757,
+          "source_index": 135,
+          "role": "actor"
+        },
+        {
+          "player_id": 203497,
+          "team_id": 1610612750,
+          "source_index": 136,
+          "role": "actor"
+        },
+        {
+          "player_id": 1642270,
+          "team_id": 1610612757,
+          "source_index": 146,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        201950,
+        1629680,
+        1630166,
+        1641739,
+        1642270
+      ],
+      "away": [
+        201144,
+        203497,
+        1628978,
+        1629675,
+        1641740
+      ]
+    },
+    {
+      "period": 3,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c",
+      "witnesses": [
+        {
+          "player_id": 1630162,
+          "team_id": 1610612750,
+          "source_index": 269,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641739,
+          "team_id": 1610612757,
+          "source_index": 270,
+          "role": "actor"
+        },
+        {
+          "player_id": 1628978,
+          "team_id": 1610612750,
+          "source_index": 272,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631101,
+          "team_id": 1610612757,
+          "source_index": 273,
+          "role": "actor"
+        },
+        {
+          "player_id": 1642270,
+          "team_id": 1610612757,
+          "source_index": 274,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630183,
+          "team_id": 1610612750,
+          "source_index": 276,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630166,
+          "team_id": 1610612757,
+          "source_index": 279,
+          "role": "actor"
+        },
+        {
+          "player_id": 203497,
+          "team_id": 1610612750,
+          "source_index": 283,
+          "role": "actor"
+        },
+        {
+          "player_id": 201950,
+          "team_id": 1610612757,
+          "source_index": 288,
+          "role": "assister"
+        },
+        {
+          "player_id": 203944,
+          "team_id": 1610612750,
+          "source_index": 296,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        201950,
+        1630166,
+        1631101,
+        1641739,
+        1642270
+      ],
+      "away": [
+        203497,
+        203944,
+        1628978,
+        1630162,
+        1630183
+      ]
+    },
+    {
+      "period": 4,
+      "source": "On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c",
+      "witnesses": [
+        {
+          "player_id": 201950,
+          "team_id": 1610612757,
+          "source_index": 407,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641740,
+          "team_id": 1610612750,
+          "source_index": 407,
+          "role": "stealer"
+        },
+        {
+          "player_id": 1630166,
+          "team_id": 1610612757,
+          "source_index": 413,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630183,
+          "team_id": 1610612750,
+          "source_index": 414,
+          "role": "actor"
+        },
+        {
+          "player_id": 203944,
+          "team_id": 1610612750,
+          "source_index": 417,
+          "role": "actor"
+        },
+        {
+          "player_id": 1642270,
+          "team_id": 1610612757,
+          "source_index": 418,
+          "role": "actor"
+        },
+        {
+          "player_id": 1641739,
+          "team_id": 1610612757,
+          "source_index": 427,
+          "role": "actor"
+        },
+        {
+          "player_id": 1630538,
+          "team_id": 1610612750,
+          "source_index": 431,
+          "role": "actor"
+        },
+        {
+          "player_id": 1631200,
+          "team_id": 1610612757,
+          "source_index": 434,
+          "role": "actor"
+        },
+        {
+          "player_id": 203497,
+          "team_id": 1610612750,
+          "source_index": 468,
+          "role": "actor"
+        }
+      ],
+      "home": [
+        201950,
+        1630166,
+        1631200,
+        1641739,
+        1642270
+      ],
+      "away": [
+        203497,
+        203944,
+        1630183,
+        1630538,
+        1641740
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "source_indices": [
+        38
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        48,
+        49
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        61,
+        62
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        67
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        76,
+        77,
+        78
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        85
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        110,
+        111
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        151,
+        152,
+        153,
+        154
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        171,
+        172
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        175
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        182
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        200
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        209
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        223,
+        224,
+        225,
+        226
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        242
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        252
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        290
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        319,
+        320,
+        321
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        331
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        334
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        342
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        346
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        352,
+        353
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        378
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        388
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        418
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        434
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        444,
+        445
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        454
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        462,
+        463
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        469
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        476
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        486
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        493
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        531
+      ],
+      "source": "Single substitution between non-substitution or different-clock boundaries; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        533,
+        534
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "source_indices": [
+        539,
+        540
+      ],
+      "source": "Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; changes commute and remain subject to five-player lineup and minute validation; On-court witnesses before any entrance in a complete substitution stream: Official all-period final PBP retained intact; Final source status; both teams match; contiguous periods with opening/closing markers (same-clock trailing replays allowed); final scores reconcile; complete coverage remains subject to lineup and player-minute reconciliation; PBP sha256=4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    }
+  ],
+  "resolved_replays": []
+}

@@ -1,0 +1,4 @@
+# Recorded evidence and its manifests are compared byte for byte against
+# pinned SHA-256 values, so git must never convert their line endings.
+tests/parity/data/** -text
+tests/parity/*.json -text

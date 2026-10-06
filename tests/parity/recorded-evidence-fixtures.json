@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "inventory_sha256": "bcea844a4f77714dc6bc73da0ca8b1bc6d08325f6c4a3d817ca71a520b0cb1dc",
+  "files": [
+    {
+      "game_id": "0022500001",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500001.evidence.json",
+      "capture": "nba/2025/0022500001/20260923T025507098072Z-bdeac77f",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500001.evidence.json",
+      "sha256": "a45361a0827b27cba023b241198862b03e3689b78ebdc06c371395da5b9bb681"
+    },
+    {
+      "game_id": "0022500001",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500001.json",
+      "capture": "nba/2025/0022500001/20260923T025507098072Z-bdeac77f",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500001.json",
+      "sha256": "025878e32a3c28766b46b0b26b5519adb1093aaa07d04bde5cd51f5c577de037"
+    },
+    {
+      "game_id": "0022500001",
+      "path": "tests/parity/data/recorded_evidence/lineups_0022500001.evidence.json",
+      "capture": "nba/2025/0022500001/20260923T025507098072Z-bdeac77f",
+      "capture_path": "bundle/lineups.evidence.json",
+      "sha256": "a8ae51f48ed14eec4a86320102bce3a498851452dbf1c93b16ec4b68867a8091"
+    },
+    {
+      "game_id": "0022500001",
+      "path": "tests/parity/data/recorded_evidence/live_0022500001.json",
+      "capture": "nba/2025/0022500001/20260923T025507098072Z-bdeac77f",
+      "capture_path": "bundle/pbp/live_0022500001.json",
+      "sha256": "b0cfc99a094f625a35ba9dde3a2722b119281bf087398687c6a572c9a597d1da"
+    },
+    {
+      "game_id": "0022500001",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500001.json",
+      "capture": "nba/2025/0022500001/20260923T025507098072Z-bdeac77f",
+      "capture_path": "bundle/pbp/stats_v3_0022500001.json",
+      "sha256": "bd2891a0535dd43067682e7d1c88ee5b36610e7bf46182ebbcfaf342c38e563c"
+    },
+    {
+      "game_id": "0022500288",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500288.evidence.json",
+      "capture": "nba/2025/0022500288/20260923T043047491268Z-70891e3b",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500288.evidence.json",
+      "sha256": "57ff81f0ecf4d1ebfed3691d63ad2b54ffdfc2751bd6dd58a07a18cac0acce4d"
+    },
+    {
+      "game_id": "0022500288",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500288.json",
+      "capture": "nba/2025/0022500288/20260923T043047491268Z-70891e3b",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500288.json",
+      "sha256": "1a6fb8c0f53ef4fad4804b2e4443c2c8bf77b5a7a0af06f68f5058eb24b02d64"
+    },
+    {
+      "game_id": "0022500288",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500288.json",
+      "capture": "nba/2025/0022500288/20260923T043047491268Z-70891e3b",
+      "capture_path": "bundle/pbp/stats_v3_0022500288.json",
+      "sha256": "3cb51ddae0b7f768ca7ba112a9e08e2d6eb598e5e03d7db147d724d2210772c4"
+    },
+    {
+      "game_id": "0022500089",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500089.evidence.json",
+      "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500089.evidence.json",
+      "sha256": "0fa7149a677f5515d8ba7f848ebc8cce7a16676129e6867bc3ec27cd2910d4ab"
+    },
+    {
+      "game_id": "0022500089",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500089.json",
+      "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500089.json",
+      "sha256": "910f8240df28558fd0286e0773d43cb3077dc9e0cada044e8df33b7905a96dcd"
+    },
+    {
+      "game_id": "0022500089",
+      "path": "tests/parity/data/recorded_evidence/lineups_0022500089.evidence.json",
+      "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
+      "capture_path": "bundle/lineups.evidence.json",
+      "sha256": "f9d5a949ba5be52729e12db22529c8ef05b2e96d4a12365496cc74d9dd539636"
+    },
+    {
+      "game_id": "0022500089",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500089.json",
+      "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
+      "capture_path": "bundle/pbp/stats_v3_0022500089.json",
+      "sha256": "4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    }
+  ]
+}
