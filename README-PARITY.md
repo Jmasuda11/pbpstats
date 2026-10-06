@@ -27,6 +27,8 @@ From this checkout on Windows:
 
 The last two commands use the pinned paired 2024-25 V2/V3 exports. `season_differential` runs every game through the original engine on V2 and the adapter on V3, in isolated offline workers; it takes about 30 minutes and writes `.parity/season-differential-2024.json`. Use `--limit N` or `--game ID` for a quick run.
 
+GitHub runs two workflows. The parity workflow runs the checks above on Python 3.12. The upstream `CI` workflow runs a bare `python -m pytest` through tox on Python 3.8–3.11. There, the root `conftest.py` marks the upstream suite's two known fixture failures as strict expected failures, while `baseline_tests` still verifies them against the original.
+
 For a new environment, use Python 3.12 and `python -m pip install -r tools/parity/requirements-py312.txt`. The dependency lock describes the tested Python 3.12 environment, not the entire legacy Python support matrix. No editable install of the old checkout is required. The workers run with isolated imports and verify the actual loaded package path.
 
 The reference runner reconstructs frozen source from Git and verifies the pinned tree and source/fixture hashes in `tests/parity/manifest.json`. The hashes are of committed bytes, so they hold whatever the local line-ending settings. A clone that does not contain the previous attempt also needs its pinned commit:
