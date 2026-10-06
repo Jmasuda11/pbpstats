@@ -320,7 +320,7 @@
       "v2": {
         "reference": "reference",
         "path": "tests/data/pbp/stats_2021900002.json",
-        "sha256": "bc5dd64c1af179472197c959c9d1ca86a7c8a31bc43b2e8cc803e84a636126a4",
+        "sha256": "42fc23796f4401e2ff922e19b3f9af77401a5658d9b5a24c09cd689a79df6fa4",
         "source_index": 17,
         "row": {
           "GAME_ID": "2021900002",

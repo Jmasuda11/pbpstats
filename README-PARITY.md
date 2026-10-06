@@ -29,7 +29,7 @@ The last two commands use the pinned paired 2024-25 V2/V3 exports. `season_diffe
 
 For a new environment, use Python 3.12 and `python -m pip install -r tools/parity/requirements-py312.txt`. The dependency lock describes the tested Python 3.12 environment, not the entire legacy Python support matrix. No editable install of the old checkout is required. The workers run with isolated imports and verify the actual loaded package path.
 
-The reference runner reconstructs frozen source from Git and verifies the archive and source/fixture hashes in `tests/parity/manifest.json`. A clone that does not contain the previous attempt also needs its pinned commit:
+The reference runner reconstructs frozen source from Git and verifies the pinned tree and source/fixture hashes in `tests/parity/manifest.json`. The hashes are of committed bytes, so they hold whatever the local line-ending settings. A clone that does not contain the previous attempt also needs its pinned commit:
 
 ```powershell
 git fetch --no-tags https://github.com/Jmasuda11/pbpstats.git 95e4dd5bda36c8d87d0c443a0298628cacccfa02

@@ -12,8 +12,21 @@ REFERENCE = "e7ccf2fb6326da630a3cf1665aac964a1e108f4c"
 
 
 def git(*args):
+    # Committed bytes whatever the local line-ending settings, so the pinned
+    # hashes hold on Windows (core.autocrlf=true) and Linux CI alike.
     return subprocess.check_output(
-        ["git", "-c", "safe.directory=" + ROOT.as_posix(), "-C", str(ROOT), *args]
+        [
+            "git",
+            "-c",
+            "safe.directory=" + ROOT.as_posix(),
+            "-c",
+            "core.autocrlf=false",
+            "-c",
+            "core.eol=lf",
+            "-C",
+            str(ROOT),
+            *args,
+        ]
     )
 
 
@@ -26,9 +39,11 @@ def prepare_reference(name="reference"):
         (ROOT / "tests/parity/manifest.json").read_text(encoding="utf-8")
     )
     revision = manifest[name + "_revision"]
+    # The tree ID pins content independently of zip compression, which can
+    # differ between Git builds; extracted files are checked below.
+    if git("rev-parse", revision + "^{tree}").decode().strip() != manifest[name + "_tree"]:
+        raise ValueError("Pinned reference tree changed")
     archive = git("archive", "--format=zip", revision)
-    if digest(archive) != manifest[name + "_archive_sha256"]:
-        raise ValueError("Pinned reference archive hash changed")
     target = ROOT / ".parity" / (name + "-" + revision[:7])
     if not target.exists():
         target.mkdir(parents=True)

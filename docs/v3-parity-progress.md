@@ -1,10 +1,10 @@
-# V3 parity progress — October 5, 2026
+# V3 parity progress — October 6, 2026
 
 ## Where things stand
 
 The adapter decodes V3 rows into the original Stats event classes; the original engine makes every enhancement, possession and attribution decision. Paired 2024-25 V2/V3 season exports now give direct evidence for decoding and a full-game comparison against the original on real games. The October 3 checkpoint is preserved in the linked continuation documents.
 
-All results were executed locally. The work is committed on the local `feat/v3-parity` branch, and a fresh clone passes the full parity suite. It has not been pushed, so the authored CI workflow has not run remotely.
+All results were executed locally. The branch is pushed to `origin/feat/v3-parity`. The parity workflow's first remote run, on `6ca73ed`, failed at its reference check. The pinned hashes had been computed from Windows (CRLF) checkouts. They now pin committed bytes, and a clone with LF line endings passes every workflow step locally. The upstream `CI` workflow runs the untouched upstream suite under tox. That suite has two known fixture failures, so the workflow cannot pass unchanged.
 
 | Check | Result | Scope |
 | --- | --- | --- |
@@ -35,6 +35,7 @@ The season comparison is in [the season differential](v3-season-differential.md)
   - *Comparison tool:* it separates observation failures from rejections, stops sibling workers when one fails, streams records, and compares double-foul participants.
   - *Tooling:* both tools share one roster-from-actors helper, and the recorded-evidence fixture manifest no longer lists one path with two hashes.
   - Every 2025-26 corpus outcome is unchanged.
+- **CI line endings:** the reference and prior checks now pin each Git tree and the committed bytes of each file. 197 reference and 231 prior file hashes, and one shot-vocabulary source hash, were re-pinned from CRLF to committed bytes. Each old hash was checked against the CRLF extraction that produced it.
 
 ## Remaining work
 
@@ -49,7 +50,7 @@ The season comparison is in [the season differential](v3-season-differential.md)
    - Both need evidence beyond the V3 stats feed, such as live play-by-play, which only 1 of 1,230 captures includes.
 3. **Recovery evidence.** Some games need recorded data.nba.com order or boxscore starter responses for the original's fallbacks. The comparison has 83 order and 16 starter cases with V2's order; the 2025-26 corpus has 3 order cases.
 4. **Integration.**
-   - Commit the branch and run CI.
+   - Confirm the parity workflow passes remotely with the line-ending fix.
    - Provide a public loader: `Client` and data-loader factory integration, web and file loaders, and context building inside the package.
    - Support WNBA and G League.
    - Settle the detailed-statistics capability gate.
