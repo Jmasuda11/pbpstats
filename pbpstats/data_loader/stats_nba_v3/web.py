@@ -3,7 +3,9 @@
 The adapter never touches the network. This module requests the V3
 play-by-play and box score, binds the adapter's context to those exact bytes,
 and records any period-start box score that the original's starter recovery
-asks for. Possessions come from the unchanged original engine.
+asks for. Reviewed corrections reach the adapter as V3Overrides, only for the
+exact bytes they were reviewed against. Possessions come from the unchanged
+original engine.
 
     python -m pbpstats.data_loader.stats_nba_v3.web 0022500001 -o game.json
 """
@@ -19,6 +21,7 @@ from pbpstats import REQUEST_TIMEOUT
 
 from .decoder import V3Context, V3DecodeError
 from .names import add_actor_aliases, add_unaccented_names, require
+from .overrides import STARTERS, V3Overrides
 from .possessions import StatsNbaV3PossessionLoader
 from .starters import V3EvidenceRequired, V3StarterBoxscore
 
@@ -39,6 +42,20 @@ HEADERS = {
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Fetch-Dest": "empty",
 }
+# Reviewed corrections, in the original's override-file schema. Each is bound to
+# the play-by-play bytes it was reviewed against, recorded in
+# tests/parity/data/wnba; the review is in docs/v3-wnba-2025.md.
+REVIEWED_CORRECTIONS = {
+    "1042600201": dict(
+        pbp_sha256="145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
+        source=(
+            "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no "
+            "4th-quarter substitution; official minutes less Q1-Q3 floor time leave "
+            "10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others."
+        ),
+        files={STARTERS: {4: {1611661330: [201886, 1642291, 1631009, 1628886, 1631044]}}},
+    ),
+}
 
 
 def get(url, params, session=None):
@@ -46,6 +63,27 @@ def get(url, params, session=None):
     return (session or requests).get(
         url, params=sorted(params.items()), headers=HEADERS, timeout=REQUEST_TIMEOUT
     )
+
+
+def reviewed_overrides(game_id, pbp_bytes, corrections=REVIEWED_CORRECTIONS):
+    """V3Overrides for a game's reviewed correction, or None when it has none.
+
+    A correction applies only to the play-by-play bytes it was reviewed
+    against; other bytes for the same game are refused rather than guessed.
+    """
+    entry = corrections.get(game_id)
+    if entry is None:
+        return None
+    if hashlib.sha256(pbp_bytes).hexdigest() != entry["pbp_sha256"]:
+        raise V3DecodeError(
+            "The reviewed correction for {} covers different play-by-play bytes; "
+            "review it again".format(game_id)
+        )
+    files = {
+        name: json.dumps({game_id: values}).encode()
+        for name, values in entry["files"].items()
+    }
+    return V3Overrides(files, entry["source"], entry["pbp_sha256"])
 
 
 def stats_url(game_id):
@@ -148,19 +186,20 @@ def boxscore_starters(box_bytes):
     return starters if all(len(p) == 5 for p in starters.values()) else None
 
 
-def parse_possessions(pbp_bytes, context, fetch_boxscore=None):
+def parse_possessions(pbp_bytes, context, fetch_boxscore=None, overrides=None):
     """Parse V3 bytes into possessions with the original engine.
 
     When the original's starter inference falls back to its period-start box
     score request, ``fetch_boxscore(period, url, params)`` must return that
     response; it is recorded as V3StarterBoxscore evidence. Without it, the
     adapter's V3EvidenceRequired error names the exact request instead.
+    ``overrides`` supplies reviewed corrections (see reviewed_overrides).
     """
     boxscores = {}
     while True:
         try:
             return StatsNbaV3PossessionLoader(
-                pbp_bytes, context, starter_boxscores=boxscores
+                pbp_bytes, context, overrides=overrides, starter_boxscores=boxscores
             )
         except V3EvidenceRequired as needed:
             if fetch_boxscore is None or needed.period in boxscores:
@@ -176,7 +215,15 @@ def parse_possessions(pbp_bytes, context, fetch_boxscore=None):
             )
 
 
-def load_game(game_id, pbp_bytes, box_bytes, source, fetch_boxscore=None, aliases=None):
+def load_game(
+    game_id,
+    pbp_bytes,
+    box_bytes,
+    source,
+    fetch_boxscore=None,
+    aliases=None,
+    overrides=None,
+):
     """Context from the box score, then possessions from the original engine.
 
     Starters come from the original's own inference. Only if a name is
@@ -187,13 +234,13 @@ def load_game(game_id, pbp_bytes, box_bytes, source, fetch_boxscore=None, aliase
     """
     context = context_from_boxscore(game_id, pbp_bytes, box_bytes, source, aliases)
     try:
-        return parse_possessions(pbp_bytes, context, fetch_boxscore)
+        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides)
     except V3DecodeError as error:
         starters = boxscore_starters(box_bytes)
         if "is unresolved or ambiguous" not in str(error) or starters is None:
             raise
         context.period_starters = {1: starters}
-        return parse_possessions(pbp_bytes, context, fetch_boxscore)
+        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides)
 
 
 def _event(event, teams):
@@ -311,6 +358,7 @@ def main(argv=None):
         fetched[period] = get(url, params, session)
         return fetched[period]
 
+    overrides = reviewed_overrides(args.game_id, raw["pbp"])
     loader = load_game(
         args.game_id,
         raw["pbp"],
@@ -318,6 +366,7 @@ def main(argv=None):
         raw["pbp_url"] + " ; " + raw["boxscore_url"],
         fetch_boxscore=None if args.pbp else fetch_boxscore,
         aliases=aliases,
+        overrides=overrides,
     )
     sources = dict(
         pbp=dict(url=raw["pbp_url"], sha256=hashlib.sha256(raw["pbp"]).hexdigest()),
@@ -333,6 +382,7 @@ def main(argv=None):
             for period, r in fetched.items()
         },
         reviewed_aliases={str(k): v for k, v in aliases.items()},
+        reviewed_correction=overrides.source if overrides else None,
     )
     if args.save_responses:
         args.save_responses.mkdir(parents=True, exist_ok=True)

@@ -1,11 +1,19 @@
 """WNBA support: pinned 2025 V2/V3 export pairing, WNBA-only codes and the fetch tool."""
 
+from collections import defaultdict
+from decimal import Decimal
 import json
+from types import SimpleNamespace
 
 import pytest
 import responses
 
-from pbpstats.data_loader.stats_nba_v3 import V3DecodeError, decoder, web
+from pbpstats.data_loader.stats_nba_v3 import (
+    V3DecodeError,
+    V3EvidenceRequired,
+    decoder,
+    web,
+)
 from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3, V3Context
 from tools.parity.paired_season import (
     SEASONS,
@@ -172,8 +180,6 @@ def test_wnba_starter_overrides_use_the_originals_integer_game_key(tmp_path):
     # IntDecoder keeps only leading-zero NBA game IDs as strings, so the original
     # looks other leagues' override games up by int(game_id). The adapter's
     # starter recovery follows the same rule.
-    from types import SimpleNamespace
-
     from pbpstats.resources.enhanced_pbp.start_of_period import StartOfPeriod
 
     starters = [201886, 1642291, 1631009, 1628886, 1631044]
@@ -219,3 +225,73 @@ def test_recorded_wnba_game_matches_the_original_on_v2():
     )
     assert indices == list(range(len(rows)))
     assert {p["start_clock"] for p in data["possessions"] if p["number"] == 1} == {"10:00"}
+
+
+def floor_seconds(loader):
+    """Seconds each player is on the floor, from the original's event lineups."""
+    played = defaultdict(Decimal)
+    for period in sorted({e.period for e in loader.events}):
+        events = [e for e in loader.events if e.period == period]
+        previous, lineups = Decimal(600 if period <= 4 else 300), events[0].current_players
+        for event in events:
+            now = Decimal(str(event.seconds_remaining))
+            for players in lineups.values():
+                for player in players:
+                    played[player] += previous - now
+            previous, lineups = now, event.current_players
+        for players in lineups.values():
+            for player in players:
+                played[player] += previous
+    return played
+
+
+def test_reviewed_correction_recovers_1042600201():
+    pbp = recording("stats_v3_1042600201.json")
+    box = recording("stats_v3_boxscore_1042600201.json")
+    fallback = recording("stats_boxscoretraditionalv2_1042600201_period_4.json")
+
+    def fetch(period, url, params):
+        return SimpleNamespace(content=fallback, url=url, status_code=200, reason="OK")
+
+    # Inference finds four Atlanta starters for the 4th, so the original asks for
+    # its period-start box score; that response contradicts the play-by-play.
+    with pytest.raises(V3EvidenceRequired) as needed:
+        web.load_game("1042600201", pbp, box, "recorded")
+    assert needed.value.period == 4
+    with pytest.raises(V3DecodeError, match="contradicts current lineup at event 452"):
+        web.load_game("1042600201", pbp, box, "recorded", fetch_boxscore=fetch)
+
+    overrides = web.reviewed_overrides("1042600201", pbp)
+    loader = web.load_game(
+        "1042600201", pbp, box, "recorded", fetch_boxscore=fetch, overrides=overrides
+    )
+    codes = [d["code"] for d in loader.diagnostics]
+    assert "recorded_override_input" in codes and "recorded_starter_boxscore" not in codes
+    recovery = next(
+        d for d in loader.diagnostics if d["code"] == "starter_recovery" and d["period"] == 4
+    )
+    assert (recovery["method"], recovery["override_teams"]) == (
+        "period_events_and_overrides",
+        [1611661330],
+    )
+    data = json.loads(json.dumps(web.possessions_json(loader)))
+    assert data["credited_possessions"] == {"1611661330": 82, "1611661313": 82}
+    official = json.loads(box)["boxScoreTraditional"]
+    assert data["final_score"] == {
+        str(official[side]["teamId"]): official[side]["statistics"]["points"]
+        for side in ("homeTeam", "awayTeam")
+    }
+    # With the correction, every player's floor time equals the official minutes.
+    played = floor_seconds(loader)
+    for side in ("homeTeam", "awayTeam"):
+        for player in official[side]["players"]:
+            minutes, _, seconds = (player["statistics"]["minutes"] or "0:0").partition(":")
+            official_seconds = int(minutes) * 60 + int(seconds)
+            assert abs(played[player["personId"]] - official_seconds) <= 1, player["personId"]
+
+
+def test_reviewed_corrections_refuse_other_play_by_play_bytes():
+    pbp = recording("stats_v3_1042600201.json")
+    assert web.reviewed_overrides("1022500001", pbp) is None
+    with pytest.raises(V3DecodeError, match="different play-by-play bytes"):
+        web.reviewed_overrides("1042600201", pbp + b" ")

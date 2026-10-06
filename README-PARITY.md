@@ -75,6 +75,7 @@ How the context and starters are built:
 - **Starters:** the original's own inference. If inference needs its period-start box score, the tool fetches the original's exact `boxscoretraditionalv2` request and records it as evidence.
 - **Unresolved names:** only when the roster alone can't resolve a description name, such as a tip to one of two same-named players, does the tool retry with the box score's first-period starters as on-court evidence. The JSON then lists them under `supplied_period_starters`.
 - **Missing names:** a description name the box score lacks, such as a given name, needs a reviewed `--alias PERSON_ID=NAME`.
+- **Reviewed corrections:** `web.REVIEWED_CORRECTIONS` holds reviewed corrections in the original's override-file schema. The tool supplies each one as `V3Overrides` only for the exact play-by-play bytes reviewed, and refuses other bytes for that game. There is currently one: the 4th-quarter starters of WNBA game `1042600201`.
 
 The JSON has:
 

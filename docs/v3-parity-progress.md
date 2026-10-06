@@ -9,7 +9,7 @@ All results were executed locally. The branch is pushed to `origin/feat/v3-parit
 | Check | Result | Scope |
 | --- | --- | --- |
 | Untouched original suite against the candidate | 116 pass; the same two known fixture failures | Only the earlier starter I/O split changes an original file |
-| Parity tests | 811 pass | Harness, adapter, vocabulary, exceptions, corpus, paired seasons, season differential, WNBA and the fetch tool |
+| Parity tests | 813 pass | Harness, adapter, vocabulary, exceptions, corpus, paired seasons, season differential, WNBA and the fetch tool |
 | Paired 2024-25 exports | 574,358 of 574,358 events pair one-to-one; period, actor and team agree on every event | [Paired season evidence](v3-paired-season-evidence.md) |
 | Decoder against recorded V2 codes | 188 of 188 labels | Was 156 matching, 8 different and 24 rejected; every table entry is checked |
 | Full games, equivalent facts | **937 of 937 comparable games identical** | Floored clocks plus V2 within-instant order; fouled player excluded as a declared gap |
@@ -44,7 +44,9 @@ The season comparison is in [the season differential](v3-season-differential.md)
   - The adapter accepts WNBA game IDs, and the fetch tool requests them from `stats.wnba.com`.
   - Three codes recorded only in WNBA data decode for WNBA games alone: official and reset timeouts, and a one-shot clear-path free throw.
   - The paired 2025 exports and the season differential support `--season wnba-2025`.
-  - Live, 8 of 12 WNBA 2026 playoff games parse with final scores equal to the box score. The other 4 are rejected for declared reasons.
+  - Live, 9 of 12 WNBA 2026 playoff games parse with final scores equal to the box score. The other 3 are rejected for declared reasons.
+  - One of the 9 uses a reviewed starter correction. The fetch tool supplies reviewed corrections as `V3Overrides`, bound to the exact play-by-play bytes reviewed.
+  - Starter recovery now looks up WNBA override games by integer ID, as the original does.
   - Details are in [WNBA support](v3-wnba-2025.md).
 - **CI line endings:** the reference and prior checks now pin each Git tree and the committed bytes of each file. 197 reference and 231 prior file hashes, and one shot-vocabulary source hash, were re-pinned from CRLF to committed bytes. Each old hash was checked against the CRLF extraction that produced it.
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "scope": "Live stats.wnba.com responses recorded unchanged: the WNBA 2025 export's fidelity witness and the fetch tool's offline WNBA test. Not ingestion captures.",
+  "scope": "Live stats.wnba.com responses recorded unchanged: the WNBA 2025 export's fidelity witness, the fetch tool's offline WNBA test, and the play-by-play that the reviewed correction for 1042600201 is bound to, with the fallback box score it replaces. Not ingestion captures.",
   "files": [
     {
       "game_id": "1022500001",
@@ -17,6 +17,30 @@
       "retrieved_utc": "2026-10-06",
       "bytes": 16189,
       "sha256": "048d471136d7b34fd398ff6ea7ae7a3c9ef19d86282d20ddef10d3f1ca82bfba"
+    },
+    {
+      "game_id": "1042600201",
+      "path": "tests/parity/data/wnba/stats_v3_1042600201.json",
+      "url": "https://stats.wnba.com/stats/playbyplayv3?EndPeriod=0&GameID=1042600201&StartPeriod=0",
+      "retrieved_utc": "2026-10-06",
+      "bytes": 178036,
+      "sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae"
+    },
+    {
+      "game_id": "1042600201",
+      "path": "tests/parity/data/wnba/stats_v3_boxscore_1042600201.json",
+      "url": "https://stats.wnba.com/stats/boxscoretraditionalv3?EndPeriod=0&EndRange=0&GameID=1042600201&RangeType=0&StartPeriod=0&StartRange=0",
+      "retrieved_utc": "2026-10-06",
+      "bytes": 16741,
+      "sha256": "a7a9a6758ba51cdf22d877659d0cfe35ca87fa4a46e2cbfb1f68c6a4e6b19d96"
+    },
+    {
+      "game_id": "1042600201",
+      "path": "tests/parity/data/wnba/stats_boxscoretraditionalv2_1042600201_period_4.json",
+      "url": "https://stats.wnba.com/stats/boxscoretraditionalv2?EndPeriod=0&EndRange=18200&GameId=1042600201&RangeType=2&StartPeriod=0&StartRange=18000",
+      "retrieved_utc": "2026-10-06",
+      "bytes": 2945,
+      "sha256": "d1a78eeabed68b2e820c1733a0995042e66acac0c4047eba74aeabad16d0a0f3"
     }
   ]
 }
