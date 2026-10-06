@@ -4,7 +4,7 @@
 
 The adapter decodes V3 rows into the original Stats event classes; the original engine makes every enhancement, possession and attribution decision. Paired 2024-25 V2/V3 season exports now give direct evidence for decoding and a full-game comparison against the original on real games. The October 3 checkpoint is preserved in the linked continuation documents.
 
-All results were executed locally. Nothing on `feat/v3-parity` is committed yet, and the authored CI workflow has not run remotely.
+All results were executed locally. The work is committed on the local `feat/v3-parity` branch, and a fresh clone passes the full parity suite. It has not been pushed, so the authored CI workflow has not run remotely.
 
 | Check | Result | Scope |
 | --- | --- | --- |
