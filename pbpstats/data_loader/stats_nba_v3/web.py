@@ -311,6 +311,94 @@ def possessions_json(loader, sources=None):
     )
 
 
+def boxscore_players(box_bytes):
+    """Official personIds in a box score; empty if malformed, which parsing reports."""
+    try:
+        box = json.loads(box_bytes)["boxScoreTraditional"]
+        return {
+            p["personId"] for side in ("homeTeam", "awayTeam") for p in box[side]["players"]
+        }
+    except (ValueError, KeyError, TypeError):
+        return set()
+
+
+def save_game(
+    game_id,
+    output,
+    *,
+    raw=None,
+    session=None,
+    responses=None,
+    aliases=None,
+    skip_absent_aliases=False,
+    indent=4,
+):
+    """Parse one game into possessions and write them to ``output`` as JSON.
+
+    ``raw`` reuses saved responses in fetch_game's shape; otherwise they are
+    fetched with ``session``, as is any period-start box score the original's
+    starter recovery requests. ``responses`` keeps the raw responses in that
+    directory, also for a rejected game. An alias for a player outside the box
+    score is an error unless ``skip_absent_aliases``, which batches use.
+    Reviewed corrections apply only to their reviewed bytes. Returns the loader.
+    """
+    offline = raw is not None
+    if not offline:
+        raw = fetch_game(game_id, session)
+    aliases = dict(aliases or {})
+    if skip_absent_aliases:
+        present = boxscore_players(raw["boxscore"])
+        aliases = {person: names for person, names in aliases.items() if person in present}
+    fetched = {}
+
+    def fetch_boxscore(period, url, params):
+        fetched[period] = get(url, params, session)
+        return fetched[period]
+
+    overrides = None
+    try:
+        overrides = reviewed_overrides(game_id, raw["pbp"])
+        loader = load_game(
+            game_id,
+            raw["pbp"],
+            raw["boxscore"],
+            raw["pbp_url"] + " ; " + raw["boxscore_url"],
+            fetch_boxscore=None if offline else fetch_boxscore,
+            aliases=aliases,
+            overrides=overrides,
+        )
+    finally:
+        if responses:
+            responses.mkdir(parents=True, exist_ok=True)
+            (responses / "playbyplayv3.json").write_bytes(raw["pbp"])
+            (responses / "boxscoretraditionalv3.json").write_bytes(raw["boxscore"])
+            for period, response in fetched.items():
+                name = "boxscoretraditionalv2_period_{}.json".format(period)
+                (responses / name).write_bytes(response.content)
+
+    def digest(data):
+        return hashlib.sha256(data).hexdigest()
+
+    sources = dict(
+        pbp=dict(url=raw["pbp_url"], sha256=digest(raw["pbp"])),
+        boxscore=dict(url=raw["boxscore_url"], sha256=digest(raw["boxscore"])),
+        starter_boxscores={
+            str(period): dict(url=r.url, status=r.status_code, sha256=digest(r.content))
+            for period, r in fetched.items()
+        },
+        reviewed_aliases={str(k): v for k, v in aliases.items()},
+        reviewed_correction=overrides.source if overrides else None,
+    )
+    temporary = output.with_name(output.name + ".tmp")  # never a partial file
+    temporary.write_text(
+        json.dumps(possessions_json(loader, sources), indent=indent),
+        encoding="utf-8",
+        newline="\n",
+    )
+    temporary.replace(output)
+    return loader
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -340,7 +428,7 @@ def main(argv=None):
         if not identity.isdigit() or not name.strip():
             parser.error("--alias expects PERSON_ID=NAME")
         aliases.setdefault(int(identity), []).append(name.strip())
-    session = requests.Session()
+    raw = None
     if args.pbp or args.boxscore:
         if not (args.pbp and args.boxscore):
             parser.error("--pbp and --boxscore are used together")
@@ -350,52 +438,14 @@ def main(argv=None):
             pbp_url=str(args.pbp),
             boxscore_url=str(args.boxscore),
         )
-    else:
-        raw = fetch_game(args.game_id, session)
-    fetched = {}
-
-    def fetch_boxscore(period, url, params):
-        fetched[period] = get(url, params, session)
-        return fetched[period]
-
-    overrides = reviewed_overrides(args.game_id, raw["pbp"])
-    loader = load_game(
-        args.game_id,
-        raw["pbp"],
-        raw["boxscore"],
-        raw["pbp_url"] + " ; " + raw["boxscore_url"],
-        fetch_boxscore=None if args.pbp else fetch_boxscore,
-        aliases=aliases,
-        overrides=overrides,
-    )
-    sources = dict(
-        pbp=dict(url=raw["pbp_url"], sha256=hashlib.sha256(raw["pbp"]).hexdigest()),
-        boxscore=dict(
-            url=raw["boxscore_url"], sha256=hashlib.sha256(raw["boxscore"]).hexdigest()
-        ),
-        starter_boxscores={
-            str(period): dict(
-                url=r.url,
-                status=r.status_code,
-                sha256=hashlib.sha256(r.content).hexdigest(),
-            )
-            for period, r in fetched.items()
-        },
-        reviewed_aliases={str(k): v for k, v in aliases.items()},
-        reviewed_correction=overrides.source if overrides else None,
-    )
-    if args.save_responses:
-        args.save_responses.mkdir(parents=True, exist_ok=True)
-        (args.save_responses / "playbyplayv3.json").write_bytes(raw["pbp"])
-        (args.save_responses / "boxscoretraditionalv3.json").write_bytes(
-            raw["boxscore"]
-        )
-        for period, response in fetched.items():
-            name = "boxscoretraditionalv2_period_{}.json".format(period)
-            (args.save_responses / name).write_bytes(response.content)
     output = args.output or Path(args.game_id + ".possessions.json")
-    output.write_text(
-        json.dumps(possessions_json(loader, sources), indent=2), encoding="utf-8"
+    loader = save_game(
+        args.game_id,
+        output,
+        raw=raw,
+        session=requests.Session(),
+        responses=args.save_responses,
+        aliases=aliases,
     )
     print(
         "{}: {} possessions, credited {}, final score {} -> {}".format(

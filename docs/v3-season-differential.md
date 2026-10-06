@@ -40,7 +40,7 @@ A time- and same-instant-order-blind decision view separates decisions from time
 
 ## Results
 
-Report: `.parity/season-differential-2024.json`, SHA-256 `0716b738a73eaff7619267fbe06db669ec23f97779b19bd67d2623caa017171b`. Its implementation hashes match the current adapter and tooling. It was re-run three times: after the adapter's `get_team_ids` guard (see the contract), after the October 6 code-review fixes, and after [WNBA support](v3-wnba-2025.md) and the fetch tool. Per-game results were identical in all three modes each time, and no 2024-25 game reaches that defect. Double-foul participants are compared where V3 names both players.
+Report: `.parity/season-differential-2024.json`, SHA-256 `91be692fad89d016b99b43fcf209c59694e1fac17dec3e7f895d93744f2b5674`. Its implementation hashes match the current adapter and tooling. It was re-run three times: after the adapter's `get_team_ids` guard (see the contract), after the October 6 code-review fixes, and after [WNBA support](v3-wnba-2025.md) and the fetch tool. Per-game results were identical in all three modes each time, and no 2024-25 game reaches that defect. Double-foul participants are compared where V3 names both players.
 
 The original completed 1,051 of 1,230 games offline. Both sides completed 937 games in every mode: 187,309 possessions, of which the original credits 185,402.
 

@@ -147,3 +147,24 @@ def test_fetch_and_save_writes_possessions_json(tmp_path):
     data = json.loads(output.read_text(encoding="utf-8"))
     assert len(data["possessions"]) == 208
     assert data["sources"]["pbp"]["sha256"] == web.hashlib.sha256(pbp).hexdigest()
+
+
+def test_save_game_keeps_responses_and_can_skip_absent_aliases(tmp_path):
+    pbp, box = recorded("0022500288")
+    raw = dict(pbp=pbp, boxscore=box, pbp_url="recorded", boxscore_url="recorded")
+    # A rejected game still keeps its responses and leaves no output file.
+    with pytest.raises(V3DecodeError, match="'Hansen' is unresolved"):
+        web.save_game("0022500288", tmp_path / "a.json", raw=raw, responses=tmp_path / "raw")
+    assert (tmp_path / "raw/playbyplayv3.json").read_bytes() == pbp
+    assert not (tmp_path / "a.json").exists()
+    aliases = {1642905: ["Hansen"], 1: ["Nobody"]}
+    with pytest.raises(V3DecodeError, match="not in the box score"):
+        web.save_game("0022500288", tmp_path / "b.json", raw=raw, aliases=aliases)
+    web.save_game(
+        "0022500288", tmp_path / "c.json", raw=raw, aliases=aliases, skip_absent_aliases=True
+    )
+    text = (tmp_path / "c.json").read_text(encoding="utf-8")
+    assert text.startswith('{\n    "game_id"')  # four-space indentation
+    data = json.loads(text)
+    assert data["sources"]["reviewed_aliases"] == {"1642905": ["Hansen"]}
+    assert data["credited_possessions"] == {"1610612757": 97, "1610612749": 96}

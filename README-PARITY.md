@@ -88,18 +88,22 @@ Detailed per-player statistics stay gated, as the adapter's capabilities state.
 From Python, with the checkout root as the working directory or on `PYTHONPATH`:
 
 ```python
-import json
+from pathlib import Path
 
 from pbpstats.data_loader.stats_nba_v3 import web
 
-raw = web.fetch_game("0022500521")
-loader = web.load_game(
-    "0022500521", raw["pbp"], raw["boxscore"], raw["pbp_url"],
-    fetch_boxscore=lambda period, url, params: web.get(url, params),
-)
-with open("game.json", "w", encoding="utf-8") as f:
-    json.dump(web.possessions_json(loader), f, indent=2)
+loader = web.save_game("0022500521", Path("game.json"), responses=Path("raw"))
 ```
+
+`save_game` is the command's own per-game path, and Cheeseburger's batch script calls it too:
+
+- It fetches the game, or reuses saved responses passed as `raw`.
+- It applies reviewed corrections and writes the JSON atomically, indented four spaces.
+- It keeps the raw responses even when a game is rejected.
+- Pass a `requests` session as `session` to pace or retry requests.
+- With `skip_absent_aliases=True`, aliases apply only to players in the game's box score.
+
+`fetch_game`, `load_game` and `possessions_json` remain available for finer control.
 
 Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,038 games, all with the same credited possessions as the corpus audit. The rest are:
 

@@ -9,7 +9,7 @@ All results were executed locally. The branch is pushed to `origin/feat/v3-parit
 | Check | Result | Scope |
 | --- | --- | --- |
 | Untouched original suite against the candidate | 116 pass; the same two known fixture failures | Only the earlier starter I/O split changes an original file |
-| Parity tests | 813 pass | Harness, adapter, vocabulary, exceptions, corpus, paired seasons, season differential, WNBA and the fetch tool |
+| Parity tests | 814 pass | Harness, adapter, vocabulary, exceptions, corpus, paired seasons, season differential, WNBA and the fetch tool |
 | Paired 2024-25 exports | 574,358 of 574,358 events pair one-to-one; period, actor and team agree on every event | [Paired season evidence](v3-paired-season-evidence.md) |
 | Decoder against recorded V2 codes | 188 of 188 labels | Was 156 matching, 8 different and 24 rejected; every table entry is checked |
 | Full games, equivalent facts | **937 of 937 comparable games identical** | Floored clocks plus V2 within-instant order; fouled player excluded as a declared gap |
@@ -38,6 +38,7 @@ The season comparison is in [the season differential](v3-season-differential.md)
   - Every 2025-26 corpus outcome is unchanged.
 - **Fetch, parse and save:**
   - `python -m pbpstats.data_loader.stats_nba_v3.web GAME_ID -o game.json` fetches `playbyplayv3` and `boxscoretraditionalv3`, builds the context from the box score and writes the possessions as JSON. Usage is in [README-PARITY](../README-PARITY.md#fetch-a-game-and-save-possessions-as-json).
+  - `web.save_game()` handles one game, and the command and Cheeseburger's batch script both call it.
   - When starter recovery needs the original's period-start box score, the adapter raises `V3EvidenceRequired` with the exact request. The tool fetches it, records it as evidence and parses again.
   - Offline over the 2025-26 captures, it parses 1,038 games, each with the corpus audit's credited possessions. Live fetches of `0022500089` and `0022500521` also match; the second needed its period-5 box score.
 - **WNBA:**
