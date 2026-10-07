@@ -367,6 +367,38 @@ def load_v3(folder, game_id, mode):
     return StatsNbaV3PossessionLoader(source, context)
 
 
+def install_held_ball():
+    """Install the adapter's held-ball extension, unchanged, into the original.
+
+    The module is loaded from this checkout's file, so its imports bind to the
+    original's classes in this worker. Candidates are swapped exactly as the
+    adapter swaps them, before linking, including after order-repair rebuilds.
+    """
+    import importlib.util
+    from pbpstats.data_loader.nba_enhanced_pbp_loader import NbaEnhancedPbpLoader
+
+    spec = importlib.util.spec_from_file_location(
+        "held_ball_extension", ROOT / "pbpstats/data_loader/stats_nba_v3/held_ball.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    original = NbaEnhancedPbpLoader._add_extra_attrs_to_all_events
+
+    def add_extra_attrs_to_all_events(self):
+        rows = {row["EVENTNUM"]: row for row in self.data}
+        following = self.items[1:] + [None]
+        self.items = [
+            module.V3HeldBallJumpBall(rows[event.event_num], index)
+            if module.is_candidate(event, following[index])
+            else event
+            for index, event in enumerate(self.items)
+        ]
+        original(self)
+
+    NbaEnhancedPbpLoader._add_extra_attrs_to_all_events = add_extra_attrs_to_all_events
+    return module.HELD_BALL_VERSION
+
+
 def run_worker(args):
     from contextlib import redirect_stdout
 
@@ -381,6 +413,8 @@ def run_worker(args):
     if Path(pbpstats.__file__).resolve() != package / "pbpstats/__init__.py":
         raise RuntimeError("Wrong parser imported: " + str(pbpstats.__file__))
     sys.path.insert(1, str(ROOT))
+    if args.held_ball:
+        install_held_ball()
     games = json.loads(args.games.read_text(encoding="utf-8"))
     with gzip.open(args.output, "wt", encoding="utf-8") as output:
         for count, game_id in enumerate(games, 1):
@@ -598,6 +632,11 @@ def main():
     parser.add_argument("--limit", type=int, help="Compare only the first N games")
     parser.add_argument("--game", action="append", help="Compare only these game IDs")
     parser.add_argument("--keep", type=Path, help="Keep worker inputs/records here")
+    parser.add_argument(
+        "--held-ball",
+        action="store_true",
+        help="Also install the adapter's held-ball extension into the original on V2",
+    )
     parser.add_argument("--worker", choices=("v2", "v3"), help=argparse.SUPPRESS)
     parser.add_argument("--package", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--input", type=Path, help=argparse.SUPPRESS)
@@ -608,6 +647,7 @@ def main():
         args.side, args.output = args.worker, args.records
         return run_worker(args)
 
+    from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
     from tools.parity.paired_season import SEASONS, manifest, season
     from tools.parity.reference import prepare_reference
 
@@ -615,6 +655,8 @@ def main():
         parser.error("--season must be one of " + ", ".join(sorted(SEASONS)))
     if args.output is None:
         suffix = "2024" if args.season == "nba-2024" else args.season
+        if args.held_ball:
+            suffix += "-held-ball"
         args.output = ROOT / ".parity/season-differential-{}.json".format(suffix)
     label = manifest(args.season)["season"]
     v2, v3, _ = season(args.season)
@@ -655,6 +697,8 @@ def main():
             ]
             if mode:
                 command += ["--clock", mode]
+            if side == "v2" and args.held_ball:
+                command.append("--held-ball")
             log = open(folder / (name + ".log"), "w", encoding="utf-8")
             processes[name] = (
                 subprocess.Popen(command, cwd=str(ROOT), stdout=log, stderr=log),
@@ -684,6 +728,7 @@ def main():
             shared_inputs=[
                 "Shot coordinates for the original's shot-chart files come from the V3 export (xLegacy/yLegacy); the pinned evidence has no V2 shot chart."
             ],
+            v2_extensions=[HELD_BALL_VERSION] if args.held_ball else [],
             implementation_hashes={
                 p.relative_to(ROOT).as_posix(): digest(p.read_bytes())
                 for folder_ in (

@@ -15,6 +15,7 @@ from pbpstats.resources.possessions.possession import Possession
 from .decoder import DecodedV3, V3DecodeError
 from .overrides import BAD_POSSESSIONS, CHANGE_EVENTS, KEEP_EVENTS, STARTERS
 from .starters import StarterRecovery
+from .held_ball import HELD_BALL_VERSION, V3HeldBallJumpBall, is_candidate
 from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 
 
@@ -110,13 +111,16 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # This hook also runs after each original source-order repair rebuild.
         # Install extension events before linking/enhancement, without changing
         # the global factory or any original event's decision methods.
-        if self.decoded.team_heaves:
-            rows = {r["EVENTNUM"]: r for r in self.data}
-            self.items = [
-                V3TeamHeave(rows[event.event_num], index)
-                if event.event_num in self.decoded.team_heaves else event
-                for index, event in enumerate(self.items)
-            ]
+        rows = {r["EVENTNUM"]: r for r in self.data}
+        following = self.items[1:] + [None]
+        self.items = [
+            V3TeamHeave(rows[event.event_num], index)
+            if event.event_num in self.decoded.team_heaves
+            else V3HeldBallJumpBall(rows[event.event_num], index)
+            if is_candidate(event, following[index])
+            else event
+            for index, event in enumerate(self.items)
+        ]
         super()._add_extra_attrs_to_all_events()
 
     def _set_period_start_items(self):
@@ -229,6 +233,13 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             V3Possession(events) for events in self._split_events_by_possession()
         ]
         self._add_extra_attrs_to_all_possessions()
+        held_balls = [
+            event.diagnostic
+            for event in self.events
+            if isinstance(event, V3HeldBallJumpBall)
+            and event.held_ball_turnover is not None
+        ]
+        self.diagnostics += held_balls
         if sum(len(possession.events) for possession in self.items) != len(self.events):
             raise V3DecodeError("Events left outside a possession")
         self._validate_lineups()
@@ -243,8 +254,11 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             "possession_sequence_checked": validate_possessions,
             "defect_guards": [TEAM_IDS_GUARD],
         }
-        if decoded.team_heaves:
-            self.capabilities["extensions"] = [TEAM_HEAVE_VERSION]
+        extensions = [TEAM_HEAVE_VERSION] if decoded.team_heaves else []
+        if held_balls:
+            extensions.append(HELD_BALL_VERSION)
+        if extensions:
+            self.capabilities["extensions"] = extensions
 
     def _load_bad_possession_overrides(self):
         self.bad_pbp_cases = deepcopy(self.overrides.get(BAD_POSSESSIONS, {}))

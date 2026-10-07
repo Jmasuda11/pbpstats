@@ -85,6 +85,20 @@
       "capture": "nba/2025/0022500089/20260923T042059234220Z-985fae3f",
       "capture_path": "bundle/pbp/stats_v3_0022500089.json",
       "sha256": "4d712671c31802936ff5f663fadff9308a33efa07b1050490bcb80bc8ed9e17c"
+    },
+    {
+      "game_id": "0022500165",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500165.json",
+      "capture": "nba/2025/0022500165/20260923T042543070239Z-94a47c4d",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500165.json",
+      "sha256": "f845af7e31067a26374aa570d0e40bbf73669fe7afb58f22a748019568f58ddb"
+    },
+    {
+      "game_id": "0022500165",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500165.json",
+      "capture": "nba/2025/0022500165/20260923T042543070239Z-94a47c4d",
+      "capture_path": "bundle/pbp/stats_v3_0022500165.json",
+      "sha256": "385899fbb8215bb2e42955fd0ab1aaef3e5d7770d864028f80b25c13434b9f44"
     }
   ]
 }
