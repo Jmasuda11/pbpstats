@@ -2,6 +2,7 @@
 
 from collections import Counter
 from copy import deepcopy
+from decimal import Decimal
 import math
 
 from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
@@ -12,8 +13,25 @@ from pbpstats.resources.enhanced_pbp.stats_nba.enhanced_pbp_factory import (
 )
 from pbpstats.resources.possessions.possession import Possession
 
-from .decoder import DecodedV3, V3DecodeError
-from .overrides import BAD_POSSESSIONS, CHANGE_EVENTS, KEEP_EVENTS, STARTERS
+from .decoder import (
+    FOULS,
+    FREE_THROWS,
+    REBOUNDS,
+    TURNOVERS,
+    VIOLATIONS,
+    DecodedV3,
+    V3DecodeError,
+    clock_text,
+)
+from .overrides import (
+    BAD_POSSESSIONS,
+    CHANGE_EVENTS,
+    EVENT_CLOCKS,
+    EVENT_ORDER,
+    EVENT_SUBTYPES,
+    KEEP_EVENTS,
+    STARTERS,
+)
 from .starters import StarterRecovery
 from .held_ball import HELD_BALL_VERSION, V3HeldBallJumpBall, is_candidate_at
 from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
@@ -21,6 +39,17 @@ from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 
 TEAM_IDS_GUARD = "possession_team_ids_skip_teamless_events_v1"
 
+
+# V3 subtype labels a reviewed correction may give each kind of event, with the
+# V2 codes the decoder records for them (EVENTMSGTYPE: label -> action type).
+# Free throws are the numbered regular ones only.
+SUBTYPE_CODES = {
+    3: {"Free Throw {} of {}".format(*key): code for key, code in FREE_THROWS.items()},
+    4: dict(REBOUNDS),
+    5: dict(TURNOVERS),
+    6: dict(FOULS),
+    7: dict(VIOLATIONS),
+}
 
 class V3Possession(Possession):
     """Original Possession with one defect guarded.
@@ -84,6 +113,9 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 }
             ]
         }
+        self._apply_reviewed_subtypes()
+        self._apply_reviewed_clocks()
+        self._apply_reviewed_event_order()
         if validate_source_order:
             self._make_pbp_items()
         else:
@@ -98,6 +130,91 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             group = decoded.groups[event.event_num]
             event.v3_source_indices = group["source_indices"]
             event.v3_source_row = deepcopy(group["primary"])
+
+    def _reviewed_entries(self, name, empty):
+        games = self.overrides.get(name, {})
+        return games.get(self.game_id, games.get(int(self.game_id), empty))
+
+    def _apply_reviewed_subtypes(self):
+        # Edits the projection's action type as the original's remedy of editing
+        # the play-by-play file would. A free throw's label in its description
+        # follows; other descriptions keep the recorded text.
+        labels = self._reviewed_entries(EVENT_SUBTYPES, {})
+        result = self.source_data["resultSets"][0]
+        headers = result["headers"]
+        kind, code = headers.index("EVENTMSGTYPE"), headers.index("EVENTMSGACTIONTYPE")
+        by_number = {row[headers.index("EVENTNUM")]: row for row in result["rowSet"]}
+        for event, label in sorted(labels.items()):
+            row = by_number.get(event)
+            table = SUBTYPE_CODES.get(row[kind]) if row is not None else None
+            names = {value: name for name, value in (table or {}).items()}
+            if table is None or label not in table or row[code] not in names:
+                raise V3DecodeError("Event subtype override does not fit the recorded event")
+            recorded = names[row[code]]
+            row[code] = table[label]
+            if row[kind] == 3:
+                for key in ("HOMEDESCRIPTION", "VISITORDESCRIPTION", "NEUTRALDESCRIPTION"):
+                    if key in headers and isinstance(row[headers.index(key)], str):
+                        row[headers.index(key)] = row[headers.index(key)].replace(recorded, label)
+            self.repairs.append(dict(
+                code="reviewed_event_subtype", event_num=event, recorded=recorded, reviewed=label
+            ))
+
+    def _apply_reviewed_clocks(self):
+        # Tenths only, within the recorded second, keeping the recorded order.
+        clocks = self._reviewed_entries(EVENT_CLOCKS, {})
+        result = self.source_data["resultSets"][0]
+        headers = result["headers"]
+        number, period, clock = (
+            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
+        )
+        rows = result["rowSet"]
+        index = {row[number]: i for i, row in enumerate(rows)}
+
+        def seconds(text):
+            minutes, _, rest = text.partition(":")
+            return Decimal(minutes) * 60 + Decimal(rest)
+
+        for event, value in sorted(clocks.items()):
+            if event not in index:
+                raise V3DecodeError("Event clock override names an event not in the source")
+            row, new = rows[index[event]], clock_text(value)
+            if int(seconds(new)) != int(seconds(row[clock])):
+                raise V3DecodeError("Event clock override moves an event to another second")
+            recorded, row[clock] = row[clock], new
+            self.repairs.append(dict(
+                code="reviewed_event_clock", event_num=event, recorded=recorded, reviewed=new
+            ))
+        # Only the edited events' neighbours are checked: a recording can hold
+        # inversions elsewhere that the original's own order repairs fix.
+        for event in clocks:
+            i = index[event]
+            for before, after in ((i - 1, i), (i, i + 1)):
+                if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and seconds(rows[before][clock]) < seconds(rows[after][clock]):
+                    raise V3DecodeError("Event clock override breaks the recorded order")
+
+    def _apply_reviewed_event_order(self):
+        # The original's remedy for events recorded out of order is to edit the
+        # play-by-play file. Reviewed moves edit this projection the same way,
+        # once, before the original loads it.
+        moves = self._reviewed_entries(EVENT_ORDER, [])
+        if not moves:
+            return
+        result = self.source_data["resultSets"][0]
+        number, period, clock = (
+            result["headers"].index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
+        )
+        rows = result["rowSet"]
+        for event, before in moves:
+            found = {row[number]: row for row in rows}
+            if event not in found or before not in found:
+                raise V3DecodeError("Event-order override names an event not in the source")
+            moved, anchor = found[event], found[before]
+            if (moved[period], moved[clock]) != (anchor[period], anchor[clock]):
+                raise V3DecodeError("Event-order override moves an event to another clock")
+            rows.remove(moved)
+            rows.insert(rows.index(anchor), moved)
+        self.repairs.append(dict(code="reviewed_event_order", moves=deepcopy(moves)))
 
     def _load_possession_changing_event_overrides(self):
         self.possession_changing_event_overrides = deepcopy(

@@ -1,0 +1,98 @@
+{
+  "0022500054": {
+    "pbp_sha256": "73c6e095c19810c10d7e30d003948a04c1c6948796a9d56b4c8ffaa16b7d85b4",
+    "source": "Video review 2026-10-07: at Q2 11:06 Sengun made the first of two free throws, and Adams' lane violation on the second ended Houston's possession. V3 logs the made free throw as 1 of 1.",
+    "files": {
+      "event_subtypes.json": {
+        "192": "Free Throw 1 of 2"
+      }
+    }
+  },
+  "0022500169": {
+    "pbp_sha256": "50b0abaeea32ae5e1bfb2a0f85ace6787034629ffe6ada5389b7aec8b6d2bde0",
+    "source": "Video review 2026-10-07: at Q4 2:48 Brooks' technical foul came during Curry's second free throw, which did not count. The technical free throw was shot next, then the second free throw. V3 lists the technical free throw after the second.",
+    "files": {
+      "event_order.json": [
+        [
+          648,
+          647
+        ]
+      ]
+    }
+  },
+  "0022500684": {
+    "pbp_sha256": "cd6ffea7dcafe3689f02de85425a6855b0071d57367942a48a1ef7d57596fc79",
+    "source": "Video review 2026-10-07: at Q1 0:19.4 Powell fouled Hardaway Jr. on his made floater, an and-one. V3 records the foul and the free throw a tenth later, at 0:19.3.",
+    "files": {
+      "event_clocks.json": {
+        "152": "PT00M19.40S",
+        "154": "PT00M19.40S"
+      }
+    }
+  },
+  "0022500775": {
+    "pbp_sha256": "fb5abfd7bfa39d6ae6f0f0251dc236a6499743e6cb6a4bb1c6eff9118016e9aa",
+    "source": "Video review 2026-10-07: at Q3 6:58 Ball's technical free throw was the first free throw shot, before Williams' and-one free throw. V3 lists the technical free throw after it.",
+    "files": {
+      "event_order.json": [
+        [
+          451,
+          462
+        ]
+      ]
+    }
+  },
+  "0022500944": {
+    "pbp_sha256": "b7fdfb019ae16e8f5d4894e563d1133ac3cc9522e3e04acb0f291a8a2886a9bb",
+    "source": "Video review 2026-10-07: at Q3 9:38 Diabate's turnover is a lane violation on Knueppel's second free throw. V3 leaves its subtype blank, which the original reads as no turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "396": "Lane Violation"
+      }
+    }
+  },
+  "0022501009": {
+    "pbp_sha256": "b18373b5f12fdf41a03a3832b0876974ea5f8529947d4b13ce759f6e1995b5e3",
+    "source": "Video review 2026-10-07: at Q1 0:47 Watkins made the first of two free throws, and Gill's offensive goaltending on the second ended Washington's possession. V3 logs the made free throw as 1 of 1.",
+    "files": {
+      "event_subtypes.json": {
+        "182": "Free Throw 1 of 2"
+      }
+    }
+  },
+  "0022501070": {
+    "pbp_sha256": "c7fd9cc475bcf9e85babef86e074d9d53ebbc10e8130a744a6f4f16f59bdc677",
+    "source": "Video review 2026-10-07: at Q3 2:27 the instant replay changed Yabusele's away-from-play foul to a personal foul. V3 keeps the away-from-play subtype.",
+    "files": {
+      "event_subtypes.json": {
+        "500": "Personal"
+      }
+    }
+  },
+  "0022501079": {
+    "pbp_sha256": "bcfcd88df04f5a7d77a3f878f768ecdce0384364b4970a136bd8149534cbeedf",
+    "source": "Video review 2026-10-07: at Q4 8:09 Miller's lane violation on his second free throw gave Memphis the ball. The league logs a shooter's lane violation as a defensive team rebound and a Lane violation, with no turnover; here the violation is missing and the team rebound is typed Normal Rebound, a dead-ball placeholder.",
+    "files": {
+      "event_subtypes.json": {
+        "688": "Unknown"
+      }
+    }
+  },
+  "1042600201": {
+    "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
+    "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",
+    "files": {
+      "missing_period_starters.json": {
+        "4": {
+          "1611661330": [
+            201886,
+            1642291,
+            1631009,
+            1628886,
+            1631044
+          ]
+        }
+      }
+    }
+  }
+}

@@ -6,14 +6,31 @@ import json
 
 from pbpstats.overrides import IntDecoder
 
-from .decoder import V3DecodeError
+from .decoder import CLOCK, V3DecodeError
 
 
 BAD_POSSESSIONS = "bad_pbp_possessions.json"
 CHANGE_EVENTS = "possession_change_event_overrides.json"
 KEEP_EVENTS = "non_possession_changing_event_overrides.json"
 STARTERS = "missing_period_starters.json"
-SUPPORTED = {BAD_POSSESSIONS, CHANGE_EVENTS, KEEP_EVENTS, STARTERS}
+# The original has no files for these three: for a recorded event that is out
+# of order or mislabeled, its remedy is to edit the play-by-play file. Each
+# entry is that edit. An event-order entry, [event, before], moves one event to
+# just before another event at the same period and clock. A subtype entry,
+# {event: label}, gives the V3 subtype the event should have recorded. A clock
+# entry, {event: V3 clock}, changes only the tenths within the recorded second.
+EVENT_ORDER = "event_order.json"
+EVENT_SUBTYPES = "event_subtypes.json"
+EVENT_CLOCKS = "event_clocks.json"
+SUPPORTED = {
+    BAD_POSSESSIONS,
+    CHANGE_EVENTS,
+    EVENT_CLOCKS,
+    EVENT_ORDER,
+    EVENT_SUBTYPES,
+    KEEP_EVENTS,
+    STARTERS,
+}
 
 
 @dataclass(frozen=True)
@@ -49,6 +66,28 @@ class V3Overrides:
             for game, entries in values.items():
                 if not isinstance(game, (str, int)) or isinstance(game, bool):
                     raise V3DecodeError("Invalid override game identity")
+                if name == EVENT_ORDER:
+                    if not isinstance(entries, list) or any(
+                        not isinstance(move, list)
+                        or len(move) != 2
+                        or any(type(n) is not int or n < 0 for n in move)
+                        or move[0] == move[1]
+                        for move in entries
+                    ):
+                        raise V3DecodeError("Invalid event-order override move")
+                    continue
+                if name in (EVENT_SUBTYPES, EVENT_CLOCKS):
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int
+                        or event < 0
+                        or not isinstance(value, str)
+                        or not value.strip()
+                        or name == EVENT_CLOCKS and not CLOCK.fullmatch(value)
+                        for event, value in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event {} override".format(
+                            "subtype" if name == EVENT_SUBTYPES else "clock"))
+                    continue
                 if name in (BAD_POSSESSIONS, STARTERS):
                     if not isinstance(entries, dict) or any(
                         type(period) is not int or period < 1 for period in entries

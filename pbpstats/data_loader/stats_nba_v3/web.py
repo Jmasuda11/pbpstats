@@ -23,7 +23,7 @@ from pbpstats import REQUEST_TIMEOUT
 from .decoder import V3Context, V3DecodeError, V3JumpBallEvidenceRequired
 from .jump_balls import V3JumpBallEvidence
 from .names import add_actor_aliases, add_unaccented_names, require
-from .overrides import STARTERS, V3Overrides
+from .overrides import V3Overrides
 from .possessions import StatsNbaV3PossessionLoader
 from .starters import V3EvidenceRequired, V3StarterBoxscore
 
@@ -44,20 +44,13 @@ HEADERS = {
     "Sec-Ch-Ua-Mobile": "?0",
     "Sec-Fetch-Dest": "empty",
 }
-# Reviewed corrections, in the original's override-file schema. Each is bound to
-# the play-by-play bytes it was reviewed against, recorded in
-# tests/parity/data/wnba; the review is in docs/v3-wnba-2025.md.
-REVIEWED_CORRECTIONS = {
-    "1042600201": dict(
-        pbp_sha256="145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
-        source=(
-            "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no "
-            "4th-quarter substitution; official minutes less Q1-Q3 floor time leave "
-            "10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others."
-        ),
-        files={STARTERS: {4: {1611661330: [201886, 1642291, 1631009, 1628886, 1631044]}}},
-    ),
-}
+# Reviewed corrections for games whose play-by-play the original cannot parse
+# as recorded: the original's override files, plus event-order edits. Each is
+# bound to the play-by-play bytes it was reviewed against and says what the
+# review found; the recordings are kept with the parity tests.
+REVIEWED_CORRECTIONS = json.loads(
+    Path(__file__).with_name("reviewed_corrections.json").read_text(encoding="utf-8")
+)
 
 
 def get(url, params, session=None):

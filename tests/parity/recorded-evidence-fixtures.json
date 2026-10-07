@@ -148,6 +148,125 @@
       "capture": "nba/2025/0022500879/20260923T045732399084Z-6177e772",
       "capture_path": "bundle/pbp/stats_v3_0022500879.json",
       "sha256": "73be82de0742b3d309b5fd0647ba8f27d99f11d895f6f2e096a05db3303fc954"
+    },
+    {
+      "game_id": "0022500169",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500169.json",
+      "capture": "nba/2025/0022500169/20260923T042551923543Z-be7c0faa",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500169.json",
+      "sha256": "af708c5753f09508418a0d658c9b51a286653292094bc346058618bd4289369f"
+    },
+    {
+      "game_id": "0022500169",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500169.json",
+      "capture": "nba/2025/0022500169/20260923T042551923543Z-be7c0faa",
+      "capture_path": "bundle/pbp/stats_v3_0022500169.json",
+      "sha256": "50b0abaeea32ae5e1bfb2a0f85ace6787034629ffe6ada5389b7aec8b6d2bde0"
+    },
+    {
+      "game_id": "0022500169",
+      "path": "tests/parity/data/recorded_evidence/live_0022500169.json",
+      "capture": "nba/2025/0022500169/20260923T042551923543Z-be7c0faa",
+      "capture_path": "bundle/live/playbyplay_0022500169.json",
+      "sha256": "1ee80500dd449c5ef681dae844e83bbd69b138fc457d0dcad61eb5fa368688ed"
+    },
+    {
+      "game_id": "0022500775",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500775.json",
+      "capture": "nba/2025/0022500775/20260923T045339230650Z-10877192",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500775.json",
+      "sha256": "ef7cbd3b2a19944dbb81b0eded5d245902de541a8e48db2fa12b7bfd0b59ea66"
+    },
+    {
+      "game_id": "0022500775",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500775.json",
+      "capture": "nba/2025/0022500775/20260923T045339230650Z-10877192",
+      "capture_path": "bundle/pbp/stats_v3_0022500775.json",
+      "sha256": "fb5abfd7bfa39d6ae6f0f0251dc236a6499743e6cb6a4bb1c6eff9118016e9aa"
+    },
+    {
+      "game_id": "0022500054",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500054.json",
+      "capture": "nba/2025/0022500054/20260923T042954306985Z-61184efc",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500054.json",
+      "sha256": "d45cf1163303cd8048f76a4a4f4ee19ec380acc2ddf787da8af53a4cf23d2599"
+    },
+    {
+      "game_id": "0022500054",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500054.json",
+      "capture": "nba/2025/0022500054/20260923T042954306985Z-61184efc",
+      "capture_path": "bundle/pbp/stats_v3_0022500054.json",
+      "sha256": "73c6e095c19810c10d7e30d003948a04c1c6948796a9d56b4c8ffaa16b7d85b4"
+    },
+    {
+      "game_id": "0022501009",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022501009.json",
+      "capture": "nba/2025/0022501009/20260923T050210688543Z-c7e756de",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022501009.json",
+      "sha256": "f78c79fc9006d61a69159b7ff666bfd96492cb35188c6495d1148ecc57154089"
+    },
+    {
+      "game_id": "0022501009",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022501009.json",
+      "capture": "nba/2025/0022501009/20260923T050210688543Z-c7e756de",
+      "capture_path": "bundle/pbp/stats_v3_0022501009.json",
+      "sha256": "b18373b5f12fdf41a03a3832b0876974ea5f8529947d4b13ce759f6e1995b5e3"
+    },
+    {
+      "game_id": "0022500944",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500944.json",
+      "capture": "nba/2025/0022500944/20260923T045951564652Z-fad63458",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500944.json",
+      "sha256": "857841c48bfa8f060d42c495cb43fad116e71eb5fd00c9434fbcbc94cedbb6f7"
+    },
+    {
+      "game_id": "0022500944",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500944.json",
+      "capture": "nba/2025/0022500944/20260923T045951564652Z-fad63458",
+      "capture_path": "bundle/pbp/stats_v3_0022500944.json",
+      "sha256": "b7fdfb019ae16e8f5d4894e563d1133ac3cc9522e3e04acb0f291a8a2886a9bb"
+    },
+    {
+      "game_id": "0022501070",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022501070.json",
+      "capture": "nba/2025/0022501070/20260923T050433945924Z-9d772243",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022501070.json",
+      "sha256": "7cebe929c0a8061b814f96b93b3c694610c11fb5a36eac05bbeda9fab8991b0e"
+    },
+    {
+      "game_id": "0022501070",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022501070.json",
+      "capture": "nba/2025/0022501070/20260923T050433945924Z-9d772243",
+      "capture_path": "bundle/pbp/stats_v3_0022501070.json",
+      "sha256": "c7fd9cc475bcf9e85babef86e074d9d53ebbc10e8130a744a6f4f16f59bdc677"
+    },
+    {
+      "game_id": "0022501079",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022501079.json",
+      "capture": "nba/2025/0022501079/20260923T050453285895Z-30bb5a89",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022501079.json",
+      "sha256": "ec6178fde9a9b07384e89c511c5c476a7cbec6d56f5d8a48d2240b799721f515"
+    },
+    {
+      "game_id": "0022501079",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022501079.json",
+      "capture": "nba/2025/0022501079/20260923T050453285895Z-30bb5a89",
+      "capture_path": "bundle/pbp/stats_v3_0022501079.json",
+      "sha256": "bcfcd88df04f5a7d77a3f878f768ecdce0384364b4970a136bd8149534cbeedf"
+    },
+    {
+      "game_id": "0022500684",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500684.json",
+      "capture": "nba/2025/0022500684/20260923T044716121964Z-aef4128c",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500684.json",
+      "sha256": "f292b523e245454132160b4464b00bf7e6d071fa0118311d9f98f0dac406a98c"
+    },
+    {
+      "game_id": "0022500684",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500684.json",
+      "capture": "nba/2025/0022500684/20260923T044716121964Z-aef4128c",
+      "capture_path": "bundle/pbp/stats_v3_0022500684.json",
+      "sha256": "cd6ffea7dcafe3689f02de85425a6855b0071d57367942a48a1ef7d57596fc79"
     }
   ]
 }
