@@ -25,9 +25,9 @@ Both exports are community CSV exports, not raw NBA JSON or a behavioral oracle.
 | Event order | Identical in 159 games. The other 1,071 differ only inside one clock instant: 2,660 instants, 2,733 moved events, no cross-instant differences |
 | V2 duplicate rows | `0022400480` events 303 and 308 appear twice, identically |
 
-V3 lacks two facts that V2 records. V2 names the fouled player for 45,826 of 46,916 fouls; the V3 stats feed has no equivalent field. For 98 jump balls the V3 description is blank, while V2 still identifies the opposing jumper and the recipient or team.
+V3 lacks two facts that V2 records. V2 names the fouled player for 45,826 of 46,916 fouls; the V3 stats feed has no equivalent field. For 98 jump balls the V3 description is blank, while V2 still identifies the opposing jumper and the recipient or team. The league's live play-by-play records these facts under the same action numbers: `tools/parity/live_jump_balls.py` finds all 2,193 V2 jump balls agreeing with their live actions, 2,093 player tips and 100 team recoveries (`.parity/live-jump-balls-nba-2024.json`, SHA-256 `08b174a236782b15e3746042c6b2f7df375a41066ce6414158941d5f29f626f4`). The adapter reads them as [recorded evidence](v3-parity-contract.md).
 
-The held-ball pattern is not new to 2025-26. In 184 cases (164 games), a jump ball is followed by a lost-ball turnover and a steal between the two jumpers; 55 occur at a later clock. V2 records the same lost-ball turnover with a stealer in all 184 cases. The original engine sees this pattern, so it is a parity case rather than an extension.
+The held-ball pattern is not new to 2025-26. In 184 cases (164 games), a jump ball is followed by a lost-ball turnover and a steal between the two jumpers; 55 occur at a later clock. V2 records the same lost-ball turnover with a stealer in all 184 cases. The original engine sees this pattern on both feeds. Its own rule covers the same-clock cases. Since October 6, 2026, the later-clock cases use the [held-ball extension](v3-parity-contract.md) wherever the original would change possession at the jump ball.
 
 Same-instant reordering mostly involves substitutions, free throws, shooting fouls and rebounds.
 

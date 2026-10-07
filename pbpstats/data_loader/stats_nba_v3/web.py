@@ -3,9 +3,10 @@
 The adapter never touches the network. This module requests the V3
 play-by-play and box score, binds the adapter's context to those exact bytes,
 and records any period-start box score that the original's starter recovery
-asks for. Reviewed corrections reach the adapter as V3Overrides, only for the
-exact bytes they were reviewed against. Possessions come from the unchanged
-original engine.
+asks for. A jump ball V3 leaves undecided is completed from the league's live
+play-by-play, also recorded. Reviewed corrections reach the adapter as
+V3Overrides, only for the exact bytes they were reviewed against. Possessions
+come from the unchanged original engine.
 
     python -m pbpstats.data_loader.stats_nba_v3.web 0022500001 -o game.json
 """
@@ -19,7 +20,8 @@ import requests
 
 from pbpstats import REQUEST_TIMEOUT
 
-from .decoder import V3Context, V3DecodeError
+from .decoder import V3Context, V3DecodeError, V3JumpBallEvidenceRequired
+from .jump_balls import V3JumpBallEvidence
 from .names import add_actor_aliases, add_unaccented_names, require
 from .overrides import STARTERS, V3Overrides
 from .possessions import StatsNbaV3PossessionLoader
@@ -186,20 +188,35 @@ def boxscore_starters(box_bytes):
     return starters if all(len(p) == 5 for p in starters.values()) else None
 
 
-def parse_possessions(pbp_bytes, context, fetch_boxscore=None, overrides=None):
+def parse_possessions(
+    pbp_bytes, context, fetch_boxscore=None, overrides=None, fetch_live=None
+):
     """Parse V3 bytes into possessions with the original engine.
 
     When the original's starter inference falls back to its period-start box
     score request, ``fetch_boxscore(period, url, params)`` must return that
     response; it is recorded as V3StarterBoxscore evidence. Without it, the
-    adapter's V3EvidenceRequired error names the exact request instead.
+    adapter's V3EvidenceRequired error names the exact request instead. A jump
+    ball V3 leaves undecided likewise needs ``fetch_live(url)`` to return the
+    live play-by-play, recorded as V3JumpBallEvidence.
     ``overrides`` supplies reviewed corrections (see reviewed_overrides).
     """
-    boxscores = {}
+    boxscores, jump_balls = {}, None
     while True:
         try:
             return StatsNbaV3PossessionLoader(
-                pbp_bytes, context, overrides=overrides, starter_boxscores=boxscores
+                pbp_bytes,
+                context,
+                overrides=overrides,
+                starter_boxscores=boxscores,
+                jump_balls=jump_balls,
+            )
+        except V3JumpBallEvidenceRequired as needed:
+            if fetch_live is None or jump_balls is not None:
+                raise
+            response = fetch_live(needed.url)
+            jump_balls = V3JumpBallEvidence(
+                response.content, response.url, context.pbp_sha256
             )
         except V3EvidenceRequired as needed:
             if fetch_boxscore is None or needed.period in boxscores:
@@ -223,6 +240,7 @@ def load_game(
     fetch_boxscore=None,
     aliases=None,
     overrides=None,
+    fetch_live=None,
 ):
     """Context from the box score, then possessions from the original engine.
 
@@ -230,17 +248,29 @@ def load_game(
     ambiguous, such as a tip to one of two same-named players, are the box
     score's first-period starter markers supplied as recorded on-court
     evidence; the adapter checks each such resolution against the original's
-    lineup. The loader's context then lists those starters.
+    lineup. The loader's context then lists those starters. A jump ball that
+    stays undecided, including a team-won one, is completed from the live
+    play-by-play that ``fetch_live(url)`` returns.
     """
     context = context_from_boxscore(game_id, pbp_bytes, box_bytes, source, aliases)
+
+    def parse(live=None):
+        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides, live)
+
     try:
-        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides)
+        return parse()
     except V3DecodeError as error:
         starters = boxscore_starters(box_bytes)
-        if "is unresolved or ambiguous" not in str(error) or starters is None:
+        if "is unresolved or ambiguous" in str(error) and starters is not None:
+            context.period_starters = {1: starters}
+            try:
+                return parse()
+            except V3JumpBallEvidenceRequired:
+                if fetch_live is None:
+                    raise
+        elif fetch_live is None or not isinstance(error, V3JumpBallEvidenceRequired):
             raise
-        context.period_starters = {1: starters}
-        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides)
+        return parse(fetch_live)
 
 
 def _event(event, teams):
@@ -311,6 +341,13 @@ def possessions_json(loader, sources=None):
     )
 
 
+class SavedResponse:
+    """A recorded response read back from disk, in the shape fetch_live returns."""
+
+    def __init__(self, content, url):
+        self.content, self.url = content, url
+
+
 def boxscore_players(box_bytes):
     """Official personIds in a box score; empty if malformed, which parsing reports."""
     try:
@@ -337,10 +374,12 @@ def save_game(
 
     ``raw`` reuses saved responses in fetch_game's shape; otherwise they are
     fetched with ``session``, as is any period-start box score the original's
-    starter recovery requests. ``responses`` keeps the raw responses in that
-    directory, also for a rejected game. An alias for a player outside the box
-    score is an error unless ``skip_absent_aliases``, which batches use.
-    Reviewed corrections apply only to their reviewed bytes. Returns the loader.
+    starter recovery requests and any live play-by-play an undecided jump ball
+    needs. Offline, ``raw["live"]`` (with ``raw["live_url"]``) supplies a saved
+    live response. ``responses`` keeps the raw responses in that directory,
+    also for a rejected game. An alias for a player outside the box score is an
+    error unless ``skip_absent_aliases``, which batches use. Reviewed
+    corrections apply only to their reviewed bytes. Returns the loader.
     """
     offline = raw is not None
     if not offline:
@@ -349,11 +388,20 @@ def save_game(
     if skip_absent_aliases:
         present = boxscore_players(raw["boxscore"])
         aliases = {person: names for person, names in aliases.items() if person in present}
-    fetched = {}
+    fetched, live = {}, []
 
     def fetch_boxscore(period, url, params):
         fetched[period] = get(url, params, session)
         return fetched[period]
+
+    def fetch_live(url):
+        if offline:
+            response = SavedResponse(raw["live"], raw.get("live_url") or url)
+        else:
+            response = (session or requests).get(url, timeout=REQUEST_TIMEOUT)
+            response.raise_for_status()
+        live.append(response)
+        return response
 
     overrides = None
     try:
@@ -366,6 +414,7 @@ def save_game(
             fetch_boxscore=None if offline else fetch_boxscore,
             aliases=aliases,
             overrides=overrides,
+            fetch_live=fetch_live if not offline or raw.get("live") else None,
         )
     finally:
         if responses:
@@ -375,6 +424,8 @@ def save_game(
             for period, response in fetched.items():
                 name = "boxscoretraditionalv2_period_{}.json".format(period)
                 (responses / name).write_bytes(response.content)
+            if live:
+                (responses / "playbyplay_live.json").write_bytes(live[0].content)
 
     def digest(data):
         return hashlib.sha256(data).hexdigest()
@@ -386,6 +437,9 @@ def save_game(
             str(period): dict(url=r.url, status=r.status_code, sha256=digest(r.content))
             for period, r in fetched.items()
         },
+        live_play_by_play=(
+            dict(url=live[0].url, sha256=digest(live[0].content)) if live else None
+        ),
         reviewed_aliases={str(k): v for k, v in aliases.items()},
         reviewed_correction=overrides.source if overrides else None,
     )
@@ -409,6 +463,9 @@ def main(argv=None):
     parser.add_argument("--pbp", type=Path, help="Saved playbyplayv3 response")
     parser.add_argument(
         "--boxscore", type=Path, help="Saved boxscoretraditionalv3 response"
+    )
+    parser.add_argument(
+        "--live", type=Path, help="Saved live play-by-play response, used offline"
     )
     parser.add_argument(
         "--save-responses", type=Path, help="Directory for the raw responses used"
@@ -437,6 +494,10 @@ def main(argv=None):
             pbp_url=str(args.pbp),
             boxscore_url=str(args.boxscore),
         )
+        if args.live:
+            raw.update(live=args.live.read_bytes(), live_url=str(args.live))
+    elif args.live:
+        parser.error("--live is used with --pbp and --boxscore")
     output = args.output or Path(args.game_id + ".possessions.json")
     loader = save_game(
         args.game_id,

@@ -17,6 +17,39 @@ class V3DecodeError(ValueError):
     pass
 
 
+# The original's own live play-by-play source (pbpstats.data_loader.live).
+LIVE_PLAY_BY_PLAY_URL = (
+    "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/"
+    "{league}/liveData/playbyplay/playbyplay_{game_id}.json"
+)
+
+
+LIVE_JUMP_BALL_FIELDS = (
+    "period",
+    "personId",
+    "teamId",
+    "jumpBallWonPersonId",
+    "jumpBallLostPersonId",
+)
+
+
+def live_play_by_play_url(game_id):
+    league = "WNBA" if game_id.startswith("10") else "NBA"
+    return LIVE_PLAY_BY_PLAY_URL.format(league=league, game_id=game_id)
+
+
+class V3JumpBallEvidenceRequired(V3DecodeError):
+    """A jump ball V3 leaves undecided; ``url`` is the live play-by-play that records it.
+
+    The adapter never makes the request. A caller records the response and
+    passes it back as V3JumpBallEvidence.
+    """
+
+    def __init__(self, message, *, url):
+        super().__init__(message)
+        self.url = url
+
+
 @dataclass
 class V3Context:
     game_id: str
@@ -269,11 +302,17 @@ def clock_text(value):
 
 
 class DecodedV3:
-    def __init__(self, source_bytes, context):
+    def __init__(self, source_bytes, context, jump_balls=None):
         context = deepcopy(context)
         context.validate(source_bytes)
         self.source_bytes = bytes(source_bytes)
         self.context = context
+        self.live_jump_balls, self.live_input = (
+            jump_balls.decode(self.source_bytes, context.game_id)
+            if jump_balls is not None
+            else (None, None)
+        )
+        self.recorded_jump_balls = []
         wnba = context.game_id.startswith("10")
         self.timeouts = {**TIMEOUTS, **WNBA_TIMEOUTS} if wnba else TIMEOUTS
         self.clear_path_free_throws = (
@@ -364,11 +403,12 @@ class DecodedV3:
                     active_players.remove(outgoing)
                     active_players.add(incoming)
             except V3DecodeError as error:
-                raise V3DecodeError(
-                    "Game {}, source rows {}: {}".format(
-                        context.game_id, [i for i, _ in group], error
-                    )
-                ) from error
+                message = "Game {}, source rows {}: {}".format(
+                    context.game_id, [i for i, _ in group], error
+                )
+                if isinstance(error, V3JumpBallEvidenceRequired):
+                    raise V3JumpBallEvidenceRequired(message, url=error.url) from error
+                raise V3DecodeError(message) from error
             self.groups[row["actionNumber"]] = dict(
                 primary_index=index,
                 source_indices=tuple(i for i, _ in group),
@@ -378,12 +418,15 @@ class DecodedV3:
         if not self.projected:
             raise V3DecodeError("Empty play-by-play")
 
+    def _candidates(self, name, team=None):
+        return {
+            player
+            for candidate_team in (self.context.team_ids if team is None else (team,))
+            for player in self._names.get((candidate_team, name.strip().casefold()), ())
+        }
+
     def _resolve(self, name, team=None, *, active_players=None, event_num=None):
-        candidates = set()
-        for candidate_team in self.context.team_ids if team is None else (team,):
-            candidates.update(
-                self._names.get((candidate_team, name.strip().casefold()), ())
-            )
+        candidates = self._candidates(name, team)
         if len(candidates) > 1 and active_players is not None:
             eligible = candidates & active_players
             if len(eligible) == 1:
@@ -652,24 +695,40 @@ class DecodedV3:
                 r"Jump Ball " + marker + r"(.+) vs\. (.+): Tip to (.+)",
                 row["description"],
             )
-            if (
-                subtype not in JUMP_BALLS
-                or not match
-                or self._resolve(match[1], team) != player
+            if subtype not in JUMP_BALLS or (
+                match and self._resolve(match[1], team) != player
             ):
                 raise V3DecodeError(
                     "Jump ball requires explicit resolvable participant roles"
                 )
             opponent = next(t for t in self.context.team_ids if t != team)
-            recipient = self._resolve(
-                match[3], active_players=active_players, event_num=row["actionNumber"]
-            )
+            try:
+                if not match:
+                    # A team-won jump ball's V3 description is blank.
+                    raise V3DecodeError(
+                        "Jump ball requires explicit resolvable participant roles"
+                    )
+                jumper = self._resolve(match[2], opponent)
+                recipient = self._resolve(
+                    match[3],
+                    active_players=active_players,
+                    event_num=row["actionNumber"],
+                )
+                recipient_team = self.context.roster[recipient]["team_id"]
+            except V3DecodeError as error:
+                if self.live_jump_balls is None:
+                    raise V3JumpBallEvidenceRequired(
+                        str(error), url=live_play_by_play_url(self.context.game_id)
+                    ) from error
+                jumper, recipient, recipient_team = self._recorded_jump_ball(
+                    row, opponent, match
+                )
             event.update(
                 EVENTMSGTYPE=10,
                 EVENTMSGACTIONTYPE=JUMP_BALLS[subtype],
-                PLAYER2_ID=self._resolve(match[2], opponent),
+                PLAYER2_ID=jumper,
                 PLAYER3_ID=recipient,
-                PLAYER3_TEAM_ID=self.context.roster[recipient]["team_id"],
+                PLAYER3_TEAM_ID=recipient_team,
             )
         elif kind == "period" and subtype in ("start", "end"):
             event["EVENTMSGTYPE"] = 12 if subtype == "start" else 13
@@ -684,6 +743,57 @@ class DecodedV3:
                 "Unsupported event type/subtype {!r}/{!r}".format(kind, subtype)
             )
         return event
+
+    def _recorded_jump_ball(self, row, opponent, match):
+        """Jump-ball facts V3 omits, from the live action with the same number.
+
+        The live feed records both jumpers' IDs and the recovering player's, or
+        no recovering player and the team in possession. Its clock can differ
+        for an opening tip, so the action number, period and the V3 jumper's
+        personId identify the action. Every fact V3 itself records must agree.
+        """
+        found = self.live_jump_balls.get(row["actionNumber"], [])
+        live = found[0] if len(found) == 1 else {}
+        recovered = live.get("jumpBallRecoverdPersonId")
+        if (
+            any(type(live.get(key)) is not int for key in LIVE_JUMP_BALL_FIELDS)
+            or (recovered is not None and type(recovered) is not int)
+            or live["period"] != row["period"]
+        ):
+            raise V3DecodeError("Recorded live play-by-play lacks this jump ball")
+        player = row["personId"]
+        jumpers = [live.get("jumpBallWonPersonId"), live.get("jumpBallLostPersonId")]
+        if jumpers.count(player) != 1:
+            raise V3DecodeError("Recorded live jumpers disagree with the V3 jumper")
+        jumper = jumpers[1 - jumpers.index(player)]
+        if self.context.roster.get(jumper, {}).get("team_id") != opponent or (
+            match and jumper not in self._candidates(match[2], opponent)
+        ):
+            raise V3DecodeError("Recorded live opposing jumper disagrees with V3")
+        if recovered:
+            if recovered not in self.context.roster or (
+                match and recovered not in self._candidates(match[3])
+            ):
+                raise V3DecodeError("Recorded live tip recipient disagrees with V3")
+            recipient, recipient_team = recovered, self.context.roster[recovered]["team_id"]
+        else:
+            # The live "possession" field can already reflect a held-ball
+            # turnover recorded next; the recovering team is the action's team.
+            winner = live["teamId"]
+            if match or live["personId"] or winner not in self.context.team_ids:
+                raise V3DecodeError("Recorded live team recovery is not explicit")
+            recipient, recipient_team = winner, None
+        self.recorded_jump_balls.append(
+            dict(
+                code="recorded_live_jump_ball",
+                event_num=row["actionNumber"],
+                jumpers=[player, jumper],
+                recipient=recipient,
+                team_recovery=recipient_team is None,
+                basis="live action number, period and V3 jumper personId",
+            )
+        )
+        return jumper, recipient, recipient_team
 
     def _team_heave_team(self, row):
         from .team_heave import TEAM_HEAVE_VERSION

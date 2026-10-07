@@ -351,8 +351,12 @@ def load_v2(folder, game_id):
     )
 
 
-def load_v3(folder, game_id, mode):
-    from pbpstats.data_loader.stats_nba_v3 import StatsNbaV3PossessionLoader, V3Context
+def load_v3(folder, game_id, mode, live=None):
+    from pbpstats.data_loader.stats_nba_v3 import (
+        StatsNbaV3PossessionLoader,
+        V3Context,
+        V3JumpBallEvidence,
+    )
 
     source = (folder / "v3" / mode / "{}.json".format(game_id)).read_bytes()
     facts = json.loads((folder / "v3/context/{}.json".format(game_id)).read_bytes())
@@ -364,7 +368,14 @@ def load_v3(folder, game_id, mode):
         facts["source"],
         digest(source),
     )
-    return StatsNbaV3PossessionLoader(source, context)
+    # The league's live play-by-play, an independent recording, not a V2 fact.
+    path = live / "playbyplay_{}.json".format(game_id) if live else None
+    evidence = (
+        V3JumpBallEvidence(path.read_bytes(), str(path), digest(source))
+        if path and path.exists()
+        else None
+    )
+    return StatsNbaV3PossessionLoader(source, context, jump_balls=evidence)
 
 
 def install_held_ball():
@@ -424,7 +435,7 @@ def run_worker(args):
                     loaded = (
                         load_v2(args.input, game_id)
                         if args.side == "v2"
-                        else load_v3(args.input, game_id, args.clock)
+                        else load_v3(args.input, game_id, args.clock, args.live)
                     )
             except Exception as error:
                 record.update(
@@ -637,6 +648,11 @@ def main():
         action="store_true",
         help="Also install the adapter's held-ball extension into the original on V2",
     )
+    parser.add_argument(
+        "--live",
+        type=Path,
+        help="Directory of recorded live play-by-play (playbyplay_<id>.json) given to the adapter as jump-ball evidence",
+    )
     parser.add_argument("--worker", choices=("v2", "v3"), help=argparse.SUPPRESS)
     parser.add_argument("--package", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--input", type=Path, help=argparse.SUPPRESS)
@@ -657,6 +673,8 @@ def main():
         suffix = "2024" if args.season == "nba-2024" else args.season
         if args.held_ball:
             suffix += "-held-ball"
+        if args.live:
+            suffix += "-live"
         args.output = ROOT / ".parity/season-differential-{}.json".format(suffix)
     label = manifest(args.season)["season"]
     v2, v3, _ = season(args.season)
@@ -699,6 +717,8 @@ def main():
                 command += ["--clock", mode]
             if side == "v2" and args.held_ball:
                 command.append("--held-ball")
+            if side == "v3" and args.live:
+                command += ["--live", str(args.live.resolve())]
             log = open(folder / (name + ".log"), "w", encoding="utf-8")
             processes[name] = (
                 subprocess.Popen(command, cwd=str(ROOT), stdout=log, stderr=log),
@@ -729,6 +749,14 @@ def main():
                 "Shot coordinates for the original's shot-chart files come from the V3 export (xLegacy/yLegacy); the pinned evidence has no V2 shot chart."
             ],
             v2_extensions=[HELD_BALL_VERSION] if args.held_ball else [],
+            # Recorded live play-by-play given to the adapter, by game: SHA-256.
+            v3_live_evidence={
+                path.stem.split("_")[-1]: digest(path.read_bytes())
+                for path in sorted(args.live.glob("playbyplay_*.json"))
+                if path.stem.split("_")[-1] in set(game_ids)
+            }
+            if args.live
+            else {},
             implementation_hashes={
                 p.relative_to(ROOT).as_posix(): digest(p.read_bytes())
                 for folder_ in (

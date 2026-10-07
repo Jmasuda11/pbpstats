@@ -200,8 +200,9 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         overrides=None,
         event_order=None,
         starter_boxscores=None,
+        jump_balls=None,
     ):
-        decoded = DecodedV3(source_bytes, context)
+        decoded = DecodedV3(source_bytes, context, jump_balls)
         self.decoded = decoded
         self.game_id = context.game_id
         self.file_directory = None
@@ -228,6 +229,8 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             override_diagnostics + enhanced.repairs
             + deepcopy(list(decoded.team_heaves.values()))
             + deepcopy(decoded.non_roster_actors)
+            + ([dict(decoded.live_input)] if decoded.live_input else [])
+            + deepcopy(decoded.recorded_jump_balls)
         )
         self.items = [
             V3Possession(events) for events in self._split_events_by_possession()

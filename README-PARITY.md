@@ -57,7 +57,7 @@ The [latest numeric vocabulary continuation](docs/v3-numeric-vocabulary-progress
 
 The [paired 2024-25 season evidence](docs/v3-paired-season-evidence.md) adds the V3 export for the same games as the pinned V2 export. All 574,358 events pair one-to-one by event number, and each of the 188 V3 labels has exactly one recorded V2 code. The decoder now produces the recorded code for all 188 labels; before this correction it matched 156, differed on 8 and rejected 24. Regenerate the facts and decoder comparison with `python -m tools.parity.paired_season`.
 
-The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,047 research passes.
+The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. With the recorded live play-by-play for undecided jump balls, and the held-ball extension on both sides, all 1,095 are. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,086 research passes, 39 of them from the held-ball extension.
 
 The [WNBA 2025 paired season](docs/v3-wnba-2025.md) extends the same evidence to the WNBA. All 110,003 events in 286 games pair one-to-one, and the decoder produces the recorded V2 code for all 154 labels, three of them WNBA-only. With equivalent facts, all 167 games that both sides complete are identical. Run it with `--season wnba-2025` on `paired_season` and `season_differential`.
 
@@ -69,13 +69,14 @@ From the checkout root:
 .\.venv\Scripts\python.exe -m pbpstats.data_loader.stats_nba_v3.web 0022500521 -o game.json --save-responses raw
 ```
 
-This requests `playbyplayv3` and `boxscoretraditionalv3` from stats.nba.com, or stats.wnba.com for a WNBA game ID, builds the adapter's context from the box score, parses the game with the original engine and writes the possessions as JSON. `--save-responses` keeps the raw responses used. To parse saved responses offline instead, pass `--pbp FILE --boxscore FILE`. Offline, a game that needs a period-start box score stops and names that request.
+This requests `playbyplayv3` and `boxscoretraditionalv3` from stats.nba.com, or stats.wnba.com for a WNBA game ID, builds the adapter's context from the box score, parses the game with the original engine and writes the possessions as JSON. `--save-responses` keeps the raw responses used. To parse saved responses offline instead, pass `--pbp FILE --boxscore FILE`, and `--live FILE` for a saved live play-by-play. Offline, a game that needs a period-start box score or the live play-by-play stops and names that request.
 
 How the context and starters are built:
 
 - **Roster:** box-score names, plus the play-by-play's own ID-bound actor names, description aliases and unaccented variants.
 - **Starters:** the original's own inference. If inference needs its period-start box score, the tool fetches the original's exact `boxscoretraditionalv2` request and records it as evidence.
 - **Unresolved names:** only when the roster alone can't resolve a description name, such as a tip to one of two same-named players, does the tool retry with the box score's first-period starters as on-court evidence. The JSON then lists them under `supplied_period_starters`.
+- **Undecided jump balls:** V3 leaves a team-won jump ball's description blank, and a tip can name a surname two players share that the starters do not separate. For these the tool fetches the league's live play-by-play from the original's own live source and records it. The adapter reads only that jump ball's jumpers and recipient or team, under the same action number, and checks each against V3.
 - **Missing names:** a description name the box score lacks, such as a given name, needs a reviewed `--alias PERSON_ID=NAME`.
 - **Reviewed corrections:** `web.REVIEWED_CORRECTIONS` holds reviewed corrections in the original's override-file schema. The tool supplies each one as `V3Overrides` only for the exact play-by-play bytes reviewed, and refuses other bytes for that game. There is currently one: the 4th-quarter starters of WNBA game `1042600201`.
 
@@ -107,21 +108,23 @@ loader = web.save_game("0022500521", Path("game.json"), responses=Path("raw"))
 
 `fetch_game`, `load_game` and `possessions_json` remain available for finer control.
 
-Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,038 games, all with the same credited possessions as the corpus audit. The rest are:
+Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,075 games, all with the same credited possessions as the corpus audit; 37 of them use the held-ball extension. The rest are:
 
 - 97 team-won jump balls;
-- 51 alternation failures;
+- 14 alternation failures;
 - 20 names that need an alias or an on-court witness;
 - 3 order-fallback cases;
 - 1 heave;
 - 3 games needing the period-start box score, which is fetched when online;
 - 17 captures without the inputs.
 
+The captures hold no live play-by-play. With it for the jump balls V3 leaves undecided, as the tool fetches online, 1,180 games parse and none of the 1,075 above changes. No team-won jump ball remains and 15 of the 20 names resolve. The other games stop at later checks: 17 alternation failures, 6 period-start box scores, 5 names, 3 order fallbacks and 1 heave. In one game, `0022500974`, the live feed numbers an overtime jump ball 799 where V3 has 804, and the adapter does not match it by clock.
+
 ## Current adapter
 
-`pbpstats.data_loader.stats_nba_v3.StatsNbaV3PossessionLoader` accepts V3 source bytes and a `V3Context` containing source provenance, a matching PBP hash, an NBA or WNBA game ID with its two teams, a recorded roster with names, and any explicitly supplied period starters. Omitted periods use original event inference and scoped starter overrides, with optional `starter_boxscores={period: V3StarterBoxscore(...)}` for recorded interval responses when recovery is needed. It builds the **original** Stats enhanced-event classes through their factory and reuses original enhancement, order repairs, possession decisions and attribution.
+`pbpstats.data_loader.stats_nba_v3.StatsNbaV3PossessionLoader` accepts V3 source bytes and a `V3Context` containing source provenance, a matching PBP hash, an NBA or WNBA game ID with its two teams, a recorded roster with names, and any explicitly supplied period starters. Omitted periods use original event inference and scoped starter overrides, with optional `starter_boxscores={period: V3StarterBoxscore(...)}` for recorded interval responses when recovery is needed. It builds the **original** Stats enhanced-event classes through their factory and reuses original enhancement, order repairs, possession decisions and attribution. Two versioned extensions go beyond the original, each reported as a capability and a diagnostic wherever it applies: recorded NBA team heaves, and held-ball turnovers recorded after their jump ball. The [contract](docs/v3-parity-contract.md) defines both.
 
-The original loader's repair input is a temporary in-memory constructor projection. Source bytes, raw rows and per-event source indices remain separate. File-writing repair hooks record diagnostics instead. Optional `V3Overrides` supplies recorded legacy bad-possession/boundary correction files; optional `V3EventOrder` supplies a recorded provider response for the original ordering fallback. Both require provenance and the exact PBP hash. Missing provider evidence still blocks recovery without making a network call. Existing V2 loaders are untouched.
+The original loader's repair input is a temporary in-memory constructor projection. Source bytes, raw rows and per-event source indices remain separate. File-writing repair hooks record diagnostics instead. Optional `V3Overrides` supplies recorded legacy bad-possession/boundary correction files; optional `V3EventOrder` supplies a recorded provider response for the original ordering fallback; optional `V3JumpBallEvidence` supplies a recorded live play-by-play for jump balls V3 leaves undecided. All require provenance and the exact PBP hash. Missing provider evidence still blocks recovery without making a network call. Existing V2 loaders are untouched.
 
 The [starter recovery continuation](docs/v3-starter-recovery-progress.md) documents 70 matching declared observations, including 29 new full-loader starter cases, exact exception classes/messages/context, scoped overrides, repairs and selected HTTP/JSON failures. Broader source/API and ingestion behavior remain open gates. The [initial exception checkpoint](docs/v3-exception-parity-progress.md) preserves the earlier 41-case results.
 
