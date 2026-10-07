@@ -57,7 +57,7 @@ The [latest numeric vocabulary continuation](docs/v3-numeric-vocabulary-progress
 
 The [paired 2024-25 season evidence](docs/v3-paired-season-evidence.md) adds the V3 export for the same games as the pinned V2 export. All 574,358 events pair one-to-one by event number, and each of the 188 V3 labels has exactly one recorded V2 code. The decoder now produces the recorded code for all 188 labels; before this correction it matched 156, differed on 8 and rejected 24. Regenerate the facts and decoder comparison with `python -m tools.parity.paired_season`.
 
-The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. With the recorded live play-by-play for undecided jump balls, and the held-ball extension on both sides, all 1,095 are. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,086 research passes, 39 of them from the held-ball extension.
+The [season differential](docs/v3-season-differential.md) runs every paired game through the original on V2 and the adapter on V3. With equivalent facts, all 937 games that both complete are identical: credits, possessions, events and statistics. With the recorded live play-by-play for undecided jump balls, and the held-ball extension on both sides, all 1,098 are. The fouled player is excluded because V3 does not record it. With V3's own facts, same-instant order changes possession membership in 368 games and credited lineups for 69 possessions. Exact V3 clocks change decisions in 746 games and add 414 credited possessions. The 2025-26 corpus audit now has 1,093 research passes, 46 of them from the held-ball extension.
 
 The [WNBA 2025 paired season](docs/v3-wnba-2025.md) extends the same evidence to the WNBA. All 110,003 events in 286 games pair one-to-one, and the decoder produces the recorded V2 code for all 154 labels, three of them WNBA-only. With equivalent facts, all 167 games that both sides complete are identical. Run it with `--season wnba-2025` on `paired_season` and `season_differential`.
 
@@ -108,17 +108,17 @@ loader = web.save_game("0022500521", Path("game.json"), responses=Path("raw"))
 
 `fetch_game`, `load_game` and `possessions_json` remain available for finer control.
 
-Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,075 games, all with the same credited possessions as the corpus audit; 37 of them use the held-ball extension. The rest are:
+Games are rejected rather than guessed when V3 lacks a fact or the original rejects them. Offline over the 2025-26 captures, the tool parses 1,082 games, all with the same credited possessions as the corpus audit; 44 of them use the held-ball extension. The rest are:
 
 - 97 team-won jump balls;
-- 14 alternation failures;
+- 7 alternation failures;
 - 20 names that need an alias or an on-court witness;
 - 3 order-fallback cases;
 - 1 heave;
 - 3 games needing the period-start box score, which is fetched when online;
 - 17 captures without the inputs.
 
-The captures hold no live play-by-play. With it for the jump balls V3 leaves undecided, as the tool fetches online, 1,180 games parse and none of the 1,075 above changes. No team-won jump ball remains and 15 of the 20 names resolve. The other games stop at later checks: 17 alternation failures, 6 period-start box scores, 5 names, 3 order fallbacks and 1 heave. In one game, `0022500974`, the live feed numbers an overtime jump ball 799 where V3 has 804, and the adapter does not match it by clock.
+The captures hold no live play-by-play. With it for the jump balls V3 leaves undecided, as the tool fetches online, 1,189 games parse and none of the 1,082 above changes. No team-won jump ball remains and 15 of the 20 names resolve. The other games stop at later checks: 8 alternation failures, 6 period-start box scores, 5 names, 3 order fallbacks and 1 heave. In one game, `0022500974`, the live feed numbers an overtime jump ball 799 where V3 has 804, and the adapter does not match it by clock.
 
 ## Current adapter
 

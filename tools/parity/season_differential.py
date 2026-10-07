@@ -397,10 +397,9 @@ def install_held_ball():
 
     def add_extra_attrs_to_all_events(self):
         rows = {row["EVENTNUM"]: row for row in self.data}
-        following = self.items[1:] + [None]
         self.items = [
             module.V3HeldBallJumpBall(rows[event.event_num], index)
-            if module.is_candidate(event, following[index])
+            if module.is_candidate_at(self.items, index)
             else event
             for index, event in enumerate(self.items)
         ]

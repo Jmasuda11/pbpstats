@@ -120,6 +120,34 @@
       "capture": "fetched 2026-10-07",
       "capture_path": "https://nba-prod-us-east-1-mediaops-stats.s3.amazonaws.com/NBA/liveData/playbyplay/playbyplay_0022500100.json",
       "sha256": "bdbf9adb4205a0d57994f5bea76f6c8b071eb8b515bd4369cd6fd097932ac13c"
+    },
+    {
+      "game_id": "0022500088",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500088.json",
+      "capture": "nba/2025/0022500088/20260923T042058375009Z-09ebffb5",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500088.json",
+      "sha256": "330a37b00ba48ec1703d797f5b21b390858fbf33b851887a5429f6eb27cf3314"
+    },
+    {
+      "game_id": "0022500088",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500088.json",
+      "capture": "nba/2025/0022500088/20260923T042058375009Z-09ebffb5",
+      "capture_path": "bundle/pbp/stats_v3_0022500088.json",
+      "sha256": "8f90f5a7bacb4d977dbab3611a2ed216ce7918de674c0a4db2c9bc3652abdecf"
+    },
+    {
+      "game_id": "0022500879",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500879.json",
+      "capture": "nba/2025/0022500879/20260923T045732399084Z-6177e772",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500879.json",
+      "sha256": "2db1b43041c57aa453db8fb9d4198df637f0f10b6a71c6c3c923e41e8d553367"
+    },
+    {
+      "game_id": "0022500879",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500879.json",
+      "capture": "nba/2025/0022500879/20260923T045732399084Z-6177e772",
+      "capture_path": "bundle/pbp/stats_v3_0022500879.json",
+      "sha256": "73be82de0742b3d309b5fd0647ba8f27d99f11d895f6f2e096a05db3303fc954"
     }
   ]
 }

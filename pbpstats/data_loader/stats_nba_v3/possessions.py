@@ -15,7 +15,7 @@ from pbpstats.resources.possessions.possession import Possession
 from .decoder import DecodedV3, V3DecodeError
 from .overrides import BAD_POSSESSIONS, CHANGE_EVENTS, KEEP_EVENTS, STARTERS
 from .starters import StarterRecovery
-from .held_ball import HELD_BALL_VERSION, V3HeldBallJumpBall, is_candidate
+from .held_ball import HELD_BALL_VERSION, V3HeldBallJumpBall, is_candidate_at
 from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 
 
@@ -112,12 +112,11 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # Install extension events before linking/enhancement, without changing
         # the global factory or any original event's decision methods.
         rows = {r["EVENTNUM"]: r for r in self.data}
-        following = self.items[1:] + [None]
         self.items = [
             V3TeamHeave(rows[event.event_num], index)
             if event.event_num in self.decoded.team_heaves
             else V3HeldBallJumpBall(rows[event.event_num], index)
-            if is_candidate(event, following[index])
+            if is_candidate_at(self.items, index)
             else event
             for index, event in enumerate(self.items)
         ]
