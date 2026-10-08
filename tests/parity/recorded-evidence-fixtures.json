@@ -267,6 +267,83 @@
       "capture": "nba/2025/0022500684/20260923T044716121964Z-aef4128c",
       "capture_path": "bundle/pbp/stats_v3_0022500684.json",
       "sha256": "cd6ffea7dcafe3689f02de85425a6855b0071d57367942a48a1ef7d57596fc79"
+    },
+    {
+      "game_id": "0022500119",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500119.json",
+      "capture": "nba/2025/0022500119/20260923T044432447364Z-6ba95572",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500119.json",
+      "sha256": "eba632dc3b31dc87bc8a8ffd8a76a5d45bb64c55a506340cb0d96e85050da64b"
+    },
+    {
+      "game_id": "0022500119",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500119.json",
+      "capture": "nba/2025/0022500119/20260923T044432447364Z-6ba95572",
+      "capture_path": "bundle/pbp/stats_v3_0022500119.json",
+      "sha256": "a61f750d62dabbc8bcba47c034955377df4fef98d051702c22c1510542fe340a"
+    },
+    {
+      "game_id": "0022500233",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500233.json",
+      "capture": "nba/2025/0022500233/20260923T042834559647Z-e7697e9e",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500233.json",
+      "sha256": "7d3a7b1df4e80ed792375d07438bc9935eb1d6a87eac0fdb77adf8a2e4fbf54c"
+    },
+    {
+      "game_id": "0022500233",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500233.json",
+      "capture": "nba/2025/0022500233/20260923T042834559647Z-e7697e9e",
+      "capture_path": "bundle/pbp/stats_v3_0022500233.json",
+      "sha256": "951caf51755d65da5bf5ad5bdd2d418fe895f747d1923fa3e4676cc2956b8046"
+    },
+    {
+      "game_id": "0022500421",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500421.json",
+      "capture": "nba/2025/0022500421/20260923T044927440822Z-e0073053",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500421.json",
+      "sha256": "42a4f22ebea0f60d72c539c7129cb38006442623214deaf6260f6dde32e9a0a5"
+    },
+    {
+      "game_id": "0022500421",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500421.json",
+      "capture": "nba/2025/0022500421/20260923T044927440822Z-e0073053",
+      "capture_path": "bundle/pbp/stats_v3_0022500421.json",
+      "sha256": "0c834e71bffec2f50f0a04bccdca0bfc3eec74895de35c3b9a71eb0b216a90ac"
+    },
+    {
+      "game_id": "0022500449",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500449.json",
+      "capture": "nba/2025/0022500449/20260923T043850436266Z-ccf4bd87",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500449.json",
+      "sha256": "8e434e4df01f13032f7cea8fa118bab1d13dac8a2fef7ad3ed11ed8af72d583d"
+    },
+    {
+      "game_id": "0022500449",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500449.json",
+      "capture": "nba/2025/0022500449/20260923T043850436266Z-ccf4bd87",
+      "capture_path": "bundle/pbp/stats_v3_0022500449.json",
+      "sha256": "17a2173c48cc68f0744cb4cf66b41ef26632b18d86f87b2e2a0a5493ff4a54e0"
+    },
+    {
+      "game_id": "0022500974",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022500974.json",
+      "capture": "nba/2025/0022500974/20260923T050058146746Z-c4197f66",
+      "capture_path": "bundle/game_details/stats_v3_boxscore_0022500974.json",
+      "sha256": "181db52e2c5447b4e6ac9a72cc82f25e76f6a20cc5263676e4e327f8df019880"
+    },
+    {
+      "game_id": "0022500974",
+      "path": "tests/parity/data/recorded_evidence/stats_v3_0022500974.json",
+      "capture": "nba/2025/0022500974/20260923T050058146746Z-c4197f66",
+      "capture_path": "bundle/pbp/stats_v3_0022500974.json",
+      "sha256": "c7afd9112c7ac84c978555724e0d9ad0d2127c3afaa377dc03329c5147adc2e9"
+    },
+    {
+      "game_id": "0022500974",
+      "path": "tests/parity/data/recorded_evidence/live_0022500974.json",
+      "capture": "nba/2025/0022500974/20260923T050058146746Z-c4197f66",
+      "capture_path": "bundle/live/playbyplay_0022500974.json",
+      "sha256": "acb7cd17c5c80440a274dd5ec45e0196c9454bae59969551891b59737f2db068"
     }
   ]
 }

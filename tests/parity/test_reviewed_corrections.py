@@ -13,18 +13,26 @@ from pbpstats.data_loader.stats_nba_v3 import (
     StatsNbaV3PossessionLoader,
     V3Context,
     V3DecodeError,
+    V3JumpBallEvidence,
     V3Overrides,
     web,
 )
+from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
 from pbpstats.data_loader.stats_nba_v3.overrides import (
+    EVENT_BLOCKS,
     EVENT_CLOCKS,
+    EVENT_DUPLICATES,
+    EVENT_LIVE_NUMBERS,
+    EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
     SUPPORTED,
 )
+from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 from pbpstats.resources.enhanced_pbp import Turnover
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
+from tools.parity.team_heave_cases import catalog as heave_cases, v3_inputs as heave_rows
 
 GAME = "0022500001"
 DATA = ROOT / "tests/parity/data/recorded_evidence"
@@ -258,6 +266,175 @@ def test_clock_edits_are_validated(values, message):
         load(rows, files=edits(EVENT_CLOCKS, values))
 
 
+def rebound_twice():
+    """HOME rebounds its own miss as a team, a rebound the feed records twice."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("miss", 590, HOME, 1),
+        e("rebound", 590, HOME, 0),
+        e("rebound", 590, HOME, 0),
+        e("make", 570, HOME, 2),
+    ]))
+    first, second = (r["actionNumber"] for r in rows if r["actionType"] == "Rebound")
+    return rows, dict(miss=numbered(rows, "Missed Shot"), first=first, second=second)
+
+
+def test_duplicate_edit_drops_a_rebound_recorded_twice():
+    rows, n = rebound_twice()
+    # The original attaches one rebound to a miss; its repairs then need data.nba.com.
+    with pytest.raises(V3DecodeError, match="additional recorded provider evidence"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_DUPLICATES, {str(n["first"]): n["second"]}))
+    trip = next(p for p in loaded.items if any(x.event_num == n["miss"] for x in p.events))
+    assert [x.event_num for x in trip.events] == [n["miss"], n["second"], n["second"] + 1]
+    assert trip.offense_team_id == HOME and trip.events[1].oreb
+    assert dict(code="reviewed_duplicate_event", event_num=n["first"],
+                kept=n["second"]) in loaded.diagnostics
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"first": 999}, "does not keep a recorded copy"),
+    ({"first": "second", "second": "first"}, "does not keep a recorded copy"),
+    ({"miss": "first"}, "names events that differ"),
+    ({"first": "first"}, "Invalid event duplicate override"),
+    ({"first": "kept"}, "Invalid event duplicate override"),
+], ids=["unknown_copy", "both_dropped", "different_events", "itself", "not_an_event"])
+def test_duplicate_edits_are_validated(values, message):
+    rows, n = rebound_twice()
+    values = {str(n.get(key, key)): n.get(value, value) for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_DUPLICATES, values))
+
+
+def missed_and_rebounded(blocked=False):
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("miss", 590, HOME, 1),
+        e("rebound", 589, AWAY, 12),
+        e("make", 570, AWAY, 13),
+    ]))
+    if blocked:
+        index = next(i for i, r in enumerate(rows) if r["actionType"] == "Missed Shot")
+        rows.insert(index + 1, dict(
+            rows[index], actionId=99, actionType="", subType="", personId=11,
+            teamId=AWAY, location="v", description="Player11 BLOCK (1 BLK)",
+        ))
+    return rows, dict(miss=numbered(rows, "Missed Shot"), make=numbered(rows, "Made Shot"))
+
+
+def test_block_edit_records_the_blocker_v3_omits():
+    rows, n = missed_and_rebounded()
+    assert not next(x for x in load(rows).events if x.event_num == n["miss"]).is_blocked
+    loaded = load(rows, files=edits(EVENT_BLOCKS, {str(n["miss"]): 11}))
+    shot = next(x for x in loaded.events if x.event_num == n["miss"])
+    assert shot.is_blocked and shot.player3_id == 11
+    assert dict(code="reviewed_event_block", event_num=n["miss"], blocker=11) in loaded.diagnostics
+
+
+@pytest.mark.parametrize("blocked, values, message", [
+    (False, {"miss": 2}, "does not fit the recorded event"),
+    (False, {"miss": 99}, "does not fit the recorded event"),
+    (False, {"make": 11}, "does not fit the recorded event"),
+    (False, {"999": 11}, "does not fit the recorded event"),
+    (True, {"miss": 12}, "does not fit the recorded event"),
+    (False, {"miss": 0}, "Invalid event block override"),
+], ids=["shooters_team", "not_on_roster", "made_shot", "unknown_event", "already_blocked", "no_person"])
+def test_block_edits_are_validated(blocked, values, message):
+    rows, n = missed_and_rebounded(blocked)
+    values = {str(n.get(key, key)): value for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_BLOCKS, values))
+
+
+def team_heave(side=""):
+    """HOME's period-ending team heave, rebounded by HOME, with the side V3 gives it."""
+    case = next(c for c in heave_cases() if c["period"] == 1 and c["start"] == "5"
+                and c["rebound"] == "offensive" and not c["blocked"] and not c["substitute"])
+    rows = heave_rows(case)
+    heave = next(r for r in rows if r["actionType"] == "Heave")
+    heave["location"] = side
+    return rows, dict(heave=heave["actionNumber"], make=numbered(rows, "Made Shot"))
+
+
+def test_location_and_block_edits_complete_a_team_heave():
+    rows, n = team_heave()
+    with pytest.raises(V3DecodeError, match="team evidence"):
+        load(rows)
+    loaded = load(rows, files={
+        **edits(EVENT_LOCATIONS, {str(n["heave"]): "h"}),
+        **edits(EVENT_BLOCKS, {str(n["heave"]): 11}),
+    })
+    heave = next(x for x in loaded.events if x.event_num == n["heave"])
+    assert isinstance(heave, V3TeamHeave) and heave.team_id == HOME
+    assert heave.is_blocked and heave.player3_id == 11
+    recorded = next(d for d in loaded.diagnostics if d["code"] == TEAM_HEAVE_VERSION)
+    assert (recorded["location"], recorded["basis"]) == ("h", "reviewed_location")
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("side, values, message", [
+    ("h", {"heave": "h"}, "location override does not fit"),
+    ("h", {"make": "h"}, "location override does not fit"),
+    ("", {"heave": "x"}, "Invalid event location override"),
+], ids=["recorded_side", "not_a_heave", "not_a_side"])
+def test_location_edits_are_validated(side, values, message):
+    rows, n = team_heave(side)
+    values = {str(n[key]): value for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_LOCATIONS, values))
+
+
+def recorded_jump_ball_game(renumber=True):
+    """0022500001 Q3 6:50: V3 leaves jump ball 424 undecided; live records it.
+
+    The live-number edit is read by the decoder, so the decoder is checked
+    here; the recorded 0022500974 test below runs it through a whole game.
+    """
+    pbp, box, live = (
+        (DATA / name).read_bytes()
+        for name in ("stats_v3_0022500001.json", "stats_v3_boxscore_0022500001.json",
+                     "live_0022500001.json")
+    )
+    if renumber:
+        payload = json.loads(live)
+        next(a for a in payload["game"]["actions"] if a["actionNumber"] == 424)["actionNumber"] = 9424
+        live = json.dumps(payload).encode()
+    context = web.context_from_boxscore(GAME, pbp, box, "recorded")
+    return pbp, context, V3JumpBallEvidence(live, "recorded", context.pbp_sha256)
+
+
+def test_live_number_edit_matches_a_renumbered_jump_ball():
+    pbp, context, renumbered = recorded_jump_ball_game()
+    with pytest.raises(V3DecodeError, match="lacks this jump ball"):
+        DecodedV3(pbp, context, renumbered)
+    decoded = DecodedV3(pbp, context, renumbered, live_numbers={424: 9424})
+    expected = DecodedV3(*recorded_jump_ball_game(renumber=False))
+    assert decoded.projected == expected.projected
+    jump, = decoded.recorded_jump_balls
+    assert jump == dict(expected.recorded_jump_balls[0], live_action_number=9424,
+                        basis="reviewed live action number, period and V3 jumper personId")
+    assert decoded.raw_rows == expected.raw_rows
+
+
+@pytest.mark.parametrize("renumber, values", [
+    (False, {424: 9424}),
+    (False, {2: 9424}),
+], ids=["live_keeps_the_number", "not_a_jump_ball"])
+def test_live_number_edits_are_validated(renumber, values):
+    pbp, context, evidence = recorded_jump_ball_game(renumber)
+    with pytest.raises(V3DecodeError, match="live-number override does not fit"):
+        DecodedV3(pbp, context, evidence, live_numbers=values)
+
+
+@pytest.mark.parametrize("values", [{"424": 424}, {"424": "x"}], ids=["itself", "not_a_number"])
+def test_live_number_entries_name_another_action(values):
+    pbp = (DATA / "stats_v3_0022500001.json").read_bytes()
+    overrides = V3Overrides(edits(EVENT_LIVE_NUMBERS, values), "Controlled review",
+                            hashlib.sha256(pbp).hexdigest())
+    with pytest.raises(V3DecodeError, match="Invalid event live-number override"):
+        overrides.decode(pbp)
+
+
 def test_reviewed_corrections_file_is_well_formed():
     assert web.REVIEWED_CORRECTIONS, "the corrections file is empty"
     for game_id, entry in web.REVIEWED_CORRECTIONS.items():
@@ -330,3 +507,38 @@ def test_recorded_corrections_from_video_review(game, trip, code):
     assert following.offense_team_id != possession.offense_team_id
     assert following.start_time == possession.end_time
     assert any(d["code"] == code for d in loader.diagnostics)
+
+
+@pytest.mark.parametrize("game, recorded, trip, offense, check, counts", [
+    ("0022500119", "team evidence", [674, 676, 677], 1610612742,
+     (674, "player3_id", 1631096), {1610612760: 97, 1610612742: 98}),
+    ("0022500233", "additional recorded provider evidence", [697, 698, 699], 1610612746,
+     (698, "is_real_rebound", False), {1610612746: 93, 1610612738: 94}),
+    ("0022500421", "additional recorded provider evidence", [506, 782, 784, 508, 510, 511],
+     1610612758, (784, "oreb", True), {1610612758: 98, 1610612765: 98}),
+    ("0022500449", "additional recorded provider evidence",
+     [571, 572, 573, 575, 617, 578, 579, 580], 1610612751,
+     (580, "oreb", False), {1610612751: 96, 1610612744: 95}),
+    ("0022500974", "lacks this jump ball", [811, 812, 804, 807, 751], 1610612747,
+     (804, "team_id", 1610612747), {1610612743: 108, 1610612747: 109}),
+])
+def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense, check, counts):
+    # 0022500119 Q4 0:00.3: Holmgren blocked Flagg's heave for Dallas, logged
+    # without a side or the block. 0022500233 Q4 0:00, 0022500421 Q3 1:50: a
+    # rebound listed before its miss. 0022500449 Q4 9:30: a lane violation on
+    # the second free throw, which was shot again. 0022500974 OT 2:49: a lodged
+    # ball's team rebound logged twice, and a renumbered jump ball.
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    live = DATA / f"live_{game}.json"
+    fetch = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
+    with pytest.raises(V3DecodeError, match=recorded):
+        web.load_game(game, pbp, box, "recorded", fetch_live=fetch)
+    loader = web.load_game(game, pbp, box, "recorded",
+                           overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
+    possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
+    assert [x.event_num for x in possession.events] == trip
+    assert possession.offense_team_id == offense
+    event, attribute, value = check
+    assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+    assert loader.counts_by_team == counts

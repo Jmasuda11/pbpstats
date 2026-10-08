@@ -26,7 +26,11 @@ from .decoder import (
 from .overrides import (
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
+    EVENT_BLOCKS,
     EVENT_CLOCKS,
+    EVENT_DUPLICATES,
+    EVENT_LIVE_NUMBERS,
+    EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
     KEEP_EVENTS,
@@ -50,6 +54,13 @@ SUBTYPE_CODES = {
     6: dict(FOULS),
     7: dict(VIOLATIONS),
 }
+
+
+def reviewed_entries(overrides, name, game_id, empty):
+    """One game's entries in a decoded reviewed-correction file."""
+    games = overrides.get(name, {})
+    return games.get(game_id, games.get(int(game_id), empty))
+
 
 class V3Possession(Possession):
     """Original Possession with one defect guarded.
@@ -113,6 +124,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 }
             ]
         }
+        self._apply_reviewed_duplicates()
+        self._apply_reviewed_blocks()
         self._apply_reviewed_subtypes()
         self._apply_reviewed_clocks()
         self._apply_reviewed_event_order()
@@ -132,8 +145,50 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             event.v3_source_row = deepcopy(group["primary"])
 
     def _reviewed_entries(self, name, empty):
-        games = self.overrides.get(name, {})
-        return games.get(self.game_id, games.get(int(self.game_id), empty))
+        return reviewed_entries(self.overrides, name, self.game_id, empty)
+
+    def _apply_reviewed_duplicates(self):
+        # Drops an event recorded twice, as editing the play-by-play file would,
+        # only when every projected fact but its number matches the copy kept.
+        duplicates = self._reviewed_entries(EVENT_DUPLICATES, {})
+        result = self.source_data["resultSets"][0]
+        number = result["headers"].index("EVENTNUM")
+        by_number = {row[number]: row for row in result["rowSet"]}
+
+        def facts(row):
+            return [value for i, value in enumerate(row) if i != number]
+
+        for event, kept in sorted(duplicates.items()):
+            if event not in by_number or kept not in by_number or kept in duplicates:
+                raise V3DecodeError("Event duplicate override does not keep a recorded copy")
+            if facts(by_number[event]) != facts(by_number[kept]):
+                raise V3DecodeError("Event duplicate override names events that differ")
+            result["rowSet"].remove(by_number[event])
+            self.repairs.append(dict(code="reviewed_duplicate_event", event_num=event, kept=kept))
+
+    def _apply_reviewed_blocks(self):
+        # Records the blocker V3 omits as the decoder records a block row: as
+        # PLAYER3 of a missed field goal, a player on the other team's roster.
+        blocks = self._reviewed_entries(EVENT_BLOCKS, {})
+        result = self.source_data["resultSets"][0]
+        kind, number, team, blocker = (
+            result["headers"].index(key)
+            for key in ("EVENTMSGTYPE", "EVENTNUM", "PLAYER1_TEAM_ID", "PLAYER3_ID")
+        )
+        by_number = {row[number]: row for row in result["rowSet"]}
+        roster = self.decoded.context.roster
+        for event, player in sorted(blocks.items()):
+            row = by_number.get(event)
+            if (
+                row is None
+                or row[kind] != 2
+                or row[blocker] is not None
+                or player not in roster
+                or roster[player]["team_id"] == row[team]
+            ):
+                raise V3DecodeError("Event block override does not fit the recorded event")
+            row[blocker] = player
+            self.repairs.append(dict(code="reviewed_event_block", event_num=event, blocker=player))
 
     def _apply_reviewed_subtypes(self):
         # Edits the projection's action type as the original's remedy of editing
@@ -318,13 +373,23 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         starter_boxscores=None,
         jump_balls=None,
     ):
-        decoded = DecodedV3(source_bytes, context, jump_balls)
-        self.decoded = decoded
-        self.game_id = context.game_id
-        self.file_directory = None
         self.overrides, override_diagnostics = (
             overrides.decode(source_bytes) if overrides is not None else ({}, [])
         )
+        decoded = DecodedV3(
+            source_bytes,
+            context,
+            jump_balls,
+            locations=reviewed_entries(
+                self.overrides, EVENT_LOCATIONS, context.game_id, {}
+            ),
+            live_numbers=reviewed_entries(
+                self.overrides, EVENT_LIVE_NUMBERS, context.game_id, {}
+            ),
+        )
+        self.decoded = decoded
+        self.game_id = context.game_id
+        self.file_directory = None
         ordering = event_order.decode(decoded) if event_order is not None else None
         starter_boxscores = (
             deepcopy(starter_boxscores) if starter_boxscores is not None else {}

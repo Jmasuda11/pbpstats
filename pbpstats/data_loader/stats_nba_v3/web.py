@@ -45,9 +45,10 @@ HEADERS = {
     "Sec-Fetch-Dest": "empty",
 }
 # Reviewed corrections for games whose play-by-play the original cannot parse
-# as recorded: the original's override files, plus event-order edits. Each is
-# bound to the play-by-play bytes it was reviewed against and says what the
-# review found; the recordings are kept with the parity tests.
+# as recorded: the original's override files, plus edits to recorded events
+# (see overrides). Each is bound to the play-by-play bytes it was reviewed
+# against and says what the review found; the recordings are kept with the
+# parity tests.
 REVIEWED_CORRECTIONS = json.loads(
     Path(__file__).with_name("reviewed_corrections.json").read_text(encoding="utf-8")
 )

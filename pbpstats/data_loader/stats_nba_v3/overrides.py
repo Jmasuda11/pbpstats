@@ -13,23 +13,43 @@ BAD_POSSESSIONS = "bad_pbp_possessions.json"
 CHANGE_EVENTS = "possession_change_event_overrides.json"
 KEEP_EVENTS = "non_possession_changing_event_overrides.json"
 STARTERS = "missing_period_starters.json"
-# The original has no files for these three: for a recorded event that is out
-# of order or mislabeled, its remedy is to edit the play-by-play file. Each
-# entry is that edit. An event-order entry, [event, before], moves one event to
-# just before another event at the same period and clock. A subtype entry,
-# {event: label}, gives the V3 subtype the event should have recorded. A clock
-# entry, {event: V3 clock}, changes only the tenths within the recorded second.
+# The original has no files for these: for a recorded event that is out of
+# order, mislabeled, duplicated or incomplete, its remedy is to edit the
+# play-by-play file. Each entry is that edit. An event-order entry, [event,
+# before], moves one event to just before another event at the same period and
+# clock. A subtype entry, {event: label}, gives the V3 subtype the event should
+# have recorded. A clock entry, {event: V3 clock}, changes only the tenths
+# within the recorded second. A duplicate entry, {event: kept}, drops an event
+# recorded twice, keeping its identical copy. A block entry, {event: person},
+# names the blocker of a missed shot that V3 records without its block. A
+# location entry, {event: "h" or "v"}, gives the side of a team heave that V3
+# records without one. A live-number entry, {event: live action}, names the
+# live play-by-play action of a jump ball that V3 renumbered.
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
+EVENT_DUPLICATES = "event_duplicates.json"
+EVENT_BLOCKS = "event_blocks.json"
+EVENT_LOCATIONS = "event_locations.json"
+EVENT_LIVE_NUMBERS = "event_live_numbers.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
+    EVENT_BLOCKS,
     EVENT_CLOCKS,
+    EVENT_DUPLICATES,
+    EVENT_LIVE_NUMBERS,
+    EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
     KEEP_EVENTS,
     STARTERS,
+}
+# Entries that map an event to a number: a kept event, a blocker or a live action.
+NUMBERED = {
+    EVENT_BLOCKS: "block",
+    EVENT_DUPLICATES: "duplicate",
+    EVENT_LIVE_NUMBERS: "live-number",
 }
 
 
@@ -87,6 +107,24 @@ class V3Overrides:
                     ):
                         raise V3DecodeError("Invalid event {} override".format(
                             "subtype" if name == EVENT_SUBTYPES else "clock"))
+                    continue
+                if name == EVENT_LOCATIONS:
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int or event < 0 or value not in ("h", "v")
+                        for event, value in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event location override")
+                    continue
+                if name in NUMBERED:
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int
+                        or event < 0
+                        or type(value) is not int
+                        or value <= 0
+                        or value == event
+                        for event, value in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event {} override".format(NUMBERED[name]))
                     continue
                 if name in (BAD_POSSESSIONS, STARTERS):
                     if not isinstance(entries, dict) or any(

@@ -302,7 +302,9 @@ def clock_text(value):
 
 
 class DecodedV3:
-    def __init__(self, source_bytes, context, jump_balls=None):
+    def __init__(
+        self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None
+    ):
         context = deepcopy(context)
         context.validate(source_bytes)
         self.source_bytes = bytes(source_bytes)
@@ -313,6 +315,15 @@ class DecodedV3:
             else (None, None)
         )
         self.recorded_jump_balls = []
+        # Reviewed facts an event cannot be decoded without (see overrides):
+        # a team heave's side and a renumbered jump ball's live action. The
+        # recorded rows stay unchanged; each fact must be used by its event.
+        self.reviewed_locations = dict(locations or {})
+        self.reviewed_live_numbers = dict(live_numbers or {})
+        self._unused_reviewed = {
+            "location": set(self.reviewed_locations),
+            "live-number": set(self.reviewed_live_numbers),
+        }
         wnba = context.game_id.startswith("10")
         self.timeouts = {**TIMEOUTS, **WNBA_TIMEOUTS} if wnba else TIMEOUTS
         self.clear_path_free_throws = (
@@ -417,6 +428,11 @@ class DecodedV3:
             self.projected.append(projected)
         if not self.projected:
             raise V3DecodeError("Empty play-by-play")
+        for kind, events in sorted(self._unused_reviewed.items()):
+            if events:
+                raise V3DecodeError(
+                    "Event {} override does not fit the recorded event".format(kind)
+                )
 
     def _candidates(self, name, team=None):
         return {
@@ -752,7 +768,14 @@ class DecodedV3:
         for an opening tip, so the action number, period and the V3 jumper's
         personId identify the action. Every fact V3 itself records must agree.
         """
-        found = self.live_jump_balls.get(row["actionNumber"], [])
+        number, basis = row["actionNumber"], "live action number"
+        if number in self.reviewed_live_numbers:
+            # Review matched this V3 jump ball to a live action renumbered apart.
+            if number in self.live_jump_balls:
+                raise V3DecodeError("Event live-number override does not fit the recorded event")
+            self._unused_reviewed["live-number"].discard(number)
+            number, basis = self.reviewed_live_numbers[number], "reviewed live action number"
+        found = self.live_jump_balls.get(number, [])
         live = found[0] if len(found) == 1 else {}
         recovered = live.get("jumpBallRecoverdPersonId")
         if (
@@ -790,7 +813,8 @@ class DecodedV3:
                 jumpers=[player, jumper],
                 recipient=recipient,
                 team_recovery=recipient_team is None,
-                basis="live action number, period and V3 jumper personId",
+                basis=basis + ", period and V3 jumper personId",
+                **({} if number == row["actionNumber"] else dict(live_action_number=number)),
             )
         )
         return jumper, recipient, recipient_team
@@ -812,7 +836,13 @@ class DecodedV3:
             or any(row.get(k) for k in ("playerName", "playerNameI"))
         ):
             raise V3DecodeError("Unsupported or conflicting team-heave facts")
-        location = row.get("location")
+        location, basis = row.get("location"), "explicit_source_teamId_and_location"
+        if row["actionNumber"] in self.reviewed_locations:
+            if location:
+                raise V3DecodeError("Event location override does not fit the recorded event")
+            self._unused_reviewed["location"].discard(row["actionNumber"])
+            location = self.reviewed_locations[row["actionNumber"]]
+            basis = "reviewed_location"
         witnesses = {}
         for index, source in enumerate(self.raw_rows):
             side, team = source.get("location"), source["teamId"]
@@ -835,6 +865,6 @@ class DecodedV3:
             attribution="team",
             location=location,
             team_witness_source_index=index,
-            basis="explicit_source_teamId_and_location",
+            basis=basis,
         )
         return team
