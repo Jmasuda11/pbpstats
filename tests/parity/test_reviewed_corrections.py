@@ -290,6 +290,11 @@ def test_duplicate_edit_drops_a_rebound_recorded_twice():
     assert trip.offense_team_id == HOME and trip.events[1].oreb
     assert dict(code="reviewed_duplicate_event", event_num=n["first"],
                 kept=n["second"]) in loaded.diagnostics
+    # The dropped copy's row belongs to the rebound kept, so every row still
+    # belongs to exactly one event.
+    index = {r["actionNumber"]: i for i, r in enumerate(rows)}
+    assert trip.events[1].v3_source_indices == (index[n["first"]], index[n["second"]])
+    assert sorted(i for x in loaded.events for i in x.v3_source_indices) == list(range(len(rows)))
 
 
 @pytest.mark.parametrize("values, message", [
@@ -542,3 +547,5 @@ def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense
     event, attribute, value = check
     assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
     assert loader.counts_by_team == counts
+    rows = json.loads(pbp)["game"]["actions"]
+    assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))

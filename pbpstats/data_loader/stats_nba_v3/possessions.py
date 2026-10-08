@@ -139,9 +139,18 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             ]
             self._add_extra_attrs_to_all_events()
             self._add_shot_x_y_coords()
+        dropped = self._reviewed_entries(EVENT_DUPLICATES, {})
         for event in self.items:
             group = decoded.groups[event.event_num]
-            event.v3_source_indices = group["source_indices"]
+            indices = group["source_indices"]
+            copies = [copy for copy, kept in sorted(dropped.items()) if kept == event.event_num]
+            if copies:
+                # A dropped copy's recorded rows belong to the event kept, so
+                # every recorded row still belongs to exactly one event.
+                indices = tuple(sorted(indices + tuple(
+                    i for copy in copies for i in decoded.groups[copy]["source_indices"]
+                )))
+            event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
 
     def _reviewed_entries(self, name, empty):
