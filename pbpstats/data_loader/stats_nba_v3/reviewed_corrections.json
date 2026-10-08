@@ -33,7 +33,7 @@
     }
   },
   "0022500233": {
-    "pbp_sha256": "951caf51755d65da5bf5ad5bdd2d418fe895f747d1923fa3e4676cc2956b8046",
+    "pbp_sha256": "54a56545ea41fee5dd38f0562cba7bdef165a8c8c3e49b4a60dc34b4658815a6",
     "source": "Video review 2026-10-07: at Q4 0:00 Harden's three missed as the game ended; the Clippers team rebound is the league's placeholder for that miss. V3 lists the rebound before the shot.",
     "files": {
       "event_order.json": [
@@ -45,7 +45,7 @@
     }
   },
   "0022500421": {
-    "pbp_sha256": "0c834e71bffec2f50f0a04bccdca0bfc3eec74895de35c3b9a71eb0b216a90ac",
+    "pbp_sha256": "ba66c0c9b1ffa5931abf4817df50617abadd42792488f0900c5e2e4818f177be",
     "source": "Video review 2026-10-07: at Q3 1:50 Ivey blocked Schroder's three and the ball came back to Schroder, his own rebound. V3 lists the rebound before the shot.",
     "files": {
       "event_order.json": [
@@ -57,7 +57,7 @@
     }
   },
   "0022500449": {
-    "pbp_sha256": "17a2173c48cc68f0744cb4cf66b41ef26632b18d86f87b2e2a0a5493ff4a54e0",
+    "pbp_sha256": "95793857453dc776ce4f1148b1120e093d44cf4542132f268b295b2f0523ae2f",
     "source": "Video review 2026-10-07: at Q4 9:30 Santos' lane violation came on Clowney's second free throw, which was shot again and missed, and Hield rebounded. V3 lists the violation after the free throw.",
     "files": {
       "event_order.json": [
@@ -100,7 +100,7 @@
     }
   },
   "0022500974": {
-    "pbp_sha256": "c7afd9112c7ac84c978555724e0d9ad0d2127c3afaa377dc03329c5147adc2e9",
+    "pbp_sha256": "205de26623d65d618d83d4b2ae1045105b345a228cc86bab99129b2b760c52fa",
     "source": "Video review 2026-10-07: in overtime at 2:49 Doncic's shot lodged between the rim and the backboard, and Jokic's violation at the jump ball with Ayton gave the Lakers the ball. V3 logs the Lakers' team rebound twice, once before the shot, where the league logs one for a lodged ball, and renumbers the jump ball, which the live play-by-play records as 799.",
     "files": {
       "event_duplicates.json": {
