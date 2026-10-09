@@ -33,6 +33,7 @@ from .overrides import (
     EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
+    EVENT_TIP_RECIPIENTS,
     KEEP_EVENTS,
     STARTERS,
 )
@@ -126,6 +127,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         }
         self._apply_reviewed_duplicates()
         self._apply_reviewed_blocks()
+        self._apply_reviewed_tip_recipients()
         self._apply_reviewed_subtypes()
         self._apply_reviewed_clocks()
         self._apply_reviewed_event_order()
@@ -198,6 +200,27 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 raise V3DecodeError("Event block override does not fit the recorded event")
             row[blocker] = player
             self.repairs.append(dict(code="reviewed_event_block", event_num=event, blocker=player))
+
+    def _apply_reviewed_tip_recipients(self):
+        # Records who secured a jump ball, as PLAYER3 and its team, the fields the
+        # original reads for the winning team. The description keeps V3's text.
+        recipients = self._reviewed_entries(EVENT_TIP_RECIPIENTS, {})
+        result = self.source_data["resultSets"][0]
+        kind, number, recipient, team = (
+            result["headers"].index(key)
+            for key in ("EVENTMSGTYPE", "EVENTNUM", "PLAYER3_ID", "PLAYER3_TEAM_ID")
+        )
+        by_number = {row[number]: row for row in result["rowSet"]}
+        roster = self.decoded.context.roster
+        for event, player in sorted(recipients.items()):
+            row = by_number.get(event)
+            if row is None or row[kind] != 10 or player not in roster or row[recipient] == player:
+                raise V3DecodeError("Event tip-recipient override does not fit the recorded event")
+            recorded = row[recipient]
+            row[recipient], row[team] = player, roster[player]["team_id"]
+            self.repairs.append(dict(
+                code="reviewed_tip_recipient", event_num=event, recorded=recorded, reviewed=player
+            ))
 
     def _apply_reviewed_subtypes(self):
         # Edits the projection's action type as the original's remedy of editing

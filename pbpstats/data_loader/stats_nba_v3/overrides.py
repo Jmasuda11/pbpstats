@@ -24,7 +24,9 @@ STARTERS = "missing_period_starters.json"
 # names the blocker of a missed shot that V3 records without its block. A
 # location entry, {event: "h" or "v"}, gives the side of a team heave that V3
 # records without one. A live-number entry, {event: live action}, names the
-# live play-by-play action of a jump ball that V3 renumbered.
+# live play-by-play action of a jump ball that V3 renumbered. A tip-recipient
+# entry, {event: person}, names the player who secured a jump ball that V3
+# credits to someone else.
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
@@ -32,6 +34,7 @@ EVENT_DUPLICATES = "event_duplicates.json"
 EVENT_BLOCKS = "event_blocks.json"
 EVENT_LOCATIONS = "event_locations.json"
 EVENT_LIVE_NUMBERS = "event_live_numbers.json"
+EVENT_TIP_RECIPIENTS = "event_tip_recipients.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
@@ -42,14 +45,17 @@ SUPPORTED = {
     EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
+    EVENT_TIP_RECIPIENTS,
     KEEP_EVENTS,
     STARTERS,
 }
-# Entries that map an event to a number: a kept event, a blocker or a live action.
+# Entries that map an event to a number: a kept event, a blocker, a live action
+# or a tip recipient.
 NUMBERED = {
     EVENT_BLOCKS: "block",
     EVENT_DUPLICATES: "duplicate",
     EVENT_LIVE_NUMBERS: "live-number",
+    EVENT_TIP_RECIPIENTS: "tip-recipient",
 }
 
 

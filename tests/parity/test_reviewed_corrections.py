@@ -26,6 +26,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_LOCATIONS,
     EVENT_ORDER,
     EVENT_SUBTYPES,
+    EVENT_TIP_RECIPIENTS,
     SUPPORTED,
 )
 from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
@@ -351,6 +352,45 @@ def test_block_edits_are_validated(blocked, values, message):
         load(rows, files=edits(EVENT_BLOCKS, values))
 
 
+def tipped_to_opponent():
+    """HOME keeps the ball through a held ball, but V3 credits the tip to AWAY."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("jump", 590, HOME, 1, winner_team=AWAY, winner=12, opponent=11),
+        e("make", 570, HOME, 2),
+    ]))
+    return rows, dict(jump=numbered(rows, "Jump Ball"), make=numbered(rows, "Made Shot"))
+
+
+def test_tip_recipient_edit_names_who_secured_the_jump_ball():
+    rows, n = tipped_to_opponent()
+    with pytest.raises(TeamHasBackToBackPossessionsException):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_TIP_RECIPIENTS, {str(n["jump"]): 4}))
+    jump = next(x for x in loaded.events if x.event_num == n["jump"])
+    # The original reads the recipient as player2 of a jump ball.
+    assert (jump.player2_id, jump.team_id) == (4, HOME)
+    assert offenses(loaded) == [AWAY, HOME, AWAY]
+    assert dict(
+        code="reviewed_tip_recipient", event_num=n["jump"], recorded=12, reviewed=4
+    ) in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"jump": 12}, "does not fit the recorded event"),
+    ({"jump": 99}, "does not fit the recorded event"),
+    ({"make": 4}, "does not fit the recorded event"),
+    ({"999": 4}, "does not fit the recorded event"),
+    ({"jump": 0}, "Invalid event tip-recipient override"),
+], ids=["recorded_recipient", "not_on_roster", "not_a_jump_ball", "unknown_event", "no_person"])
+def test_tip_recipient_edits_are_validated(values, message):
+    rows, n = tipped_to_opponent()
+    values = {str(n.get(key, key)): value for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_TIP_RECIPIENTS, values))
+
+
 def team_heave(side=""):
     """HOME's period-ending team heave, rebounded by HOME, with the side V3 gives it."""
     case = next(c for c in heave_cases() if c["period"] == 1 and c["start"] == "5"
@@ -546,6 +586,59 @@ def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense
     assert possession.offense_team_id == offense
     event, attribute, value = check
     assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+    assert loader.counts_by_team == counts
+    rows = json.loads(pbp)["game"]["actions"]
+    assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))
+
+
+@pytest.mark.parametrize("game, recorded, trip, offense, counts", [
+    ("0022400013", TeamHasBackToBackPossessionsException, [262, 267, 268], 1610612741,
+     {1610612739: 108, 1610612741: 107}),
+    ("0022400116", TeamHasBackToBackPossessionsException, [65, 68, 69], 1610612744,
+     {1610612744: 96, 1610612740: 96}),
+    ("0022400313", TeamHasBackToBackPossessionsException, [530, 531, 532, 534, 535, 537],
+     1610612758, {1610612759: 99, 1610612758: 98}),
+    ("0022400326", V3DecodeError, [461, 466, 711, 712, 585, 473, 474, 475, 476], 1610612742,
+     {1610612742: 102, 1610612764: 104}),
+    ("0022400345", TeamHasBackToBackPossessionsException,
+     [726, 727, 729, 735, 734, 736, 738, 741, 742], 1610612763,
+     {1610612763: 108, 1610612738: 108}),
+    ("0022400512", TeamHasBackToBackPossessionsException, [588, 634, 658], 1610612764,
+     {1610612764: 90, 1610612755: 90}),
+    ("0022400625", TeamHasBackToBackPossessionsException, [615, 617, 618, 619], 1610612742,
+     {1610612742: 99, 1610612760: 100}),
+    ("0022400739", TeamHasBackToBackPossessionsException, [492, 499, 500, 501, 502, 503],
+     1610612760, {1610612761: 95, 1610612760: 95}),
+    ("0022400758", TeamHasBackToBackPossessionsException,
+     [177, 178, 185, 490, 188, 189, 191, 192, 193, 194, 198, 199, 201, 202], 1610612766,
+     {1610612766: 91, 1610612751: 92}),
+    ("0022400834", TeamHasBackToBackPossessionsException, [359, 364, 365], 1610612766,
+     {1610612766: 101, 1610612744: 100}),
+    ("0022400862", TeamHasBackToBackPossessionsException,
+     [300, 302, 303, 304, 324, 307, 308, 309], 1610612745,
+     {1610612745: 95, 1610612758: 95}),
+])
+def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, offense, counts):
+    # 0022400013 Q2 5:51, 0022400834 Q3 11:17: a block caused a held ball, listed
+    # in the league's order: miss, the jump-ball winner's team rebound, jump ball.
+    # 0022400116 Q1 6:40, 0022400739 Q3 1:54: the jump ball's tip recipient.
+    # 0022400313 Q4 11:25: an offensive foul turnover. 0022400326 Q3 3:07: the
+    # technical free throw between two free throws. 0022400512 Q4 3:21: a free
+    # throw 1 of 2. 0022400625 Q4 9:43: a transition take foul. 0022400345 Q4
+    # 0:19.1, 0022400758 Q1 3:39, 0022400862 Q2 1:06: a successful challenge.
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    live = DATA / f"live_{game}.json"
+    fetch = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
+    # 0022400116's box score lists Brandon Boston without the "Jr." its rows use.
+    aliases = {1630527: ["Boston Jr."]} if game == "0022400116" else None
+    with pytest.raises(recorded):
+        web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
+    loader = web.load_game(game, pbp, box, "recorded", aliases=aliases,
+                           overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
+    possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
+    assert [x.event_num for x in possession.events] == trip
+    assert possession.offense_team_id == offense
     assert loader.counts_by_team == counts
     rows = json.loads(pbp)["game"]["actions"]
     assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))

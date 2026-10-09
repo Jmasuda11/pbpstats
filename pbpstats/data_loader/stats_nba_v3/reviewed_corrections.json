@@ -1,4 +1,128 @@
 {
+  "0022400013": {
+    "pbp_sha256": "37e976e0a80872c4fd404f5dd6f004c8f5d6cafcd3ad7629ffe2c676660a2c4c",
+    "source": "Video review 2026-10-09: at Q2 5:51 (5:57 on video) Buzelis' block on LeVert's layup caused a held ball, and the Bulls won the jump ball; the Bulls team rebound is credited for winning it. V3 lists the jump ball before the shot. Listed in the league's order, miss, team rebound, jump ball, as in all 72 other same-clock cases this season.",
+    "files": {
+      "event_order.json": [
+        [
+          281,
+          262
+        ],
+        [
+          283,
+          262
+        ]
+      ]
+    }
+  },
+  "0022400116": {
+    "pbp_sha256": "724ad30908252dd2832d5b1455ae44542fd053b4056e06e6456e29b4083c5875",
+    "source": "Video review 2026-10-09: at Q1 6:40 Payton II blocked Hawkins' drive, and the jump ball between them was tipped to Podziemski; Golden State's team rebound is credited for winning it. V3 and the live play-by-play credit the tip to Jones (New Orleans). Also needs alias Boston Jr. -> 1630527.",
+    "files": {
+      "event_tip_recipients.json": {
+        "65": 1641764
+      }
+    }
+  },
+  "0022400313": {
+    "pbp_sha256": "13355209b2b170d26966e83b83dc0ffdeb1fd9bffa3642c0b8a74314aa1a8d93",
+    "source": "Video review 2026-10-09: at Q4 11:25 I. Jones' foul just after Sacramento's offensive rebound was an offensive foul, a turnover that ended Sacramento's possession. V3 leaves the turnover subtype blank, which the original reads as no turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "537": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0022400326": {
+    "pbp_sha256": "653c9f8ce4d1ed9bf10407fa4f7b910112569cb4450984ea625052b8ae7a48a6",
+    "source": "Video review 2026-10-09: at Q3 3:07 Doncic's technical free throw came between Gafford's two free throws, as the action numbers (473-476) also show. V3 lists the technical free throw after the second. Same pattern as reviewed 0022500169.",
+    "files": {
+      "event_order.json": [
+        [
+          585,
+          475
+        ],
+        [
+          473,
+          475
+        ],
+        [
+          474,
+          475
+        ]
+      ]
+    }
+  },
+  "0022400345": {
+    "pbp_sha256": "da213b3ebfd6453422fb41d5b1b110f6ab8e53df148072192712096180b0a8fa",
+    "source": "Video review 2026-10-09: at Q4 0:19.1 the jump ball was ruled Boston's, and Memphis' coach challenge succeeded (0:17.1), so Memphis kept the ball (Porzingis' take foul, Bane's free throws). V3 and the live play-by-play still record the tip to Boston.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        729
+      ]
+    }
+  },
+  "0022400512": {
+    "pbp_sha256": "c428b29b7fdc514925c01906358d55607ba9cd825e4c3f7ee396bbe09dc56e24",
+    "source": "Video review 2026-10-09: at Q4 3:21 Holmes made the first of two free throws, and the second did not count: Kuzma's offensive goaltending ended Washington's possession. V3 logs the made free throw as 1 of 1. Same pattern as reviewed 0022500054 and 0022501009.",
+    "files": {
+      "event_subtypes.json": {
+        "634": "Free Throw 1 of 2"
+      }
+    }
+  },
+  "0022400625": {
+    "pbp_sha256": "b6f9b3bcacd7de36fe4dabf70fc07c7b1b34fb01077f2fecc1f1fb615ff08f63",
+    "source": "Video review 2026-10-09: at Q4 9:43 Jal. Williams fouled Washington right after his defensive rebound, a transition take foul: one free throw, and Dallas kept the ball. V3 labels it Personal Take, which the original ends the possession on.",
+    "files": {
+      "event_subtypes.json": {
+        "615": "Transition Take"
+      }
+    }
+  },
+  "0022400739": {
+    "pbp_sha256": "6a8e7cfc7360cb27b4e1a250904bcd6a3e7893e9e5321c2286e7a7f3381e9732",
+    "source": "Video review 2026-10-09: at Q3 1:54 Barnes touched the jump ball after Walter's miss, but Kenrich Williams secured it for Oklahoma City, whose team rebound is credited for winning it. V3 and the live play-by-play credit the tip to Barnes (Toronto).",
+    "files": {
+      "event_tip_recipients.json": {
+        "492": 1629026
+      }
+    }
+  },
+  "0022400758": {
+    "pbp_sha256": "627d35afcb9beb88ee231d758ae57e3950cee1b0e46fa9ca616cc5524ffc4cbb",
+    "source": "Video review 2026-10-09: at Q1 3:39 Charlotte's coach challenge succeeded, turning Salaun's offensive foul into a foul on Watford: Salaun shot two free throws and Charlotte kept the ball. V3 keeps the turnover, which should have been deleted; the box score also counts it (Salaun 2 TOV), and it stays credited.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        185
+      ]
+    }
+  },
+  "0022400834": {
+    "pbp_sha256": "435e53a49c9d0f7ee281b5543a199311491309df70f7b680ba4684ff3c30666b",
+    "source": "Video review 2026-10-09: at Q3 11:17 Josh Green's block on Moody's layup caused a held ball, and the Hornets won the jump ball; the Hornets team rebound is credited for winning it. V3 lists the jump ball before the shot. Listed in the league's order, miss, team rebound, jump ball, as in all 72 other same-clock cases this season.",
+    "files": {
+      "event_order.json": [
+        [
+          377,
+          359
+        ],
+        [
+          379,
+          359
+        ]
+      ]
+    }
+  },
+  "0022400862": {
+    "pbp_sha256": "29d53b25c746a7c9996009817fc1cd4eea6ae275239c0aaa85c0c1565ff10178",
+    "source": "Video review 2026-10-09: at Q2 1:06 Valanciunas blocked Green and the ball was ruled Sacramento's (Kings team rebound), but Houston kept the ball and Sengun was fouled at 0:57.8. V3 keeps the Kings rebound.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        302
+      ]
+    }
+  },
   "0022500054": {
     "pbp_sha256": "73c6e095c19810c10d7e30d003948a04c1c6948796a9d56b4c8ffaa16b7d85b4",
     "source": "Video review 2026-10-07: at Q2 11:06 Sengun made the first of two free throws, and Adams' lane violation on the second ended Houston's possession. V3 logs the made free throw as 1 of 1.",
