@@ -94,4 +94,7 @@ class V3LeagueRules:
         available = (self.league_id == "00" and self.season_start_year >= 2025) or (
             self.league_id == "20" and self.season_start_year >= 2024
         )
-        return available and period <= 3 and seconds <= 3
+        # NBA's regular-season implementation includes all four quarters:
+        # https://www.nba.com/news/nba-heaves-rule-change-early-results
+        last_period = 4 if self.league_id == "00" else 3
+        return available and period <= last_period and seconds <= 3

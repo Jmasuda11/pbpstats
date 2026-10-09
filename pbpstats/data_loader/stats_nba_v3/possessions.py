@@ -35,6 +35,8 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
         self.game_id, self.context = lineups.game_id, lineups.context
         self.rules = self.context.rules
         self.lineups = lineups
+        self.use_v2_rules = lineups.use_v2_rules
+        self.diagnostics = []
         if shot_zones is not None:
             if not isinstance(shot_zones, StatsNbaV3ShotZoneLoader):
                 raise TypeError("shot_zones requires StatsNbaV3ShotZoneLoader")
@@ -117,6 +119,13 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 raise event.error("resolved replay requires affected source rows")
             covered.add(index)
         for index in sorted(changed.keys() - covered):
+            if self.use_v2_rules:
+                self.diagnostics.append(dict(
+                    stage="replays", code="final_snapshot_replay",
+                    message="Replay retained in final snapshot under V2 rules; no reversal synthesized; scoring and sequence checks required.",
+                    source_indices=changed[index].facts.group.source_indices,
+                ))
+                continue
             raise changed[index].error(
                 "changed replay requires separate resolution evidence"
             )
@@ -188,6 +197,8 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     raise event.error("foul requires a game team")
                 if event.counts_as_personal_foul:
                     player_fouls[event.player1_id] += 1
+                if event.is_double_foul:
+                    player_fouls[event.facts.participants.require_player("other_fouler")] += 1
                 if event.counts_towards_penalty:
                     fouls_to_give[event.team_id] = max(
                         0, fouls_to_give[event.team_id] - 1
@@ -206,14 +217,22 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     if (
                         not isinstance(supplied, str)
                         or not supplied.isdecimal()
-                        or int(supplied) != score[team]
                     ):
                         raise event.error(f"{field} conflicts with accumulated scoring")
+                    if int(supplied) != score[team]:
+                        if not self.use_v2_rules:
+                            raise event.error(f"{field} conflicts with accumulated scoring")
+                        self.diagnostics.append(dict(
+                            stage="scoring", code="stale_score_annotation",
+                            message=f"{field}={supplied}; event-derived score={score[team]}; raw annotation retained.",
+                            source_indices=event.facts.group.source_indices,
+                        ))
             roles = event.facts.participants.participants
             mappings = {
                 "field_goal": {"assister": "player2_id", "blocker": "player3_id"},
+                "team_heave": {"blocker": "player3_id"},
                 "turnover": {"stealer": "player3_id"},
-                "foul": {"foul_drawn": "player3_id"},
+                "foul": {"foul_drawn": "player3_id", "other_fouler": "player3_id"},
                 "substitution": {"incoming": "player2_id"},
                 "jump_ball": {
                     "tip_recipient": "player2_id",
@@ -229,8 +248,27 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
     def _associate_free_throws(self):
         consumed = set()
         active = None
+        self._double_lane_restarts = {}
         for event in self.events:
             if not isinstance(event, V3FreeThrow):
+                if (self.use_v2_rules and active is not None and isinstance(event, V3Turnover)
+                        and active.facts.free_throw.category == "regular"
+                        and active.facts.free_throw.attempt == active.facts.free_throw.total - 1
+                        and (event.period, event.seconds_remaining, event.team_id)
+                        == (active.period, active.seconds_remaining, active.team_id)):
+                    # V2's recorded turnover ends possession, including a lane
+                    # turnover instead of the final FT. Keep original numbering
+                    # and actual attempts; an empty TO subtype stays unspecified.
+                    self.diagnostics.append(dict(
+                        stage="free_throws", code="ft_trip_ended_by_recorded_turnover",
+                        message="Same-clock shooting-team turnover ends the pending trip before its final attempt; no attempt or turnover cause synthesized.",
+                        source_indices=active.facts.group.source_indices + event.facts.group.source_indices,
+                    ))
+                    active = None
+                if isinstance(event, V3Violation) and event.is_double_lane_violation:
+                    if event not in self._double_lane_restarts:
+                        self._bind_double_lane_restart(event, active)
+                        active = None
                 if active and (event.period, event.seconds_remaining) != (
                     active.period,
                     active.seconds_remaining,
@@ -240,7 +278,8 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     )
                 if active and (
                     isinstance(event, (V3FieldGoal, V3Turnover, V3JumpBall))
-                    or (isinstance(event, V3Foul) and not event.is_technical)
+                    or (isinstance(event, V3Foul) and not (event.is_technical or event.is_double_technical)
+                        and not (self.use_v2_rules and event is active.trip_foul))
                 ):
                     raise event.error(
                         "live event or unrelated foul interrupts free-throw trip"
@@ -250,6 +289,8 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
             if ft.attempt == 1:
                 if active is not None and not event.is_technical_ft:
                     raise event.error("overlapping free-throw trips")
+                if active is not None and ft.total > 1:
+                    raise event.error("numbered technical trip interrupts an active free-throw trip")
                 self._start_free_throw_trip(event, consumed)
                 if ft.total > 1:
                     active = event
@@ -261,7 +302,6 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     event.period,
                     event.seconds_remaining,
                     event.team_id,
-                    event.player1_id,
                     ft.category,
                     ft.total,
                     ft.attempt,
@@ -269,7 +309,6 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     active.period,
                     active.seconds_remaining,
                     active.team_id,
-                    active.player1_id,
                     previous.category,
                     previous.total,
                     previous.attempt + 1,
@@ -277,7 +316,18 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                     raise event.error(
                         "conflicting free-throw trip order, shooter, or clock"
                     )
+                if event.player1_id != active.player1_id:
+                    if not self.use_v2_rules:
+                        raise event.error("conflicting free-throw trip order, shooter, or clock")
+                    self.diagnostics.append(dict(
+                        stage="free_throws", code="recorded_shooter_change",
+                        message="Same-team free-throw trip continues with the recorded replacement shooter; no injury or fouled-player identity inferred.",
+                        source_indices=active.facts.group.source_indices + event.facts.group.source_indices,
+                    ))
                 event.trip_foul = active.trip_foul
+                if ft.category == "technical" and ft.total > 1:
+                    event.technical_trip_fouls = active.technical_trip_fouls
+                    event.trip_foul = event.technical_trip_fouls[ft.attempt - 1]
                 active = None if ft.is_last_attempt else event
         if active is not None:
             raise active.error("incomplete free-throw trip")
@@ -305,19 +355,59 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
             ):
                 raise foul.error("missing free-throw trip for foul")
 
+    def _bind_double_lane_restart(self, event, active):
+        """A paired lane violation can cancel the unrecorded final attempt.
+
+        NBA Rule 9-I-4 requires a jump ball when both teams violate the live
+        final FT. Keep the original attempt numbering and never invent a miss.
+        Other cancellation/retry sequences still require separate evidence.
+        """
+        if (self.rules.league_id != "00" or active is None
+                or active.facts.free_throw.category != "regular"
+                or active.facts.free_throw.attempt != active.facts.free_throw.total - 1
+                or (active.period, active.seconds_remaining) != (event.period, event.seconds_remaining)):
+            raise event.error("double lane requires evidence of the cancelled final free throw")
+        pair, following = [], event
+        while following is not None and following.seconds_remaining == event.seconds_remaining:
+            if isinstance(following, V3Violation) and following.is_double_lane_violation:
+                pair.append(following)
+            elif following.facts.kind not in ("substitution", "replay", "timeout"):
+                break
+            following = following.next_event
+        if (len(pair) != 2 or {e.team_id for e in pair} != set(self.context.team_ids)
+                or not isinstance(following, V3JumpBall)
+                or following.seconds_remaining != event.seconds_remaining):
+            raise event.error("double lane requires opposing violations and a same-clock jump restart")
+        for violation in pair:
+            violation.facts.participants.require_player("actor")
+            self._double_lane_restarts[violation] = following
+
     def _start_free_throw_trip(self, event, consumed):
         ft = event.facts.free_throw
+        # V2 FieldGoal checks a same-team one-shot award at the basket's clock,
+        # including personal/loose-ball fouls; the FT shooter need not be scorer.
+        def basket_award(foul):
+            if (self.rules.league_id != "00"
+                    or not (foul.is_loose_ball_foul or self.use_v2_rules and foul.is_personal_foul)
+                    or ft.category != "regular" or ft.total != 1):
+                return None
+            makes = [e for e in event.get_all_events_at_current_time()
+                     if isinstance(e, V3FieldGoal) and e.is_made
+                     and e.order < foul.order and e.team_id == event.team_id]
+            return makes[0] if len(makes) == 1 else None
+
         candidates = []
         for foul in event.get_all_events_at_current_time():
             if (
                 not isinstance(foul, V3Foul)
-                or foul.order >= event.order
+                or (not self.use_v2_rules and foul.order >= event.order)
                 or foul in consumed
                 or foul.team_id == event.team_id
             ):
                 continue
             compatible = {
                 "regular": foul.is_shooting_foul
+                or basket_award(foul) is not None
                 or (
                     (
                         foul.is_personal_foul
@@ -335,19 +425,40 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
             }[ft.category]
             if compatible:
                 candidates.append(foul)
-        if len(candidates) != 1:
+        if self.use_v2_rules:
+            # FreeThrow.foul_that_led_to_ft in V2 searches backwards first,
+            # then forwards at the same clock. Retain V3's unique-match and
+            # shooter/award checks instead of taking an arbitrary nearby foul.
+            preceding = [f for f in candidates if f.order < event.order]
+            candidates = preceding or candidates
+        repeated_technical = (
+            event.is_technical_ft and len(candidates) > 1
+            and all(f.is_technical for f in candidates)
+            and len({(f.team_id, f.facts.subtype, f.facts.group.primary.get("personId")) for f in candidates}) == 1
+        )
+        if len(candidates) != 1 and not repeated_technical:
             raise event.error(
-                "free-throw trip requires one unconsumed compatible preceding foul at the exact clock, including penalty evidence for regular non-shooting trips"
+                "free-throw trip requires one unconsumed compatible "
+                + ("" if self.use_v2_rules else "preceding ")
+                + "foul at the exact clock, including penalty evidence for regular non-shooting trips"
             )
         foul = candidates[0]
         if (
-            not event.is_technical_ft
+            not self.use_v2_rules
+            and not event.is_technical_ft
             and not foul.is_transition_take_foul
             and not foul.is_away_from_play_foul
             and hasattr(foul, "player3_id")
             and foul.player3_id != event.player1_id
         ):
             raise event.error("replacement shooter requires separate validation")
+        if (self.use_v2_rules and not event.is_technical_ft
+                and hasattr(foul, "player3_id") and foul.player3_id != event.player1_id):
+            self.diagnostics.append(dict(
+                stage="free_throws", code="recorded_shooter_differs_from_fouled_player",
+                message="Recorded FT shooter and explicitly identified fouled player differ; both identities preserved without inferring an injury.",
+                source_indices=foul.facts.group.source_indices + event.facts.group.source_indices,
+            ))
         award = ft.total * ft.points_per_attempt
         retained = foul.is_transition_take_foul or foul.is_away_from_play_foul
         if retained:
@@ -361,12 +472,20 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 )
             event.is_transition_take_foul_ft = foul.is_transition_take_foul
             event.is_away_from_play_ft = foul.is_away_from_play_foul
-        elif ft.category == "regular" and not foul.is_shooting_foul:
+        elif ft.category == "regular" and not foul.is_shooting_foul and basket_award(foul) is None:
             if award != 2 or foul.fouls_to_give_before[foul.team_id] != 0:
                 raise event.error("regular non-shooting trip requires penalty evidence")
         consumed.add(foul)
+        if event.is_technical_ft and ft.total > 1:
+            if not self.use_v2_rules or not repeated_technical or len(candidates) != ft.total:
+                raise event.error("numbered technical trip requires matching individual technical foul awards")
+            consumed.update(candidates)
+            event.technical_trip_fouls = tuple(candidates)
+            for technical in candidates:
+                technical.number_of_fta_for_foul = 1
         event.trip_foul = foul
-        foul.number_of_fta_for_foul = award
+        if not (event.is_technical_ft and ft.total > 1):
+            foul.number_of_fta_for_foul = award
         if ft.category == "regular" and award == 1 and not retained:
             makes = [
                 e
@@ -375,13 +494,19 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 and e.is_made
                 and e.order < foul.order
                 and e.team_id == event.team_id
-                and e.player1_id == event.player1_id
+                and (self.use_v2_rules or e.player1_id == event.player1_id or e is basket_award(foul))
             ]
-            if len(makes) != 1 or not foul.is_shooting_foul:
+            if len(makes) != 1 or not (foul.is_shooting_foul or basket_award(foul) is not None):
                 raise event.error(
                     "one-shot regular trip requires a unique matching and-one; restart evidence is missing"
                 )
             makes[0]._and_one = event
+            if makes[0].player1_id != event.player1_id and self.use_v2_rules:
+                self.diagnostics.append(dict(
+                    stage="free_throws", code="different_shooter_after_made_basket",
+                    message="Unique same-team basket linked to the one-shot award; recorded basket scorer and FT shooter preserved separately, without an injury inference.",
+                    source_indices=makes[0].facts.group.source_indices + event.facts.group.source_indices,
+                ))
         if ft.category in ("clear_path", "flagrant"):
             makes = [
                 e
@@ -478,6 +603,9 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
         for event in self.events:
             if isinstance(event, V3Violation):
                 if event.is_lane_violation:
+                    if self.use_v2_rules:
+                        self._validate_v2_lane_context(event)
+                        continue
                     before, after = event.previous_event, event.next_event
                     # A defensive lane violation between two made attempts in
                     # one validated trip cannot cancel either made free throw.
@@ -521,6 +649,24 @@ class StatsNbaV3PossessionLoader(NbaPossessionLoader):
                 ]
                 if len(turnovers) != 1:
                     raise event.error("offensive foul requires one matching turnover")
+
+    def _validate_v2_lane_context(self, event):
+        """V2 Violation is passive; FT/rebound/turnover rules decide possession.
+
+        A timeout, sub or replay is not an unknown restart. Keep the recorded
+        final FT sequence rather than synthesizing an attempt, cancellation or
+        turnover from a lane label. Trip, rebound and box-score checks still run.
+        """
+        related = [e for e in event.get_all_events_at_current_time()
+                   if isinstance(e, V3FreeThrow) and not e.is_technical_ft
+                   or isinstance(e, V3Turnover) and e.is_lane_violation]
+        if not related:
+            raise event.error("lane ruling has no same-clock free-throw or lane-turnover context")
+        self.diagnostics.append(dict(
+            stage="free_throws", code="lane_ruling_recorded_sequence",
+            message="Lane violation retained as in V2; validated recorded FT, rebound and turnover events determine the outcome; no synthetic retry or possession boundary.",
+            source_indices=event.facts.group.source_indices,
+        ))
 
     def _is_shooter_lane_award(self, event):
         rebound = event.previous_event

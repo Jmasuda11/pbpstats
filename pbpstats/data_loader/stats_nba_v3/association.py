@@ -44,7 +44,10 @@ def _make_group(rows):
             role, expected_type = "block", "Missed Shot"
         else:
             raise _error(rows, "unrecognized blank-type secondary action")
-        if primary[0].action_type != expected_type:
+        blocked_heave = role == "block" and (
+            primary[0].action_type, primary[0].sub_type
+        ) == ("Heave", "Team Field Goal Attempt")
+        if primary[0].action_type != expected_type and not blocked_heave:
             raise _error(rows, f"{role} requires a {expected_type} primary action")
         if role in secondary:
             raise _error(rows, f"multiple {role} rows are ambiguous")

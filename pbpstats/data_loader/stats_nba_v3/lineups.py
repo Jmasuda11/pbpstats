@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Tuple
@@ -17,6 +17,7 @@ from pbpstats.data_loader.stats_nba_v3.pbp.file import (
     _unique_object,
 )
 from pbpstats.resources.json_copy import json_copy
+from pbpstats.data_loader.stats_nba_v3.v2_rules import period_order, technical_activity
 
 
 def _digest(value):
@@ -140,7 +141,7 @@ class StatsNbaV3LineupLoader:
     is retained, but a caller's external assertions cannot be authenticated.
     """
 
-    def __init__(self, event_loader, evidence):
+    def __init__(self, event_loader, evidence, *, use_v2_rules=False):
         if not isinstance(event_loader, StatsNbaV3EventLoader):
             raise TypeError("lineup loader requires StatsNbaV3EventLoader")
         if not isinstance(evidence, V3LineupEvidence):
@@ -149,10 +150,17 @@ class StatsNbaV3LineupLoader:
         self.context = event_loader.context
         self.rules = self.context.rules
         self.evidence = evidence
+        self.use_v2_rules = use_v2_rules
+        self.diagnostics = []
+        self._implied_jump_winners = {}
         self._events = event_loader.items
         if not self.context.roster_complete or not event_loader.snapshot_complete:
             raise self._error("complete roster and snapshot evidence are required")
         data = evidence.data
+        if data.get("processing_rules") not in (None, "strict", "v2"):
+            raise self._error("unknown processing_rules in lineup evidence")
+        if data.get("processing_rules") == "v2" and not use_v2_rules:
+            raise self._error("lineup evidence requires use_v2_rules=True")
         if type(data.get("schema_version")) is not int or data["schema_version"] != 1:
             raise self._error("schema_version must be 1")
         if data.get("game_id") != self.game_id:
@@ -160,6 +168,12 @@ class StatsNbaV3LineupLoader:
         for key, expected in lineup_fingerprints(event_loader).items():
             if data.get(key) != expected:
                 raise self._error(f"{key} does not match lineup inputs")
+        if use_v2_rules:
+            indices, self.diagnostics = period_order(
+                ((e.group.primary.order, e.group.primary.data) for e in self._events), self.rules
+            )
+            by_index = {e.group.primary.order: e for e in self._events}
+            self._events = tuple(by_index[i] for i in indices)
         periods = self._validate_periods()
         starters = self._starters(data.get("periods"), periods)
         batches = self._batches(data.get("batches"))
@@ -199,7 +213,9 @@ class StatsNbaV3LineupLoader:
                 active = row.period
                 previous_clock = clock
             elif active is None or row.period != active:
-                raise self._error("event lies outside a started period", event)
+                if not (active is None and periods and row.period == periods[-1]
+                        and event.kind == "replay" and clock == previous_clock):
+                    raise self._error("event lies outside a started period", event)
             if clock > previous_clock:
                 raise self._error("clock increases within a period", event)
             previous_clock = clock
@@ -333,7 +349,8 @@ class StatsNbaV3LineupLoader:
             raise self._error("substitution batch does not leave five players per team")
         return after
 
-    def _validate_on_court(self, event, lineups):
+    @staticmethod
+    def _requires_on_court_participants(event):
         if event.kind in (
             "period_start",
             "period_end",
@@ -341,14 +358,167 @@ class StatsNbaV3LineupLoader:
             "timeout",
             "ejection",
         ):
-            return
+            return False
         # Technicals can identify bench personnel; they do not establish who is
         # on court. Do not use them to infer starters or force a substitution.
         if (
-            event.kind == "foul" and event.subtype in ("Technical", "Hanging Technical")
+            event.kind == "foul" and event.subtype in (
+                "Technical", "Hanging Technical", "Double Technical", "Delay Technical", "Bench",
+                "Excess Timeout Technical", "Too Many Players Technical", "Non-Unsportsmanlike Technical",
+            )
         ) or (event.free_throw and event.free_throw.category == "technical"):
+            return False
+        return True
+
+    def _resolve_on_court_names(self, event, lineups):
+        """Narrow name-only candidates using this event's validated lineup.
+
+        Roster facts and their review fingerprints stay unchanged. These
+        derived identities belong to the lineup result consumed by possessions.
+        Substitutions use their separate entrance/exit validation, so incoming
+        bench players are never excluded by this on-court filter.
+        """
+        if not self._requires_on_court_participants(event):
+            return event
+        roles = dict(event.participants.participants)
+        changed = False
+        for role, participant in roles.items():
+            if (
+                participant.status not in ("ambiguous", "unresolved")
+                or not participant.name
+            ):
+                continue
+            candidates = tuple(
+                pid for pid in participant.candidates
+                if pid in lineups.get(self.context.player(pid).team_id, ())
+                and (
+                    participant.team_id is None
+                    or self.context.player(pid).team_id == participant.team_id
+                )
+            )
+            if candidates == participant.candidates:
+                continue
+            player_id = candidates[0] if len(candidates) == 1 else None
+            if (
+                player_id is not None
+                and role in ("assister", "opposing_jumper", "foul_drawn")
+                and player_id == roles["actor"].player_id
+            ):
+                raise self._error(f"{role} cannot be the primary actor", event)
+            roles[role] = replace(
+                participant,
+                status="resolved"
+                if player_id is not None
+                else "ambiguous"
+                if candidates
+                else "unresolved",
+                player_id=player_id,
+                team_id=self.context.player(player_id).team_id
+                if player_id is not None
+                else participant.team_id,
+                candidates=candidates,
+                evidence=(
+                    participant.evidence
+                    + "; name candidates restricted to players on court before "
+                    f"source row {event.group.primary.order}; "
+                    f"lineup evidence sha256={self.evidence.sha256}"
+                ),
+            )
+            changed = True
+        if self.use_v2_rules and event.kind == "jump_ball":
+            recipient = roles["tip_recipient"]
+            teams = {self.context.player(pid).team_id for pid in recipient.candidates}
+            if recipient.status == "ambiguous" and len(teams) == 1:
+                roles["tip_recipient"] = replace(
+                    recipient, team_id=next(iter(teams)),
+                    evidence=recipient.evidence + "; all on-court recipient candidates belong to the same team; individual identity remains ambiguous",
+                )
+                changed = True
+        if not changed:
+            return event
+        return replace(
+            event, participants=replace(event.participants, participants=roles)
+        )
+
+    def _infer_jump_winner(self, event, position):
+        """Infer only the recovering team from the first clear control event.
+
+        This assumes the declared complete snapshot has no unrecorded change
+        of control. Retain the unknown individual and cite every traversed row.
+        A same-clock turnover can describe the loss *leading to* the jump, so
+        it cannot establish the team that controlled the ball after the tip.
+        """
+        if not self.use_v2_rules or event.kind != "jump_ball":
+            return event
+        recipient = event.participants.participants["tip_recipient"]
+        if recipient.status not in ("unresolved", "ambiguous") or recipient.team_id is not None:
+            return event
+        row = event.group.primary
+        if self.rules.untimed(row.period):
+            return event
+        indices = list(event.group.source_indices)
+        for witness in self._events[position + 1:]:
+            following = witness.group.primary
+            elapsed = row.seconds_remaining_exact - following.seconds_remaining_exact
+            # A single bounded stretch of play; never cross a period or skip
+            # a second jump, rebound, free throw, violation or unknown foul.
+            if following.period != row.period or not 0 <= elapsed <= 24:
+                break
+            indices.extend(witness.group.source_indices)
+            if witness.kind in ("substitution", "timeout"):
+                continue
+            team = witness.team_id
+            if team not in self.context.team_ids:
+                break
+            if witness.kind == "field_goal":
+                pass
+            elif witness.kind == "turnover" and elapsed > 0 and witness.subtype in (
+                "Bad Pass", "Lost Ball", "Traveling", "Double Dribble", "Palming Turnover",
+                "Discontinue Dribble", "3 Second Violation", "5 Second Violation",
+                "8 Second Violation", "10 Second Violaton", "Backcourt Turnover",
+                "Out of Bounds - Bad Pass Turnover", "Out of Bounds Lost Ball Turnover",
+                "Step Out of Bounds Turnover", "Shot Clock Turnover", "Offensive Foul Turnover",
+            ):
+                pass  # Use the team losing control, not the stealing team.
+            elif witness.kind == "foul" and elapsed > 0 and witness.subtype in (
+                "Offensive", "Offensive Charge", "Shooting",
+            ):
+                if witness.subtype == "Shooting":
+                    team = self.context.other_team(team)
+            else:
+                break
+            # A named recipient with no on-court matches cannot be repaired
+            # by assigning a team; nor can a contradicting candidate list.
+            if recipient.name and not any(
+                self.context.player(pid).team_id == team for pid in recipient.candidates
+            ):
+                break
+            source_indices = tuple(dict.fromkeys(indices))
+            explanation = (
+                f"Implied jump recovery team {team} from subsequent {witness.kind}"
+                f"/{witness.subtype} at source rows {witness.group.source_indices}; "
+                "only substitutions/timeouts intervened; assumes complete event order; "
+                "individual tip recipient remains unknown"
+            )
+            roles = dict(event.participants.participants)
+            roles["tip_recipient"] = replace(
+                recipient, team_id=team, source_indices=source_indices,
+                evidence=recipient.evidence + "; " + explanation,
+            )
+            self._implied_jump_winners[row.order] = team
+            self.diagnostics.append(dict(
+                stage="participants", code="implied_jump_winner",
+                message=explanation, source_indices=source_indices,
+            ))
+            return replace(event, participants=replace(event.participants, participants=roles))
+        return event
+
+    def _validate_on_court(self, event, lineups):
+        if not self._requires_on_court_participants(event):
             return
         roles = event.participants.participants
+        if event.kind == "foul" and event.subtype == "Double Personal":
+            event.participants.require_player("other_fouler")
         if (
             event.kind
             in ("field_goal", "free_throw", "rebound", "turnover", "foul", "jump_ball")
@@ -356,9 +526,37 @@ class StatsNbaV3LineupLoader:
         ):
             event.participants.require_player("actor")
         if event.kind == "jump_ball":
-            event.participants.require_player("opposing_jumper")
+            opponent = roles["opposing_jumper"]
+            if not self.use_v2_rules or opponent.status not in ("unresolved", "ambiguous"):
+                event.participants.require_player("opposing_jumper")
+            else:
+                # V2 possession rules use the winning TEAM, not both jumpers'
+                # identities. Preserve the explicit actor and unknown opponent.
+                self.diagnostics.append(dict(
+                    stage="participants", code="unknown_opposing_jumper",
+                    message="Recorded jump actor retained; opposing jumper remains unknown and is not needed for team possession accounting.",
+                    source_indices=event.group.source_indices,
+                ))
             recipient = roles["tip_recipient"]
-            if recipient.status != "team":
+            inferred_team = (self.use_v2_rules and recipient.team_id is not None
+                             and self._implied_jump_winners.get(event.group.primary.order) == recipient.team_id)
+            known_team_only = (self.use_v2_rules and recipient.status == "ambiguous"
+                               and recipient.candidates and recipient.team_id in lineups
+                               and all(self.context.player(pid).team_id == recipient.team_id
+                                       for pid in recipient.candidates))
+            if self.use_v2_rules and recipient.status in ("unresolved", "ambiguous") and not (known_team_only or inferred_team):
+                raise self._error(
+                    "jump-ball winning team is unresolved; the recorded actor ID does not identify who recovered the ball", event
+                )
+            if inferred_team:
+                pass  # Provenance and a notice were recorded by look-ahead.
+            elif known_team_only:
+                self.diagnostics.append(dict(
+                    stage="participants", code="ambiguous_recipient_known_team",
+                    message="All on-court tip-recipient candidates share a team; use that team for possession, retaining the unresolved individual identity.",
+                    source_indices=event.group.source_indices,
+                ))
+            elif recipient.status != "team":
                 event.participants.require_player("tip_recipient")
             elif (
                 recipient.team_id not in lineups
@@ -379,8 +577,16 @@ class StatsNbaV3LineupLoader:
 
     def _validate_ejections(self):
         ejected = {}
+        ejected_bench = set()
         for item in self.items:
             event = item.event
+            bench = self.context.bench_person(event.group.primary.get("personId"))
+            if bench is not None:
+                if bench.person_id in ejected_bench:
+                    raise self._error("ejected bench person cannot participate again", event)
+                if event.kind == "ejection":
+                    ejected_bench.add(bench.person_id)
+                    continue
             stamp = (
                 event.group.primary.period,
                 event.group.primary.seconds_remaining_exact,
@@ -396,18 +602,21 @@ class StatsNbaV3LineupLoader:
             for role, participant in event.participants.participants.items():
                 if participant.player_id in ejected and not (
                     event.kind == "substitution" and role in ("actor", "outgoing")
+                    or self.use_v2_rules and ejected[participant.player_id] == stamp
+                    and event.kind == "foul" and technical_activity(event.group.primary.data)
                 ):
                     raise self._error(
                         "ejected player cannot participate or re-enter", event
                     )
             for players in item.before.values():
                 for pid in set(players) & ejected.keys():
-                    if ejected[pid] != stamp or event.kind not in (
+                    administrative = self.use_v2_rules and technical_activity(event.group.primary.data)
+                    if ejected[pid] != stamp or not (administrative or event.kind in (
                         "substitution",
                         "replay",
                         "timeout",
                         "period_end",
-                    ):
+                    )):
                         raise self._error(
                             "ejected player requires explicit replacement before further play",
                             event,
@@ -430,6 +639,8 @@ class StatsNbaV3LineupLoader:
                 lineups = after
                 position += len(batch)
             else:
+                event = self._resolve_on_court_names(event, lineups)
+                event = self._infer_jump_winner(event, position)
                 self._validate_on_court(event, lineups)
                 result.append(V3LineupEvent(event, lineups, lineups))
                 position += 1

@@ -23,15 +23,17 @@ from pbpstats.data_loader.stats_nba_v3.lineups import (
 )
 from pbpstats.data_loader.stats_nba_v3.possessions import StatsNbaV3PossessionLoader
 from pbpstats.resources.json_copy import json_copy
+from pbpstats.data_loader.stats_nba_v3.v2_rules import reconcile_scoring
 
 
 class V3Preparation:
     """A reviewable candidate and explicit blockers, with no implicit writes."""
 
-    def __init__(self, candidate, template, diagnostics, inputs):
+    def __init__(self, candidate, template, diagnostics, inputs, notices=()):
         self._candidate, self._template = json_copy(candidate), json_copy(template)
         self._diagnostics = tuple(diagnostics)
         self._inputs = MappingProxyType(dict(inputs))
+        self.notices = tuple(notices)
 
     @property
     def diagnostics(self):
@@ -58,6 +60,7 @@ class V3Preparation:
         return dict(
             ready=self.ready,
             diagnostics=[asdict(d) for d in self.diagnostics],
+            notices=[asdict(d) for d in self.notices],
             inputs={k: asdict(v) for k, v in self.inputs.items()},
             lineup_candidate=self.lineup_candidate,
             review_template=self.review_template,
@@ -129,7 +132,10 @@ def _witnesses(events):
             continue
         if (
             event.kind == "foul"
-            and event.subtype in ("Technical", "Hanging Technical")
+            and event.subtype in (
+                "Technical", "Hanging Technical", "Double Technical", "Delay Technical", "Bench",
+                "Excess Timeout Technical", "Too Many Players Technical", "Non-Unsportsmanlike Technical",
+            )
             or event.free_throw
             and event.free_throw.category == "technical"
         ):
@@ -229,7 +235,24 @@ def _starters(events, box, reviews, source, diagnostics):
     return result, pending
 
 
-def _batches(events, reviews, source, diagnostics):
+def _independent_substitutions(events):
+    """Distinct, disjoint entrants/exits commute; chains still need review."""
+    incoming, outgoing = set(), set()
+    for event in events:
+        roles = event.participants
+        entrant = roles.participants["incoming"]
+        exiting = roles.participants["outgoing"]
+        if any(p.status not in ("explicit", "resolved") or p.player_id is None
+               for p in (entrant, exiting)):
+            return False
+        if entrant.player_id in incoming or exiting.player_id in outgoing:
+            return False
+        incoming.add(entrant.player_id)
+        outgoing.add(exiting.player_id)
+    return not incoming.intersection(outgoing)
+
+
+def _batches(events, reviews, source, diagnostics, auto_independent_batches=False, use_v2_rules=False):
     runs, prior = [], None
     for event in events.items:
         if event.kind != "substitution":
@@ -256,15 +279,29 @@ def _batches(events, reviews, source, diagnostics):
             raise ValueError("reviewed batches contain duplicate source_indices")
         covered.update(indices)
     pending = []
+    by_index = {e.group.primary.order: e for e in events.items}
     for run in runs:
         missing = [i for i in run if i not in covered]
         if not missing:
             continue
-        if len(run) == 1:
+        if use_v2_rules:
+            # V2 Substitution.current_players replaces one player at a time.
+            # Keep explicitly reviewed atomic batches; infer only singleton
+            # transitions for the remaining source rows, including chains.
+            accepted.extend(dict(source_indices=[i], source=
+                "V2 sequential substitution; five-player and minute validation required; " + source)
+                for i in missing)
+            continue
+        independent = (auto_independent_batches and missing == run
+                       and _independent_substitutions([by_index[i] for i in run]))
+        if len(run) == 1 or independent:
             accepted.append(
                 dict(
                     source_indices=run,
-                    source=f"Single substitution between non-substitution or different-clock boundaries; {source}",
+                    source=("Distinct, disjoint entrants and exits in contiguous same-period, same-clock substitutions; "
+                            "changes commute and remain subject to five-player lineup and minute validation; "
+                            if independent and len(run) > 1 else
+                            "Single substitution between non-substitution or different-clock boundaries; ") + source,
                 )
             )
         else:
@@ -287,7 +324,7 @@ def _batches(events, reviews, source, diagnostics):
     return sorted(accepted, key=lambda r: r["source_indices"][0]), pending
 
 
-def _replays(events, reviews, diagnostics):
+def _replays(events, reviews, diagnostics, use_v2_rules=False):
     changed = {
         e.group.primary.order
         for e in events.items
@@ -302,6 +339,8 @@ def _replays(events, reviews, diagnostics):
             raise ValueError("duplicate or extraneous reviewed replay")
         covered.add(index)
     pending = []
+    if use_v2_rules:
+        return records, pending
     for index in sorted(changed - covered):
         diagnostics.append(
             V3Diagnostic(
@@ -387,12 +426,18 @@ def prepare_game(
     review=None,
     jump_ball_evidence=None,
     jump_ball_live=None,
+    auto_independent_batches=False,
+    use_v2_rules=False,
 ):
     """Generate witnesses and a review template, then validate available evidence.
 
     ``substitution_stream_source`` explicitly attests complete substitution
     coverage. Its text is a caller assertion, not proof inferred from a roster.
-    Multi-row substitution batches and changed replays are never auto-approved.
+    With ``auto_independent_batches``, disjoint, fully resolved changes can be
+    grouped automatically. Chains, ambiguous identities and changed replays
+    still require sourced review. ``use_v2_rules`` processes unreviewed
+    substitutions sequentially and replay rows as part of the final snapshot,
+    repairs bounded period ordering, and reconciles event-derived scoring.
     """
     directory, box, raw, events, inputs = _load_inputs(
         game_id,
@@ -414,10 +459,15 @@ def prepare_game(
             inputs["review"] = _file(path, review_source.source_bytes)
         source = f"On-court witnesses before any entrance in a complete substitution stream: {substitution_stream_source}; PBP sha256={inputs['pbp'].sha256}"
         diagnostics = []
+        notices = []
         periods, pending_periods = _starters(events, box, reviewed, source, diagnostics)
-        batches, pending_batches = _batches(events, reviewed, source, diagnostics)
-        replays, pending_replays = _replays(events, reviewed, diagnostics)
+        batches, pending_batches = _batches(
+            events, reviewed, source, diagnostics, auto_independent_batches, use_v2_rules
+        )
+        replays, pending_replays = _replays(events, reviewed, diagnostics, use_v2_rules)
         header = dict(schema_version=1, game_id=game_id, **fingerprints)
+        if use_v2_rules:
+            header["processing_rules"] = "v2"
         candidate = dict(
             header, periods=periods, batches=batches, resolved_replays=replays
         )
@@ -434,11 +484,15 @@ def prepare_game(
                     V3LineupEvidence(
                         _json_bytes(candidate), "Prepared witness and reviewed evidence"
                     ),
+                    use_v2_rules=use_v2_rules,
                 )
                 _reconcile_minutes(box, lineups, diagnostics)
-                StatsNbaV3PossessionLoader(lineups)
+                possessions = StatsNbaV3PossessionLoader(lineups)
+                notices.extend(V3Diagnostic(**d) for d in lineups.diagnostics + possessions.diagnostics)
+                if use_v2_rules:
+                    reconcile_scoring(box, possessions.events)
             except (ValueError, TypeError) as error:
                 diagnostics.append(
                     V3Diagnostic("validation", "validation_failed", str(error))
                 )
-    return V3Preparation(candidate, template, diagnostics, inputs)
+    return V3Preparation(candidate, template, diagnostics, inputs, notices)

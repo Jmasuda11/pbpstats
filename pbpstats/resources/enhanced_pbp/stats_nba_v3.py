@@ -243,11 +243,22 @@ class V3FreeThrow(V3EnhancedEvent, FreeThrow):
 
 
 class V3Foul(V3EnhancedEvent, Foul):
-    is_inbound_foul = is_double_foul = False
-    is_double_technical = is_delay_of_game = False
+    is_inbound_foul = False
     is_personal_block_foul = False
     is_shooting_block_foul = False
     number_of_fta_for_foul = None
+
+    @property
+    def is_double_foul(self):
+        return self.facts.subtype == "Double Personal"
+
+    @property
+    def is_double_technical(self):
+        return self.facts.subtype == "Double Technical"
+
+    @property
+    def is_delay_of_game(self):
+        return self.facts.subtype == "Delay Technical"
 
     @property
     def is_personal_foul(self):
@@ -279,7 +290,10 @@ class V3Foul(V3EnhancedEvent, Foul):
 
     @property
     def is_technical(self):
-        return self.facts.subtype in ("Technical", "Hanging Technical")
+        return self.facts.subtype in (
+            "Technical", "Hanging Technical", "Delay Technical", "Bench", "Flopping",
+            "Excess Timeout Technical", "Too Many Players Technical", "Non-Unsportsmanlike Technical",
+        )
 
     @property
     def is_defensive_3_seconds(self):
@@ -335,7 +349,15 @@ class V3Rebound(V3EnhancedEvent, Rebound):
 
 
 class V3Turnover(V3EnhancedEvent, Turnover):
-    is_no_turnover = is_offensive_goaltending = is_lane_violation = False
+    is_no_turnover = False
+
+    @property
+    def is_lane_violation(self):
+        return self.facts.subtype == "Lane Violation"
+
+    @property
+    def is_offensive_goaltending(self):
+        return self.facts.subtype == "Offensive Goaltending"
 
     @property
     def is_kicked_ball(self):
@@ -390,7 +412,9 @@ class V3Turnover(V3EnhancedEvent, Turnover):
 
 
 class V3Violation(V3EnhancedEvent, Violation):
-    is_double_lane_violation = False
+    @property
+    def is_double_lane_violation(self):
+        return self.facts.subtype == "Double Lane"
 
     @property
     def is_jumpball_violation(self):
@@ -459,8 +483,16 @@ class V3TeamHeave(V3EnhancedEvent, FieldGoal):
     """A team miss, without a fabricated player or two/three-point value."""
 
     is_made = is_and1 = is_make_that_does_not_end_possession = False
-    is_blocked = is_assisted = False
+    is_assisted = False
     shot_value = None
+
+    @property
+    def is_blocked(self):
+        participant = self.facts.participants.participants.get("blocker")
+        if participant is None or participant.status == "absent":
+            return False
+        self.facts.participants.require_player("blocker")
+        return True
 
     def get_offense_team_id(self):
         return self.team_id

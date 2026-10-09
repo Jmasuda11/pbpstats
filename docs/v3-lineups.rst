@@ -64,6 +64,47 @@ participants must be on court. Technical-foul and technical-free-throw rows
 are excluded from on-court identity checks and do not change the five.
 Unresolved optional roles, including foul-drawn identities, stay unresolved.
 
+For name-only roles, roster candidates are narrowed to the validated lineup
+immediately before the event. A single on-court match resolves the identity;
+multiple on-court matches remain ambiguous, and no on-court match stays
+unresolved. Jump-ball recipients are searched across both teams' five players;
+team-scoped roles such as assists retain their team restriction. The filter
+uses source order across substitutions, even when events share a clock, and
+each period's separately evidenced starters. Incoming substitutions retain
+their roster lookup and must enter from off court.
+
+This refinement does not mutate the original classified roster facts or their
+review fingerprints. The resulting ``lineups.items[].event`` and possession
+events carry the narrowed candidates and the lineup evidence hash in the
+participant provenance. Explicit IDs are validated, never reassigned by name.
+
+With ``use_v2_rules=True``, an unknown opposing jumper is retained rather than
+required for team possession accounting. The winning team must still be
+established independently of the primary actor. Ambiguous on-court tip-recipient
+candidates establish a team directly when every candidate belongs to the same
+team; the individual identity and candidates remain ambiguous in the output.
+Recorded actors and resolved participants still undergo on-court validation.
+
+In that mode, a missing winning team can also be inferred by looking ahead to
+the first supported control event in the same period, within 24 game-clock
+seconds. A made/missed field goal identifies the shooting team; a supported
+ball-control turnover at a later clock identifies the losing team; a shooting
+foul identifies the opposing team, and an offensive foul identifies the fouling
+team. Only substitutions and timeouts may intervene. Rebounds, free throws,
+other fouls, violations, replays, ejections, another jump, period boundaries,
+longer gaps and untimed periods do not support this inference. In particular,
+a same-clock turnover may describe the loss that led to the jump, so it cannot
+identify the subsequent recovery. Recorded recoveries take precedence.
+
+This inference assumes the declared complete event stream has no omitted or
+misordered change of control. It infers only the team: recipient status,
+candidates and null player ID are preserved, and on-court name candidates must
+be compatible with the inferred team. Participant evidence and an
+``implied_jump_winner`` diagnostic cite the jump, intervening rows and control
+event. Raw facts and review fingerprints remain unchanged; no external-source
+hash is fabricated. All downstream lineup, possession and box-score checks
+still apply. Strict mode does not enable look-ahead.
+
 The stream must start each contiguous period at its opening clock, end at zero,
 and never increase the clock within a period. An unsupported correction or
 out-of-order boundary fails explicitly rather than being silently repaired.
