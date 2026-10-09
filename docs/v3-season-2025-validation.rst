@@ -31,10 +31,9 @@ The complete repository test suite passed on Python 3.12: **897 tests**, includi
 in ``tox.ini``. The existing CI matrix covers Python 3.8 through 3.12; the local
 result does not claim that every matrix version has run.
 
-The separate Cheeseburger ingestion application passed **59 Django tests** on
-an isolated temporary PostgreSQL database. Its offline validator checked all
-**1,230** cached NBA 2025-26 regular-season games with adapter 2.3, applying
-parser validation plus player-statistics, minutes and box-score reconciliation:
+An offline audit checked all **1,230** cached NBA 2025-26 regular-season games,
+applying parser validation plus player-statistics, minutes and box-score
+reconciliation:
 
 .. list-table:: Offline season outcomes
    :header-rows: 1
@@ -66,9 +65,8 @@ have smaller source, lineup, FT/rebound, ejection or event-order issues.
 
 Original capture hashes were unchanged, and the audit's parser source hashes
 matched the implementation. Validation used temporary copies with networking
-and database connections disabled; no season backfill was performed. The
-cached season recordings and ingestion validator belong to the separate
-application and are not included in this repository. Repository tests retain
+disabled. The cached season recordings and the audit script are not included
+in this repository. Repository tests retain
 synthetic counterexamples and the existing recorded league fixtures.
 
 For traceability, the local full report ``jump-lookahead-validation.json`` has
