@@ -2,7 +2,7 @@
 
 Prepared October 2, 2026. This is an implementation plan; it does not change parser behavior or authorize a production backfill.
 
-Implementation has started in this checkout on `feat/v3-parity`. See [current progress](v3-parity-progress.md) for executed checks, the first adapter slice, and remaining phases. Cheeseburger's parser selection has not changed.
+Implementation has started in this checkout on `feat/v3-parity`. See [current progress](v3-parity-progress.md) for executed checks, the first adapter slice, and remaining phases.
 
 **Goal**
 
@@ -22,7 +22,7 @@ Exact parity includes the original's observable quirks. Corrections and newer le
 
 Use a separate fresh clone of the existing fork for implementation, with an implementation branch based on upstream revision `e7ccf2fb6326da630a3cf1665aac964a1e108f4c`. Keep the existing checkout, research, recordings, and import artifacts as references. A new clone of the fork's current default branch would still contain the previous attempt; selecting the starting revision is essential. Retain the fork's Git history and upstream remote rather than creating an unrelated repository.
 
-Use an isolated Python environment so editable installs cannot cause tests or Cheeseburger to import the wrong checkout. Verify and record the imported package path in comparison runs. Bring over reviewed recordings, scenarios, and diagnostics first; transfer implementation only when its responsibility and compatibility tests are established. This workspace setup has now been performed; implementation status is recorded separately above.
+Use an isolated Python environment so editable installs cannot cause tests or downstream consumers to import the wrong checkout. Verify and record the imported package path in comparison runs. Bring over reviewed recordings, scenarios, and diagnostics first; transfer implementation only when its responsibility and compatibility tests are established. This workspace setup has now been performed; implementation status is recorded separately above.
 
 **Starting evidence**
 
@@ -36,7 +36,7 @@ Use an isolated Python environment so editable installs cannot cause tests or Ch
 
 1. Create the separate implementation checkout and isolated environment. Pin the untouched upstream V2 revision, prior audit revision, and current V3 revision, dependencies, configuration, and all evidence needed to reproduce each path. Record source hashes and prevent reference artifacts from being silently regenerated. Record existing upstream test failures separately rather than silently fixing the reference.
 2. Inventory archived V2 games, paired V2/V3 recordings, synthetic encodings, current accepted games, and rejected games. Record fixture provenance, source repairs, overrides, starters, roster inputs, and capture completeness.
-3. Define the required possession output contract: event membership/order, offense/defense, boundaries, period links, start labels, score margins, count eligibility, time, and player/opponent lineup attribution. Inventory public properties consumed by Cheeseburger and legacy pbpstats consumers.
+3. Define the required possession output contract: event membership/order, offense/defense, boundaries, period links, start labels, score margins, count eligibility, time, and player/opponent lineup attribution. Inventory public properties consumed by downstream and legacy pbpstats consumers.
 4. Classify every known difference as adapter error, behavioral divergence, source-fact difference, missing evidence, legacy defect, or explicit league extension. Record the known free-throw and jump-ball cases as behavioral divergences that must match the original in compatibility behavior.
 5. Define separate acceptance gates for parser compatibility, source completeness, and publication validation. Keep current validation protections while making their coverage impact visible.
 
@@ -86,7 +86,7 @@ Exit gate: zero behavioral mismatches on the equivalent-input corpus, including 
 
 **Phase 5 — Expand real-game coverage and resolve feed gaps**
 
-1. Run every recorded paired game and the full cached V3 corpus, including all 1,230 cached 2025–26 regular-season games in Cheeseburger's existing audit scope. Run supported NBA, WNBA, and G League fixtures under their explicit league/season policy.
+1. Run every recorded paired game and the full cached V3 corpus, including all 1,230 cached 2025–26 regular-season games. Run supported NBA, WNBA, and G League fixtures under their explicit league/season policy.
 2. Group failures by the earliest causal difference. Fix mapping/identity/order errors in the adapter and shared decision errors in the shared implementation. Convert every supported fix into a fixture with relevant counterexamples.
 3. Compare all available possession details for paired recordings. For V3-only games, use reviewed sequences, generated equivalent-input cases, and independent score/minute/stat reconciliation; label these as validation rather than direct historical V2 proof.
 4. Reconcile source-row accounting, scores, player/team minutes, supported box statistics, period separation, and credit consistency. Document exclusions and tolerances; aggregate equality alone does not establish correct possession segmentation.
@@ -99,11 +99,11 @@ Exit gate: zero unexplained behavioral differences in the comparable corpus; eve
 
 **Phase 6 — Verify statistics and the public integration contract**
 
-1. Verify possession/time statistics and all public fields needed by Cheeseburger, including start labels, diagnostics, capabilities, exact durations, and provenance.
+1. Verify possession/time statistics and all public fields needed by downstream consumers, including start labels, diagnostics, capabilities, exact durations, and provenance.
 2. Audit detailed event/player/lineup statistics separately. Reuse shared accounting where evidence is complete; obtain recorded supporting evidence where possible. A missing foul-drawn identity must not silently become an absent foul-drawn credit.
 3. Define and test how dependent aggregates expose unavailable or partial attribution. Enable detailed statistics only within that established contract. Full statistical parity cannot be claimed until every required statistic passes on complete equivalent inputs.
 4. Version processing behavior, lineup evidence/fingerprints, and persisted import metadata. Ensure evidence prepared for one interpretation cannot silently be consumed by another. Provide an explicit migration/re-preparation path for affected evidence.
-5. Exercise Cheeseburger ingestion in a separate test database, including serialization, exact-clock handling, rejected imports, idempotency, capability gates, and selection of the active import. Run repository-required CI checks across supported environments.
+5. Exercise end-to-end serialization, exact-clock handling, rejected games and capability gates. Run repository-required CI checks across supported environments.
 
 Deliverables: verified public API/capability matrix, versioned integration changes, and ingestion regression results.
 
@@ -112,7 +112,7 @@ Exit gate: supported outputs survive end-to-end ingestion without changed meanin
 **Phase 7 — Roll out and retire duplicated behavior**
 
 1. Run candidate and current parsing side by side on the same immutable captures and evidence. Produce a reviewable report of every changed possession, credited lineup, and acceptance outcome before selecting the candidate for publication.
-2. Pin the chosen parser revision, update Cheeseburger's adapter version, and document compatibility behavior, source differences, extensions, and rollback procedure. Switching the default parser must not implicitly rewrite historical imports.
+2. Pin the chosen parser revision and document compatibility behavior, source differences, extensions, and rollback procedure. Switching the default parser must not implicitly rewrite historical imports.
 3. Stage representative replacement imports under the new version, verify their output and active-import selection, then expand the reprocessing scope. Preserve prior imports and source captures so rollback can select the previous result.
 4. Remove obsolete V3 decision code and transition switches after the replacement path is verified. Keep the original reference runner and differential fixtures as permanent CI protections.
 

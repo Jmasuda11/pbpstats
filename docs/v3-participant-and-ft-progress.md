@@ -66,7 +66,7 @@ Current audit: `.parity/candidate-v3-corpus-flagrant.json`, also copied byte-for
 
 ## Verification and next gates
 
-The new parity suite passes 170 tests. The untouched original suite remains 116 passed with its two exact documented fixture failures. All 183 original production Python files retain their baseline hashes. The season inventory remains byte-identical at SHA-256 `bcea844a4f77714dc6bc73da0ca8b1bc6d08325f6c4a3d817ca71a520b0cb1dc`. Source captures and Cheeseburger imports/parser selection are unchanged.
+The new parity suite passes 170 tests. The untouched original suite remains 116 passed with its two exact documented fixture failures. All 183 original production Python files retain their baseline hashes. The season inventory remains byte-identical at SHA-256 `bcea844a4f77714dc6bc73da0ca8b1bc6d08325f6c4a3d817ca71a520b0cb1dc`. Source captures are unchanged.
 
 Run the additional comparisons:
 

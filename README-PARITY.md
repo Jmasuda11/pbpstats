@@ -6,7 +6,7 @@ Start here for the new implementation. The original upstream README and pinned o
 - Upstream starting point: `e7ccf2fb6326da630a3cf1665aac964a1e108f4c`.
 - Origin: `https://github.com/Jmasuda11/pbpstats.git`; upstream: `https://github.com/dblackrun/pbpstats.git`.
 - This independent clone was created from the existing local Git history with `--no-hardlinks`, then checked out at the original upstream revision. No previous working-tree files were copied into the implementation.
-- This checkout has its own `.venv`; the existing parser and Cheeseburger environment have not been switched.
+- This checkout has its own `.venv`; existing installs of the parser have not been switched.
 
 Read [the approved phased plan](docs/v3-parity-plan.md), [the compatibility contract](docs/v3-parity-contract.md), and [current progress](docs/v3-parity-progress.md).
 
@@ -98,7 +98,7 @@ from pbpstats.data_loader.stats_nba_v3 import web
 loader = web.save_game("0022500521", Path("game.json"), responses=Path("raw"))
 ```
 
-`save_game` is the command's own per-game path, and Cheeseburger's batch script calls it too:
+`save_game` is the command's own per-game path, and batch tools can call it too:
 
 - It fetches the game, or reuses saved responses passed as `raw`.
 - It applies reviewed corrections and writes the JSON atomically, indented four spaces.
@@ -125,6 +125,6 @@ The original loader's repair input is a temporary in-memory constructor projecti
 
 The [starter recovery continuation](docs/v3-starter-recovery-progress.md) documents 70 matching declared observations, including 29 new full-loader starter cases, exact exception classes/messages/context, scoped overrides, repairs and selected HTTP/JSON failures. Broader source/API and ingestion behavior remain open gates. The [initial exception checkpoint](docs/v3-exception-parity-progress.md) preserves the earlier 41-case results.
 
-This is an **experimental, bounded NBA and WNBA adapter**, not the replacement for Cheeseburger's game API. Unknown event vocabulary/participants fail explicitly. Detailed statistics are unavailable at the adapter's aggregate API until attribution completeness is implemented; original event objects are exposed for compatibility research and their direct statistics must not be treated as complete V3 outputs. `full_game_validated` stays false because schedule, official-box validation and the full evidence contract are not implemented here.
+This is an **experimental, bounded NBA and WNBA adapter**, not a replacement for the original V2 game API. Unknown event vocabulary/participants fail explicitly. Detailed statistics are unavailable at the adapter's aggregate API until attribution completeness is implemented; original event objects are exposed for compatibility research and their direct statistics must not be treated as complete V3 outputs. `full_game_validated` stays false because schedule, official-box validation and the full evidence contract are not implemented here.
 
 Synthetic sequence checks explicitly bypass full source-order and alternating-possession validation, matching the original synthetic worker's scope. The recorded-game checks run both validations. Passing a synthetic case is not a full-game acceptance claim.
