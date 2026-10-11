@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from pbpstats.data_loader.stats_nba_v3 import decoder
+from pbpstats.data_loader.stats_nba_v3 import decoder, web
 from tools.parity.paired_season import (
     EXPECTED,
     decoder_comparison,
@@ -22,6 +22,12 @@ UNOBSERVED = {
     ("Foul", "Inbound"),
     ("Foul", "Personal Block"),
     ("Foul", "Shooting Block"),
+}
+# Decoder labels the paired seasons lack, coded from one pinned V2 export row of
+# another season whose game and event number match a pinned V3 recording.
+OTHER_SEASONS = json.loads((ROOT / "tests/parity/decoder-code-evidence.json").read_text())
+OTHER_SEASON_CODES = {
+    tuple(o["label"]): tuple(o["code"]) for o in OTHER_SEASONS["observations"]
 }
 
 
@@ -112,8 +118,32 @@ def test_every_decoder_table_entry_is_recorded_or_declared_unobserved(facts):
         for subtype, code in table.items():
             if (kind, subtype) in UNOBSERVED:
                 assert (kind, subtype) not in recorded
+            elif (kind, subtype) in OTHER_SEASON_CODES:
+                assert (kind, subtype) not in recorded
+                assert OTHER_SEASON_CODES[kind, subtype] == (event_type, code), (kind, subtype)
             else:
                 assert recorded[kind, subtype] == [(event_type, code)], (kind, subtype)
+
+
+@pytest.mark.parametrize("observation", OTHER_SEASONS["observations"], ids=lambda o: o["label"][1])
+def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation):
+    # 0022300678 Q1 11:23: Fox's swinging elbows turnover, the only one in the
+    # 2023-24 V2 export, whose member hash is pinned with the archive's.
+    v2, v3 = observation["v2"], observation["v3"]
+    assert "/datasets/" + v2["member"].replace(".csv", ".tar.xz") in v2["raw_url"]
+    row = v2["row"]
+    assert (int(row["EVENTMSGTYPE"]), int(row["EVENTMSGACTIONTYPE"])) == tuple(observation["code"])
+    assert row["GAME_ID"] == v3["game_id"].lstrip("0")
+    pbp = (ROOT / v3["path"]).read_bytes()
+    assert digest(pbp) == v3["sha256"]
+    action = json.loads(pbp)["game"]["actions"][v3["source_index"]]
+    assert [action["actionType"], action["subType"]] == observation["label"]
+    assert action["actionNumber"] == int(row["EVENTNUM"])
+    assert action["personId"] == int(row["PLAYER1_ID"])
+    box = (ROOT / v3["boxscore_path"]).read_bytes()
+    loader = web.load_game(v3["game_id"], pbp, box, "recorded")
+    event = next(x for x in loader.events if x.event_num == action["actionNumber"])
+    assert (event.event_type, event.event_action_type) == tuple(observation["code"])
 
 
 def test_fouls_without_a_fouled_player_are_exactly_those_v2_never_names_one_for():

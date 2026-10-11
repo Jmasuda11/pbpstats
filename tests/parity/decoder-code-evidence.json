@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "Decoder codes for V3 labels the paired 2024-25 season lacks, each read from a V2 export row with the same game and event number as a pinned V3 recording",
+  "observations": [
+    {
+      "label": ["Turnover", "Swinging Elbows Turnover"],
+      "code": [5, 34],
+      "label_rows_in_season": 1,
+      "v2": {
+        "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2023.tar.xz",
+        "bytes": 8480776,
+        "sha256": "ec0029c0d45a90b769d173010f60b73c6c8866acf1d4d914a72476373ce3a913",
+        "git_blob_sha1": "b7c7d97729a1787fc9a5e1dcf4d6b6e5532f55d2",
+        "member": "nbastats_2023.csv",
+        "member_sha256": "541d9935eb4b9184673adc94580ffc438f01692605dedd1f1fdc8920212d3090",
+        "retrieved_utc": "2026-10-10",
+        "row": {
+          "GAME_ID": "22300678",
+          "EVENTNUM": "11",
+          "EVENTMSGTYPE": "5",
+          "EVENTMSGACTIONTYPE": "34",
+          "PERIOD": "1",
+          "PCTIMESTRING": "11:23",
+          "VISITORDESCRIPTION": "Fox Swinging Elbows Turnover (P1.T1)",
+          "PLAYER1_ID": "1628368",
+          "PLAYER1_TEAM_ID": "1610612758"
+        }
+      },
+      "v3": {
+        "game_id": "0022300678",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0022300678.json",
+        "boxscore_path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022300678.json",
+        "sha256": "13cdd49b14f49240ad3b258f215545fb096054f32b7cd1dee489e2841c0564cf",
+        "source_index": 3
+      }
+    }
+  ]
+}

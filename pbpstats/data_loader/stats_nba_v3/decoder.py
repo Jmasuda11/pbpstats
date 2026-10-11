@@ -159,6 +159,7 @@ TURNOVERS = {
     "Palming Turnover": 21,
     "10 Second Violaton": 24,
     "Punched Ball Turnover": 33,
+    "Swinging Elbows Turnover": 34,
     "Basket from Below Turnover": 35,
     "Illegal Screen Turnover": 36,
     "Offensive Foul Turnover": 37,

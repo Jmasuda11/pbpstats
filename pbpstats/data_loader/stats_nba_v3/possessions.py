@@ -27,6 +27,7 @@ from .overrides import (
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
     EVENT_BLOCKS,
+    EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_LIVE_NUMBERS,
@@ -34,6 +35,7 @@ from .overrides import (
     EVENT_ORDER,
     EVENT_SUBTYPES,
     EVENT_TIP_RECIPIENTS,
+    EVENT_TURNOVERS,
     KEEP_EVENTS,
     STARTERS,
 )
@@ -64,13 +66,22 @@ def reviewed_entries(overrides, name, game_id, empty):
 
 
 class V3Possession(Possession):
-    """Original Possession with one defect guarded.
+    """Original Possession with one defect guarded and reviewed clock resets.
 
     The original get_team_ids skips team-less events in its own possession but
     not in neighbouring ones. Replay events never have a team, in V2 or V3, so
     a lone jump-ball possession after a replay review raised AttributeError.
     Wherever the original returns, this returns the identical list.
+
+    A possession that follows a reviewed game-clock reset starts at the clock
+    the reset set, not at the previous possession's last clock.
     """
+
+    @property
+    def start_time(self):
+        previous = getattr(self, "previous_possession", None)
+        reset = getattr(previous.events[-1], "reviewed_clock_reset", None) if previous else None
+        return reset if reset is not None else super().start_time
 
     def get_team_ids(self):
         def team_ids_of(possession):
@@ -130,6 +141,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         self._apply_reviewed_tip_recipients()
         self._apply_reviewed_subtypes()
         self._apply_reviewed_clocks()
+        self.added_rows = self._apply_reviewed_turnovers()
+        self.clock_resets = self._apply_reviewed_clock_resets()
         self._apply_reviewed_event_order()
         if validate_source_order:
             self._make_pbp_items()
@@ -143,6 +156,12 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             self._add_shot_x_y_coords()
         dropped = self._reviewed_entries(EVENT_DUPLICATES, {})
         for event in self.items:
+            event.reviewed_clock_reset = self.clock_resets.get(event.event_num)
+            if event.event_num in self.added_rows:
+                # A reviewed event that V3 does not record owns no recorded row.
+                event.v3_source_indices = ()
+                event.v3_source_row = deepcopy(self.added_rows[event.event_num])
+                continue
             group = decoded.groups[event.event_num]
             indices = group["source_indices"]
             copies = [copy for copy, kept in sorted(dropped.items()) if kept == event.event_num]
@@ -203,7 +222,10 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
 
     def _apply_reviewed_tip_recipients(self):
         # Records who secured a jump ball, as PLAYER3 and its team, the fields the
-        # original reads for the winning team. The description keeps V3's text.
+        # original reads for the winning team. A team that secures it, as when the
+        # tip goes out of bounds, is recorded as V2 and the decoder record a team
+        # recovery: the team as PLAYER3, with no PLAYER3 team. The description
+        # keeps V3's text.
         recipients = self._reviewed_entries(EVENT_TIP_RECIPIENTS, {})
         result = self.source_data["resultSets"][0]
         kind, number, recipient, team = (
@@ -212,12 +234,19 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         )
         by_number = {row[number]: row for row in result["rowSet"]}
         roster = self.decoded.context.roster
+        teams = self.decoded.context.team_ids
         for event, player in sorted(recipients.items()):
             row = by_number.get(event)
-            if row is None or row[kind] != 10 or player not in roster or row[recipient] == player:
+            if (
+                row is None
+                or row[kind] != 10
+                or player not in roster and player not in teams
+                or row[recipient] == player
+            ):
                 raise V3DecodeError("Event tip-recipient override does not fit the recorded event")
             recorded = row[recipient]
-            row[recipient], row[team] = player, roster[player]["team_id"]
+            row[recipient] = player
+            row[team] = None if player in teams else roster[player]["team_id"]
             self.repairs.append(dict(
                 code="reviewed_tip_recipient", event_num=event, recorded=recorded, reviewed=player
             ))
@@ -248,7 +277,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             ))
 
     def _apply_reviewed_clocks(self):
-        # Tenths only, within the recorded second, keeping the recorded order.
+        # At most two seconds from the recorded clock, keeping the recorded order.
         clocks = self._reviewed_entries(EVENT_CLOCKS, {})
         result = self.source_data["resultSets"][0]
         headers = result["headers"]
@@ -266,8 +295,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             if event not in index:
                 raise V3DecodeError("Event clock override names an event not in the source")
             row, new = rows[index[event]], clock_text(value)
-            if int(seconds(new)) != int(seconds(row[clock])):
-                raise V3DecodeError("Event clock override moves an event to another second")
+            if abs(seconds(new) - seconds(row[clock])) > 2:
+                raise V3DecodeError("Event clock override moves an event more than two seconds")
             recorded, row[clock] = row[clock], new
             self.repairs.append(dict(
                 code="reviewed_event_clock", event_num=event, recorded=recorded, reviewed=new
@@ -279,6 +308,110 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             for before, after in ((i - 1, i), (i, i + 1)):
                 if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and seconds(rows[before][clock]) < seconds(rows[after][clock]):
                     raise V3DecodeError("Event clock override breaks the recorded order")
+
+    def _apply_reviewed_turnovers(self):
+        # Adds a turnover V3 does not record, as the original's remedy of editing
+        # the play-by-play file would: a projected row like the decoder's own,
+        # just before another event and at its period and clock. Returns each
+        # added event's V3-shaped row, which no recorded row backs.
+        turnovers = self._reviewed_entries(EVENT_TURNOVERS, {})
+        result = self.source_data["resultSets"][0]
+        headers, rows = result["headers"], result["rowSet"]
+        number = headers.index("EVENTNUM")
+        index = {row[number]: i for i, row in enumerate(rows)}
+        roster = self.decoded.context.roster
+        added = {}
+        for event, entry in sorted(turnovers.items()):
+            before, player, label = entry["before"], entry["player"], entry["subtype"]
+            if (
+                event in index
+                or event in self.decoded.groups
+                or before not in index
+                or player not in roster
+                or label not in TURNOVERS
+                or TURNOVERS[label] == 0
+            ):
+                raise V3DecodeError("Event turnover override does not fit the recorded events")
+            anchor = dict(zip(headers, rows[index[before]]))
+            recorded = self.decoded.groups[before]["primary"]
+            team = roster[player]["team_id"]
+            name = next(
+                (r["playerName"] for r in self.decoded.raw_rows
+                 if r.get("personId") == player and r.get("playerName")),
+                roster[player]["names"][0],
+            )
+            description = f"{name} {label}"
+            row = dict.fromkeys(headers)
+            row.update(
+                GAME_ID=anchor["GAME_ID"], EVENTNUM=event, PERIOD=anchor["PERIOD"],
+                PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=player,
+                PLAYER1_TEAM_ID=team, NEUTRALDESCRIPTION=description,
+                EVENTMSGTYPE=5, EVENTMSGACTIONTYPE=TURNOVERS[label],
+            )
+            rows.insert(index[before], [row[key] for key in headers])
+            index = {r[number]: i for i, r in enumerate(rows)}
+            added[event] = dict(
+                actionNumber=event, clock=recorded["clock"], period=recorded["period"],
+                teamId=team, personId=player, playerName=name, description=description,
+                actionType="Turnover", subType=label,
+            )
+            self.repairs.append(dict(
+                code="reviewed_added_turnover", event_num=event, before=before,
+                player=player, subtype=label,
+            ))
+        return added
+
+    def _apply_reviewed_clock_resets(self):
+        # The game clock set back to a later time right after an event: the
+        # events played after the reset, which V3 sorts among earlier ones by
+        # clock, move to follow it in their recorded order. The clock must run
+        # down on both sides of the reset. Returns each reset clock by event.
+        resets = self._reviewed_entries(EVENT_CLOCK_RESETS, {})
+        result = self.source_data["resultSets"][0]
+        headers, rows = result["headers"], result["rowSet"]
+        number, period, clock = (
+            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
+        )
+
+        def seconds(text):
+            minutes, _, rest = text.partition(":")
+            return Decimal(minutes) * 60 + Decimal(rest)
+
+        applied = {}
+        for event, entry in sorted(resets.items()):
+            index = {row[number]: i for i, row in enumerate(rows)}
+            moved, reset = entry["events"], clock_text(entry["clock"])
+            if (
+                event not in index
+                or any(n not in index or index[n] > index[event] for n in moved)
+                or moved != sorted(moved, key=index.get)
+            ):
+                raise V3DecodeError("Event clock-reset override does not fit the recorded events")
+            anchor, block = rows[index[event]], [rows[index[n]] for n in moved]
+            first = index[moved[0]]
+            if (
+                any(row[period] != anchor[period] for row in block)
+                or seconds(reset) <= seconds(anchor[clock])
+                or seconds(block[0][clock]) > seconds(reset)
+            ):
+                raise V3DecodeError("Event clock-reset override does not fit the recorded events")
+            for row in block:
+                rows.remove(row)
+            at = rows.index(anchor) + 1
+            rows[at:at] = block
+            span = rows[max(first - 1, 0):at + len(block) + 1]
+            for before, after in zip(span, span[1:]):
+                if (
+                    before is not anchor
+                    and before[period] == after[period]
+                    and seconds(before[clock]) < seconds(after[clock])
+                ):
+                    raise V3DecodeError("Event clock-reset override breaks a running clock")
+            applied[event] = reset
+            self.repairs.append(dict(
+                code="reviewed_clock_reset", event_num=event, clock=reset, moved=list(moved)
+            ))
+        return applied
 
     def _apply_reviewed_event_order(self):
         # The original's remedy for events recorded out of order is to edit the
@@ -374,6 +507,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             raise V3DecodeError(
                 "Original ordering repair requires additional recorded provider evidence"
             )
+        if self.added_rows:
+            raise V3DecodeError("Recorded provider order cannot place a reviewed added event")
         order, diagnostic = self.recorded_event_order
         result = self.source_data["resultSets"][0]
         number_index = result["headers"].index("EVENTNUM")
@@ -458,6 +593,12 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         self.diagnostics += held_balls
         if sum(len(possession.events) for possession in self.items) != len(self.events):
             raise V3DecodeError("Events left outside a possession")
+        if any(
+            getattr(event, "reviewed_clock_reset", None) is not None
+            for possession in self.items
+            for event in possession.events[:-1]
+        ):
+            raise V3DecodeError("A reviewed clock reset must end a possession")
         self._validate_lineups()
         if validate_possessions:
             self._load_bad_possession_overrides()

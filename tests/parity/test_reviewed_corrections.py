@@ -3,11 +3,15 @@
 import hashlib
 import json
 import re
+from types import SimpleNamespace
 
 import pytest
 
 from pbpstats.data_loader.stats_nba.possessions.loader import (
     TeamHasBackToBackPossessionsException,
+)
+from pbpstats.resources.enhanced_pbp.start_of_period import (
+    InvalidNumberOfStartersException,
 )
 from pbpstats.data_loader.stats_nba_v3 import (
     StatsNbaV3PossessionLoader,
@@ -20,6 +24,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
 from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCKS,
+    EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_LIVE_NUMBERS,
@@ -27,6 +32,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_ORDER,
     EVENT_SUBTYPES,
     EVENT_TIP_RECIPIENTS,
+    EVENT_TURNOVERS,
     SUPPORTED,
 )
 from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
@@ -255,11 +261,11 @@ def test_clock_edit_restores_an_and_one():
 
 
 @pytest.mark.parametrize("values, message", [
-    ({"foul": "PT00M20.40S"}, "moves an event to another second"),
+    ({"foul": "PT00M21.40S"}, "moves an event more than two seconds"),
     ({"foul": "PT00M19.80S"}, "breaks the recorded order"),
     ({"999": "PT00M19.40S"}, "names an event not in the source"),
     ({"foul": "0:19.4"}, "Invalid event clock override"),
-], ids=["another_second", "breaks_order", "unknown_event", "not_a_v3_clock"])
+], ids=["over_two_seconds", "breaks_order", "unknown_event", "not_a_v3_clock"])
 def test_clock_edits_are_validated(values, message):
     rows, foul, ft = and_one_a_tenth_later()
     values = {str(foul) if key == "foul" else key: value for key, value in values.items()}
@@ -377,18 +383,189 @@ def test_tip_recipient_edit_names_who_secured_the_jump_ball():
     assert loaded.decoded.raw_rows == rows
 
 
+def test_tip_recipient_edit_names_a_team_recovery():
+    # A tip out of bounds off an AWAY player: HOME recovers it as a team. The
+    # original reads such a jump ball's PLAYER3 as the winning team, with no
+    # recipient ("when jump ball is tipped out of bounds").
+    rows, n = tipped_to_opponent()
+    loaded = load(rows, files=edits(EVENT_TIP_RECIPIENTS, {str(n["jump"]): HOME}))
+    jump = next(x for x in loaded.events if x.event_num == n["jump"])
+    assert jump.team_id == HOME and not hasattr(jump, "player2_id")
+    assert offenses(loaded) == [AWAY, HOME, AWAY]
+    assert dict(
+        code="reviewed_tip_recipient", event_num=n["jump"], recorded=12, reviewed=HOME
+    ) in loaded.diagnostics
+
+
 @pytest.mark.parametrize("values, message", [
     ({"jump": 12}, "does not fit the recorded event"),
     ({"jump": 99}, "does not fit the recorded event"),
+    ({"jump": 1610612799}, "does not fit the recorded event"),
     ({"make": 4}, "does not fit the recorded event"),
     ({"999": 4}, "does not fit the recorded event"),
     ({"jump": 0}, "Invalid event tip-recipient override"),
-], ids=["recorded_recipient", "not_on_roster", "not_a_jump_ball", "unknown_event", "no_person"])
+], ids=["recorded_recipient", "not_on_roster", "team_not_in_game", "not_a_jump_ball",
+        "unknown_event", "no_person"])
 def test_tip_recipient_edits_are_validated(values, message):
     rows, n = tipped_to_opponent()
     values = {str(n.get(key, key)): value for key, value in values.items()}
     with pytest.raises(V3DecodeError, match=message):
         load(rows, files=edits(EVENT_TIP_RECIPIENTS, values))
+
+
+def charge_without_turnover():
+    """AWAY's challenge leaves HOME's charge standing, but the feed records no turnover."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("foul", 590, HOME, 1, subtype="Offensive Charge"),
+        e("timeout", 590, AWAY, AWAY),
+        e("miss", 580, AWAY, 12),
+        e("rebound", 578, HOME, 2),
+        e("make", 570, HOME, 3),
+    ]))
+    return rows, dict(
+        foul=numbered(rows, "Foul"), timeout=numbered(rows, "Timeout"),
+        added=max(r["actionNumber"] for r in rows) + 1,
+    )
+
+
+def test_turnover_edit_adds_the_turnover_v3_omits():
+    rows, n = charge_without_turnover()
+    with pytest.raises(TeamHasBackToBackPossessionsException):
+        load(rows)
+    entry = dict(before=n["timeout"], player=1, subtype="Offensive Foul Turnover")
+    loaded = load(rows, files=edits(EVENT_TURNOVERS, {str(n["added"]): entry}))
+    turnover = next(x for x in loaded.events if x.event_num == n["added"])
+    assert isinstance(turnover, Turnover) and turnover.event_action_type == 37
+    assert (turnover.player1_id, turnover.team_id, turnover.clock) == (1, HOME, "9:50")
+    assert turnover.description == "Player1 Offensive Foul Turnover"
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME, AWAY]
+    assert [x.event_num for x in loaded.items[1].events] == [n["foul"], n["added"]]
+    assert dict(code="reviewed_added_turnover", event_num=n["added"], **entry) in loaded.diagnostics
+    # The added turnover owns no recorded row; every recorded row keeps one event.
+    assert turnover.v3_source_indices == ()
+    assert turnover.v3_source_row["subType"] == "Offensive Foul Turnover"
+    assert sorted(i for x in loaded.events for i in x.v3_source_indices) == list(range(len(rows)))
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"foul": dict(before="timeout", player=1, subtype="Offensive Foul Turnover")},
+     "does not fit the recorded events"),
+    ({"added": dict(before=999, player=1, subtype="Offensive Foul Turnover")},
+     "does not fit the recorded events"),
+    ({"added": dict(before="timeout", player=99, subtype="Offensive Foul Turnover")},
+     "does not fit the recorded events"),
+    ({"added": dict(before="timeout", player=1, subtype="Offensive Charge")},
+     "does not fit the recorded events"),
+    ({"added": dict(before="timeout", player=1, subtype="")}, "Invalid event turnover override"),
+    ({"added": dict(before="timeout", player=1)}, "Invalid event turnover override"),
+    ({"added": dict(before="added", player=1, subtype="Offensive Foul Turnover")},
+     "Invalid event turnover override"),
+], ids=["recorded_number", "unknown_event", "not_on_roster", "not_a_turnover_label",
+        "no_label", "missing_field", "before_itself"])
+def test_turnover_edits_are_validated(values, message):
+    rows, n = charge_without_turnover()
+    values = {
+        str(n.get(key, key)): {
+            field: n.get(value, value) if field == "before" else value
+            for field, value in entry.items()
+        }
+        for key, entry in values.items()
+    }
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_TURNOVERS, values))
+
+
+def clock_reset():
+    """HOME's shot-clock turnover at 9:30, after which the clock is set back to
+    9:45; the feed sorts AWAY's 9:40 basket, played after the reset, by clock."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("miss", 590, HOME, 1),
+        e("rebound", 588, HOME, 2),
+        e("make", 580, AWAY, 12),
+        e("turnover", 570, HOME, 1, subtype="Shot Clock Turnover"),
+        e("make", 560, HOME, 3),
+    ]))
+    turnover = numbered(rows, "Turnover")
+    makes = [r["actionNumber"] for r in rows if r["actionType"] == "Made Shot"]
+    return rows, dict(rebound=numbered(rows, "Rebound"), turnover=turnover,
+                      replayed=makes[1], last=makes[2])
+
+
+def test_clock_reset_edit_moves_the_replayed_events_after_the_reset():
+    rows, n = clock_reset()
+    with pytest.raises(TeamHasBackToBackPossessionsException):
+        load(rows)
+    entry = dict(clock="PT09M45.00S", events=[n["replayed"]])
+    loaded = load(rows, files=edits(EVENT_CLOCK_RESETS, {str(n["turnover"]): entry}))
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME, AWAY]
+    home, away = loaded.items[1], loaded.items[2]
+    assert home.events[-1].event_num == n["turnover"] and home.end_time == "9:30"
+    # The possession after the reset starts at the clock the reset set.
+    assert [x.event_num for x in away.events] == [n["replayed"]]
+    assert (away.start_time, away.end_time) == ("9:45", "9:40")
+    assert dict(code="reviewed_clock_reset", event_num=n["turnover"], clock="9:45",
+                moved=[n["replayed"]]) in loaded.diagnostics
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"turnover": dict(clock="PT09M45.00S", events=["last"])}, "does not fit the recorded events"),
+    ({"turnover": dict(clock="PT09M20.00S", events=["replayed"])}, "does not fit the recorded events"),
+    ({"turnover": dict(clock="PT09M35.00S", events=["replayed"])}, "does not fit the recorded events"),
+    ({"999": dict(clock="PT09M45.00S", events=["replayed"])}, "does not fit the recorded events"),
+    ({"turnover": dict(clock="9:45", events=["replayed"])}, "Invalid event clock-reset override"),
+    ({"turnover": dict(clock="PT09M45.00S", events=[])}, "Invalid event clock-reset override"),
+], ids=["played_after_the_event", "not_set_back", "replayed_after_the_reset_clock", "unknown_event",
+        "not_a_v3_clock", "no_events"])
+def test_clock_reset_edits_are_validated(values, message):
+    rows, n = clock_reset()
+    values = {
+        str(n.get(key, key)): dict(entry, events=[n[x] for x in entry["events"]])
+        for key, entry in values.items()
+    }
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_CLOCK_RESETS, values))
+
+
+def test_clock_reset_must_end_a_possession():
+    # HOME keeps the ball through its offensive rebound, so a reset after the
+    # rebound would split HOME's possession at a clock that runs backward.
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("miss", 590, HOME, 1),
+        e("miss", 585, HOME, 3),
+        e("rebound", 583, HOME, 2),
+        e("rebound", 580, HOME, 2),
+        e("make", 570, HOME, 4),
+    ]))
+    miss, rebound, anchor = (r["actionNumber"] for r in rows[3:6])
+    entry = dict(clock="PT09M48.00S", events=[miss, rebound])
+    with pytest.raises(V3DecodeError, match="must end a possession"):
+        load(rows, files=edits(EVENT_CLOCK_RESETS, {str(anchor): entry}))
+
+
+def test_recorded_clock_reset_follows_the_live_entry_order():
+    # 0022301177 Q3 1:14: Memphis' shot-clock violation, after which the table
+    # set the clock back to 2:20. The live play-by-play lists actions in the
+    # order entered; the reviewed order of the replayed stretch is that order.
+    game = "0022301177"
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    with pytest.raises(V3DecodeError, match="additional recorded provider evidence"):
+        web.load_game(game, pbp, box, "recorded")
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    live = json.loads((DATA / f"live_{game}.json").read_bytes())["game"]["actions"]
+    stretch = [458, 461, 462, 463, 464, 468, 469, 470, 471, 681, 473, 475, 476, 477, 478, 480, 481]
+    entered = sorted((a for a in live if a["period"] == 3 and a["actionNumber"] in stretch),
+                     key=lambda a: a["timeActual"])
+    assert [a["actionNumber"] for a in entered] == stretch
+    order = [x.event_num for x in loader.events if x.event_num in stretch]
+    assert order == stretch
+    after = next(p for p in loader.items if p.events[0].event_num == 473)
+    assert (after.offense_team_id, after.start_time, after.end_time) == (1610612747, "2:20", "2:06")
+    assert loader.counts_by_team == {1610612747: 102, 1610612763: 103}
 
 
 def team_heave(side=""):
@@ -639,6 +816,70 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
     assert [x.event_num for x in possession.events] == trip
     assert possession.offense_team_id == offense
+    assert loader.counts_by_team == counts
+    rows = json.loads(pbp)["game"]["actions"]
+    assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))
+
+
+@pytest.mark.parametrize("game, recorded, trip, offense, counts", [
+    ("0022300470", TeamHasBackToBackPossessionsException, [647, 649, 650, 652, 653],
+     1610612763, {1610612763: 100, 1610612761: 101}),
+    ("0022300512", InvalidNumberOfStartersException, [359, 345, 361, 360], 1610612765,
+     {1610612758: 103, 1610612765: 102}),
+    ("0022300866", TeamHasBackToBackPossessionsException, [431, 432, 433, 435, 437, 439],
+     1610612751, {1610612751: 93, 1610612737: 93}),
+    ("0022300019", TeamHasBackToBackPossessionsException, [577, 580, 582, 590, 586, 587],
+     1610612755, {1610612755: 107, 1610612754: 107}),
+    ("0022300910", TeamHasBackToBackPossessionsException, [524, 528, 529], 1610612764,
+     {1610612766: 98, 1610612764: 99}),
+    ("0022301024", TeamHasBackToBackPossessionsException, [410, 411, 412], 1610612762,
+     {1610612762: 99, 1610612745: 99}),
+    ("0022300609", TeamHasBackToBackPossessionsException, [442, 443, 446, 450, 447, 452, 454],
+     1610612763, {1610612763: 95, 1610612761: 93}),
+    ("0022300322", TeamHasBackToBackPossessionsException, [152, 207], 1610612743,
+     {1610612743: 102, 1610612751: 102}),
+    ("0022300933", TeamHasBackToBackPossessionsException, [586, 590, 592, 595, 597],
+     1610612766, {1610612766: 98, 1610612765: 98}),
+    ("0022300173", TeamHasBackToBackPossessionsException, [390, 411, 394], 1610612753,
+     {1610612749: 100, 1610612753: 99}),
+    ("0022300977", TeamHasBackToBackPossessionsException, [455, 458], 1610612765,
+     {1610612748: 94, 1610612765: 93}),
+    ("0022300474", V3DecodeError, [377, 385], 1610612765, {1610612765: 110, 1610612762: 109}),
+])
+def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense, counts):
+    # 0022300470 Q4 0:48.1: Smart's lane violation on his second free throw gave
+    # Toronto the ball, so its team rebound is real. 0022300512 Q3: Burks'
+    # flopping technical at the start came from the bench; the period-start box
+    # score the original then reads lists six Kings, so the starters are reviewed.
+    # 0022300866 Q3 4:03: Johnson's and-one, its made 3 recorded a second early.
+    # 0022300019 Q4 10:40: the free throws recorded as Maxey's makes were missed,
+    # and Philadelphia kept the ball. 0022300910 Q4 9:34 and 0022301024 Q3 5:43: a
+    # successful challenge's turnover, which V3 does not record, is added.
+    # 0022300609 Q3 1:42: the jump ball went out of bounds off Boucher, a Memphis
+    # team recovery. 0022300322 Q1 0:41.8 and 0022300933 Q4 3:45: fouls typed away
+    # from play were a personal and a loose ball foul. 0022300173 Q3 11:08: a lane
+    # violation voided only the first free throw. 0022300977 Q4 11:24: Adebayo's
+    # steal at a jump ball, listed before the jump ball violation that follows it.
+    # 0022300474 Q3 8:45: a technical after a held ball's whistle, recorded at the
+    # shot's clock, two seconds earlier, between the miss and its team rebound.
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    live = DATA / f"live_{game}.json"
+    fetch_live = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
+
+    def fetch(period, url, params):
+        path = DATA / f"stats_boxscoretraditionalv2_{game}_period_{period}.json"
+        return SimpleNamespace(content=path.read_bytes(), url=url, status_code=200, reason="OK")
+
+    with pytest.raises(recorded):
+        web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live)
+    loader = web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live,
+                           overrides=web.reviewed_overrides(game, pbp))
+    possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
+    assert [x.event_num for x in possession.events] == trip
+    assert possession.offense_team_id == offense
+    following = loader.items[loader.items.index(possession) + 1]
+    assert following.offense_team_id != offense
     assert loader.counts_by_team == counts
     rows = json.loads(pbp)["game"]["actions"]
     assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))

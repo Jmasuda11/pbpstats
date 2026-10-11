@@ -18,15 +18,21 @@ STARTERS = "missing_period_starters.json"
 # play-by-play file. Each entry is that edit. An event-order entry, [event,
 # before], moves one event to just before another event at the same period and
 # clock. A subtype entry, {event: label}, gives the V3 subtype the event should
-# have recorded. A clock entry, {event: V3 clock}, changes only the tenths
-# within the recorded second. A duplicate entry, {event: kept}, drops an event
+# have recorded. A clock entry, {event: V3 clock}, moves the event at most two
+# seconds from its recorded clock. A duplicate entry, {event: kept}, drops an event
 # recorded twice, keeping its identical copy. A block entry, {event: person},
 # names the blocker of a missed shot that V3 records without its block. A
 # location entry, {event: "h" or "v"}, gives the side of a team heave that V3
 # records without one. A live-number entry, {event: live action}, names the
 # live play-by-play action of a jump ball that V3 renumbered. A tip-recipient
-# entry, {event: person}, names the player who secured a jump ball that V3
-# credits to someone else.
+# entry, {event: person or team}, names the player who secured a jump ball that
+# V3 credits to someone else, or the team, for a team recovery. A turnover
+# entry, {event: {"before": event, "player": person, "subtype": label}}, adds
+# under an unused event number a turnover that V3 does not record, just before
+# another event and at its period and clock. A clock-reset entry, {event:
+# {"clock": V3 clock, "events": [event, ...]}}, records that the game clock was
+# set back to a later time right after an event, and moves the events played
+# after the reset, which V3 sorts among earlier ones by clock, to follow it.
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
@@ -35,10 +41,13 @@ EVENT_BLOCKS = "event_blocks.json"
 EVENT_LOCATIONS = "event_locations.json"
 EVENT_LIVE_NUMBERS = "event_live_numbers.json"
 EVENT_TIP_RECIPIENTS = "event_tip_recipients.json"
+EVENT_TURNOVERS = "event_turnovers.json"
+EVENT_CLOCK_RESETS = "event_clock_resets.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
     EVENT_BLOCKS,
+    EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_LIVE_NUMBERS,
@@ -46,6 +55,7 @@ SUPPORTED = {
     EVENT_ORDER,
     EVENT_SUBTYPES,
     EVENT_TIP_RECIPIENTS,
+    EVENT_TURNOVERS,
     KEEP_EVENTS,
     STARTERS,
 }
@@ -113,6 +123,40 @@ class V3Overrides:
                     ):
                         raise V3DecodeError("Invalid event {} override".format(
                             "subtype" if name == EVENT_SUBTYPES else "clock"))
+                    continue
+                if name == EVENT_CLOCK_RESETS:
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int
+                        or event < 0
+                        or not isinstance(value, dict)
+                        or set(value) != {"clock", "events"}
+                        or not isinstance(value["clock"], str)
+                        or not CLOCK.fullmatch(value["clock"])
+                        or not isinstance(value["events"], list)
+                        or not value["events"]
+                        or any(type(n) is not int or n < 0 for n in value["events"])
+                        or len(set(value["events"])) != len(value["events"])
+                        or event in value["events"]
+                        for event, value in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event clock-reset override")
+                    continue
+                if name == EVENT_TURNOVERS:
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int
+                        or event < 0
+                        or not isinstance(value, dict)
+                        or set(value) != {"before", "player", "subtype"}
+                        or type(value["before"]) is not int
+                        or value["before"] < 0
+                        or value["before"] == event
+                        or type(value["player"]) is not int
+                        or value["player"] <= 0
+                        or not isinstance(value["subtype"], str)
+                        or not value["subtype"].strip()
+                        for event, value in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event turnover override")
                     continue
                 if name == EVENT_LOCATIONS:
                     if not isinstance(entries, dict) or not entries or any(

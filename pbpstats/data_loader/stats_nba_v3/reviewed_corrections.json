@@ -1,4 +1,165 @@
 {
+  "0022300019": {
+    "pbp_sha256": "fdd92ef7e9c521bdf6bc29f93e302ad3e76865d63ed38e6cba5b8b188048eaa0",
+    "source": "Video review 2026-10-10: at Q4 10:40 Harris was fouled and hurt, and Martin, his substitute, missed both free throws; Morris rebounded, and Maxey missed at 10:33, where Nesmith's rebound and out-of-bounds pass gave the ball back to Philadelphia with a new 24-second clock. V3, V2, the live play-by-play and the box score record Maxey making both free throws, which stay credited; the second no longer ends Philadelphia's possession.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        590
+      ]
+    }
+  },
+  "0022300173": {
+    "pbp_sha256": "3f5c02f8b9427d8d03af7bdb02682709db4f43afd3207ccd32f2c38e8813c5e6",
+    "source": "Video review 2026-10-11: at Q3 11:08 Bitadze's lane violation voided Banchero's first free throw, and his second still counted, ending Orlando's possession. The turnover V3 records for the violation stays credited, as in the box score, but no longer ends the possession.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        411
+      ]
+    }
+  },
+  "0022300322": {
+    "pbp_sha256": "30f85d37f312c4504116803aa5411d6eec71b95fc765aec7d0b8a282dfcf3729",
+    "source": "Video review 2026-10-11: at Q1 0:41.8, after Dinwiddie's three free throws, Brooklyn's intentional foul on Jordan was a personal foul, not an away-from-play foul, and Brooklyn had the ball after the free throws. V3 and V2 type it away from play; the free throw they record, Jackson's 1 of 1, stays credited as in the box score.",
+    "files": {
+      "event_subtypes.json": {
+        "152": "Personal"
+      }
+    }
+  },
+  "0022300470": {
+    "pbp_sha256": "e510807a1957ecb2668a0a2484954bc5843340ec4b66b57ef43d585607866e34",
+    "source": "Video review 2026-10-10: at Q4 0:48.1 Smart's second free throw ended in his own lane violation, which gave Toronto the ball. The league logs a shooter's lane violation as a missed free throw, the other team's real team rebound and a Lane violation, as in all 18 such cases from 2023-24 to 2025-26. Here V3, like V2, labels the Raptors team rebound a placeholder (Normal Rebound) and omits the violation.",
+    "files": {
+      "event_subtypes.json": {
+        "653": "Unknown"
+      }
+    }
+  },
+  "0022300474": {
+    "pbp_sha256": "77e0fd5658dc1b1ad3b49fdd11bf7137704e91502aef602ed9e567ef7af0a750",
+    "source": "Video review 2026-10-11: at Q3 8:47 Dunn tied up Ivey's layup, a held ball; right after the whistle Dunn was called for a technical foul (Cunningham's free throw), and then the jump ball went to Markkanen for Utah. V3 and V2 record the replay, the technical and the free throw at 8:47, the shot's clock, before the Jazz team rebound and the jump ball at 8:45, the whistle's; data.nba.com has the same order. Recorded at 8:45, after the team rebound, which the league lists right after the miss when a held ball follows a shot.",
+    "files": {
+      "event_clocks.json": {
+        "379": "PT08M45.00S",
+        "380": "PT08M45.00S",
+        "381": "PT08M45.00S"
+      },
+      "event_order.json": [
+        [
+          385,
+          379
+        ]
+      ]
+    }
+  },
+  "0022300512": {
+    "pbp_sha256": "c483662d73a472ce1a4fb302d01914aad829f2485ec3bf7fb7a977df6cf15f95",
+    "source": "Reviewed 2026-10-10: Sacramento's and Detroit's 3rd-quarter starters. Burks' flopping technical at 12:00 came from the bench (he entered at 4:35), and the original's starter inference does not skip flopping technicals (V2 code 6/32), so it finds six Pistons; the 12-second period-start box score lists six Kings and eight Pistons. These starters come from the 3rd-quarter substitutions (Lyles entered at 5:17), and with them every player's minutes match the official box score.",
+    "files": {
+      "missing_period_starters.json": {
+        "3": {
+          "1610612758": [
+            1628368,
+            1628989,
+            1627734,
+            203084,
+            1631099
+          ],
+          "1610612765": [
+            1630165,
+            1631093,
+            1631105,
+            202711,
+            1630587
+          ]
+        }
+      }
+    }
+  },
+  "0022300609": {
+    "pbp_sha256": "5b3670f173ca261f393e9a0b05a52521788f3de49e0d10feb8bdab126d11b063",
+    "source": "Video review 2026-10-11: at Q3 1:42 the held ball's jump ball was tipped to Boucher, who stood on the sideline, so the ball went out of bounds and Memphis kept it. V3 and the live play-by-play credit the tip to Boucher. A jump ball no player secures is a team recovery, as V2 records for 81 of 2,070 jump balls in 2023-24.",
+    "files": {
+      "event_tip_recipients.json": {
+        "447": 1610612763
+      }
+    }
+  },
+  "0022300866": {
+    "pbp_sha256": "dafde58c3602c5aac389cd71aa13d2fdb2af430964797a03bad1ea90c7248a6a",
+    "source": "Reviewed 2026-10-10: at Q3 4:03 Mathews fouled Johnson on his made 3, an and-one. V3, like V2, records the shot at 4:04 but the foul, a substitution and the free throw at 4:03, where the official minutes also put the substitution; 17,005 of the 17,007 and-ones from 2023-24 to 2025-26 are recorded at one clock.",
+    "files": {
+      "event_clocks.json": {
+        "433": "PT04M03.00S"
+      }
+    }
+  },
+  "0022300910": {
+    "pbp_sha256": "84925b243259cb06856b455e22c7e35cfd7dd0836756dd3f8c389864a3059a7a",
+    "source": "Video review 2026-10-10: at Q4 9:34 Charlotte's coach challenge turned the call into Holmes' offensive foul, a turnover that gave Charlotte the ball. V3, V2 and the box score record the foul but no turnover, the only one of 10,868 offensive fouls from 2023-24 to 2025-26 without its turnover. It is added as 529, the number V3 leaves free after the foul.",
+    "files": {
+      "event_turnovers.json": {
+        "529": {
+          "before": 530,
+          "player": 1626158,
+          "subtype": "Offensive Foul Turnover"
+        }
+      }
+    }
+  },
+  "0022300933": {
+    "pbp_sha256": "73750971a9eec6fd1d319f4aff15a2ffbeb856780be4eeb24cc84aea4b5ca966",
+    "source": "Video review 2026-10-11: at Q4 3:45, after Cunningham's basket, Duren's foul on Micic was a loose ball foul with Charlotte in the bonus, so Micic's two free throws ended Charlotte's possession. V3 and V2 type it away from play.",
+    "files": {
+      "event_subtypes.json": {
+        "590": "Loose Ball"
+      }
+    }
+  },
+  "0022300977": {
+    "pbp_sha256": "4af90e50324bd365de8e0bac5f43f0802cfbaffeb97d5089710dd02f84dd979b",
+    "source": "Video review 2026-10-11: at Q4 11:24 Adebayo tied up Wiseman, and Wiseman grabbed the ball after the tip, a jump ball violation that gave Miami the ball; Detroit's possession ended as Adebayo's steal from Wiseman. V3 lists the violation between the jump ball and the turnover. Listed with the turnover first, the original's rule for a steal at a jump ball's clock ends the possession there.",
+    "files": {
+      "event_order.json": [
+        [
+          458,
+          495
+        ]
+      ]
+    }
+  },
+  "0022301024": {
+    "pbp_sha256": "042bef2f149757286028cc262b7b9d60b09911229ac0473aa8c7320cf4c27b0b",
+    "source": "Video review 2026-10-10: at Q3 5:43 the ball was ruled out of bounds off Houston, and Houston's coach challenge overturned it to off George, giving Houston the ball. V3 and V2 drop the challenged event, 412, which the replay row names, and record no Utah turnover, nor does the box score. George's turnover is added as 412, a ball lost out of bounds.",
+    "files": {
+      "event_turnovers.json": {
+        "412": {
+          "before": 413,
+          "player": 1641718,
+          "subtype": "Out of Bounds Lost Ball Turnover"
+        }
+      }
+    }
+  },
+  "0022301177": {
+    "pbp_sha256": "7f01a4af1b49c1383c43ec5a1e83f545ab059d3cff02ac87a21367ebec52383c",
+    "source": "Video review 2026-10-11: at Q3 1:14 Memphis was called for a shot-clock violation, and the table then set the game clock back to 2:20; Davis' jumper (2:06), Simpson's miss, Goodwin's rebound and basket (1:47-1:41), Russell's miss and Goodwin's rebound (1:29-1:27) were played after the reset. V3, V2 and data.nba.com sort these by clock among the earlier 1:45-1:14 events; the live play-by-play's entry order is the order played.",
+    "files": {
+      "event_clock_resets.json": {
+        "681": {
+          "clock": "PT02M20.00S",
+          "events": [
+            473,
+            475,
+            476,
+            477,
+            478,
+            480
+          ]
+        }
+      }
+    }
+  },
   "0022400013": {
     "pbp_sha256": "37e976e0a80872c4fd404f5dd6f004c8f5d6cafcd3ad7629ffe2c676660a2c4c",
     "source": "Video review 2026-10-09: at Q2 5:51 (5:57 on video) Buzelis' block on LeVert's layup caused a held ball, and the Bulls won the jump ball; the Bulls team rebound is credited for winning it. V3 lists the jump ball before the shot. Listed in the league's order, miss, team rebound, jump ball, as in all 72 other same-clock cases this season.",

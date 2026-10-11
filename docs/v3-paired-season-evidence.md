@@ -33,7 +33,7 @@ Same-instant reordering mostly involves substitutions, free throws, shooting fou
 
 ## Decoder comparison
 
-The tool decodes one real sample per label with the candidate's own `DecodedV3`. Before the corrections below, 156 labels matched V2, 8 differed and 24 were rejected. The decoder now produces the recorded code for all 188 labels; `test_paired_season.py` asserts this for every label, and checks every decoder table entry against the pinned codes. Inbound, Personal Block and Shooting Block are the only table entries absent from the paired evidence; they keep the original's own named codes and are declared as unobserved.
+The tool decodes one real sample per label with the candidate's own `DecodedV3`. Before the corrections below, 156 labels matched V2, 8 differed and 24 were rejected. The decoder now produces the recorded code for all 188 labels; `test_paired_season.py` asserts this for every label, and checks every decoder table entry against the pinned codes. Four table entries are absent from the paired evidence. Inbound, Personal Block and Shooting Block keep the original's own named codes and are declared as unobserved. Swinging Elbows Turnover, which the original does not name, takes code 5/34 from the 2023-24 V2 export's only such row, game `0022300678` event 11. That row is pinned with the archive's hashes in `tests/parity/decoder-code-evidence.json`, beside the game's V3 recording.
 
 Codes the decoder produced before the corrections:
 
