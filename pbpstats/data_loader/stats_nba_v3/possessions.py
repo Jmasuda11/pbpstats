@@ -17,6 +17,7 @@ from .decoder import (
     FOULS,
     FREE_THROWS,
     REBOUNDS,
+    TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
     DecodedV3,
@@ -30,10 +31,14 @@ from .overrides import (
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
+    EVENT_FOUL_OPPONENTS,
     EVENT_LIVE_NUMBERS,
     EVENT_LOCATIONS,
+    EVENT_MOVES,
     EVENT_ORDER,
+    EVENT_REMOVALS,
     EVENT_SUBTYPES,
+    EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
     KEEP_EVENTS,
@@ -137,10 +142,12 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             ]
         }
         self._apply_reviewed_duplicates()
+        self._apply_reviewed_removals()
         self._apply_reviewed_blocks()
         self._apply_reviewed_tip_recipients()
         self._apply_reviewed_subtypes()
         self._apply_reviewed_clocks()
+        self._apply_reviewed_moves()
         self.added_rows = self._apply_reviewed_turnovers()
         self.clock_resets = self._apply_reviewed_clock_resets()
         self._apply_reviewed_event_order()
@@ -154,7 +161,10 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             ]
             self._add_extra_attrs_to_all_events()
             self._add_shot_x_y_coords()
-        dropped = self._reviewed_entries(EVENT_DUPLICATES, {})
+        dropped = {
+            **self._reviewed_entries(EVENT_DUPLICATES, {}),
+            **self._reviewed_entries(EVENT_REMOVALS, {}),
+        }
         for event in self.items:
             event.reviewed_clock_reset = self.clock_resets.get(event.event_num)
             if event.event_num in self.added_rows:
@@ -166,8 +176,9 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             indices = group["source_indices"]
             copies = [copy for copy, kept in sorted(dropped.items()) if kept == event.event_num]
             if copies:
-                # A dropped copy's recorded rows belong to the event kept, so
-                # every recorded row still belongs to exactly one event.
+                # A dropped copy's or removed event's recorded rows belong to
+                # the event kept, so every recorded row still belongs to
+                # exactly one event.
                 indices = tuple(sorted(indices + tuple(
                     i for copy in copies for i in decoded.groups[copy]["source_indices"]
                 )))
@@ -195,6 +206,34 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 raise V3DecodeError("Event duplicate override names events that differ")
             result["rowSet"].remove(by_number[event])
             self.repairs.append(dict(code="reviewed_duplicate_event", event_num=event, kept=kept))
+
+    def _apply_reviewed_removals(self):
+        # Drops an event that another recorded event already records, as editing
+        # the play-by-play file would: both of one kind and period, with the
+        # removed event's actor the kept event's actor or second party.
+        removals = self._reviewed_entries(EVENT_REMOVALS, {})
+        duplicates = self._reviewed_entries(EVENT_DUPLICATES, {})
+        result = self.source_data["resultSets"][0]
+        headers = result["headers"]
+        number, period, kind, actor, other = (
+            headers.index(key)
+            for key in ("EVENTNUM", "PERIOD", "EVENTMSGTYPE", "PLAYER1_ID", "PLAYER2_ID")
+        )
+        by_number = {row[number]: row for row in result["rowSet"]}
+        for event, kept in sorted(removals.items()):
+            row, keeper = by_number.get(event), by_number.get(kept)
+            if (
+                row is None
+                or keeper is None
+                or kept in removals
+                or kept in duplicates
+                or (row[period], row[kind]) != (keeper[period], keeper[kind])
+                or not row[actor]
+                or row[actor] not in (keeper[actor], keeper[other])
+            ):
+                raise V3DecodeError("Event removal override does not fit the recorded events")
+            result["rowSet"].remove(row)
+            self.repairs.append(dict(code="reviewed_removed_event", event_num=event, kept=kept))
 
     def _apply_reviewed_blocks(self):
         # Records the blocker V3 omits as the decoder records a block row: as
@@ -309,11 +348,37 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and seconds(rows[before][clock]) < seconds(rows[after][clock]):
                     raise V3DecodeError("Event clock override breaks the recorded order")
 
+    def _apply_reviewed_moves(self):
+        # Moves an event V3 records at the wrong time to just after another
+        # event of its period, taking that event's clock, as editing the
+        # play-by-play file would.
+        moves = self._reviewed_entries(EVENT_MOVES, {})
+        result = self.source_data["resultSets"][0]
+        headers, rows = result["headers"], result["rowSet"]
+        number, period, clock = (
+            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
+        )
+        for event, after in sorted(moves.items()):
+            found = {row[number]: row for row in rows}
+            moved, anchor = found.get(event), found.get(after)
+            if moved is None or anchor is None or moved[period] != anchor[period]:
+                raise V3DecodeError("Event move override does not fit the recorded events")
+            rows.remove(moved)
+            recorded, moved[clock] = moved[clock], anchor[clock]
+            rows.insert(rows.index(anchor) + 1, moved)
+            self.repairs.append(dict(
+                code="reviewed_moved_event", event_num=event, after=after,
+                recorded=recorded, reviewed=moved[clock],
+            ))
+
     def _apply_reviewed_turnovers(self):
         # Adds a turnover V3 does not record, as the original's remedy of editing
         # the play-by-play file would: a projected row like the decoder's own,
-        # just before another event and at its period and clock. Returns each
-        # added event's V3-shaped row, which no recorded row backs.
+        # just before another event and at its period and clock. The player may
+        # instead be one of the two teams, for a turnover of a kind V3 records as
+        # a team's (TEAM_TURNOVERS), shaped as the decoder shapes those: no
+        # person, the team as the event's team. Returns each added event's
+        # V3-shaped row, which no recorded row backs.
         turnovers = self._reviewed_entries(EVENT_TURNOVERS, {})
         result = self.source_data["resultSets"][0]
         headers, rows = result["headers"], result["rowSet"]
@@ -323,28 +388,32 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         added = {}
         for event, entry in sorted(turnovers.items()):
             before, player, label = entry["before"], entry["player"], entry["subtype"]
+            by_team = player in self.decoded.context.team_ids
             if (
                 event in index
                 or event in self.decoded.groups
                 or before not in index
-                or player not in roster
+                or not (player in roster or by_team and label in TEAM_TURNOVERS)
                 or label not in TURNOVERS
                 or TURNOVERS[label] == 0
             ):
                 raise V3DecodeError("Event turnover override does not fit the recorded events")
             anchor = dict(zip(headers, rows[index[before]]))
             recorded = self.decoded.groups[before]["primary"]
-            team = roster[player]["team_id"]
-            name = next(
-                (r["playerName"] for r in self.decoded.raw_rows
-                 if r.get("personId") == player and r.get("playerName")),
-                roster[player]["names"][0],
-            )
-            description = f"{name} {label}"
+            if by_team:
+                team, person, name, description = player, 0, "", label
+            else:
+                team, person = roster[player]["team_id"], player
+                name = next(
+                    (r["playerName"] for r in self.decoded.raw_rows
+                     if r.get("personId") == player and r.get("playerName")),
+                    roster[player]["names"][0],
+                )
+                description = f"{name} {label}"
             row = dict.fromkeys(headers)
             row.update(
                 GAME_ID=anchor["GAME_ID"], EVENTNUM=event, PERIOD=anchor["PERIOD"],
-                PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=player,
+                PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=person,
                 PLAYER1_TEAM_ID=team, NEUTRALDESCRIPTION=description,
                 EVENTMSGTYPE=5, EVENTMSGACTIONTYPE=TURNOVERS[label],
             )
@@ -352,8 +421,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             index = {r[number]: i for i, r in enumerate(rows)}
             added[event] = dict(
                 actionNumber=event, clock=recorded["clock"], period=recorded["period"],
-                teamId=team, personId=player, playerName=name, description=description,
-                actionType="Turnover", subType=label,
+                teamId=0 if by_team else team, personId=player, playerName=name,
+                description=description, actionType="Turnover", subType=label,
             )
             self.repairs.append(dict(
                 code="reviewed_added_turnover", event_num=event, before=before,
@@ -553,6 +622,11 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             live_numbers=reviewed_entries(
                 self.overrides, EVENT_LIVE_NUMBERS, context.game_id, {}
             ),
+            teams=reviewed_entries(self.overrides, EVENT_TEAMS, context.game_id, {}),
+            foul_opponents=reviewed_entries(
+                self.overrides, EVENT_FOUL_OPPONENTS, context.game_id, {}
+            ),
+            removed=reviewed_entries(self.overrides, EVENT_REMOVALS, context.game_id, {}),
         )
         self.decoded = decoded
         self.game_id = context.game_id
@@ -577,6 +651,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             override_diagnostics + enhanced.repairs
             + deepcopy(list(decoded.team_heaves.values()))
             + deepcopy(decoded.non_roster_actors)
+            + deepcopy(decoded.reviewed_inputs)
             + ([dict(decoded.live_input)] if decoded.live_input else [])
             + deepcopy(decoded.recorded_jump_balls)
         )

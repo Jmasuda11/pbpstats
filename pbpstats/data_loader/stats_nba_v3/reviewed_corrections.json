@@ -1,4 +1,340 @@
 {
+  "0022100039": {
+    "pbp_sha256": "8f3250e7ec9e12732df21b81e2e1eab9eef5ae63c46106a877e664c0a5e8423b",
+    "source": "Video review 2026-10-16: at Q4 0:59.2 Hield's missed 3-point attempt was first called a shooting foul; Golden State's coach challenge overturned the call (653, which the replay row names and V3 and V2 drop), the loose ball went to a jump ball at 0:56.6, and Sacramento kept the ball until Fox's turnover at 0:49. The scorer added the miss (665) and a Kings team rebound (666) after the game; V3 and V2 record the rebound at 0:52.2, after the challenge and the jump ball, which the original's event-order repairs cannot place. The rebound moves to just after the miss.",
+    "files": {
+      "event_moves.json": {
+        "666": 665
+      }
+    }
+  },
+  "0022100107": {
+    "pbp_sha256": "55ca7e62bff3e5083d0012347e9b10153d9d8cc7f9a28f1eca42e90d437512d0",
+    "source": "Video review 2026-10-16: at Q4 2:31 Bazemore stole the ball from Porter Jr., who fouled him at once; Bazemore was sent to the line and made both free throws, and Houston took the ball, but the Lakers were not in the bonus, so the officials later took the two points off the score without replaying the possession. V3, V2 and the box score record no free throws (event numbers 632 and 634 around the 633 substitution are unused) and nothing else that ends the Lakers' possession before Houston's next shot at 2:13. A Lakers team turnover (632) ends it at 2:31, as the voided trip did; its 5 Second Violation label is a convention, a team turnover with no stat of its own, and the box score lacks it.",
+    "files": {
+      "event_turnovers.json": {
+        "632": {
+          "before": 633,
+          "player": 1610612747,
+          "subtype": "5 Second Violation"
+        }
+      }
+    }
+  },
+  "0022100115": {
+    "pbp_sha256": "4f495c08bcdabe8ecc02fbb6f673f8a9779b286e8bf2c69e18c409237e3a9614",
+    "source": "Reviewed 2026-10-16: V3 and V2 list delay of game violations on both teams (341, 342), entered later, before the start of the 3rd quarter (291), so the original takes the quarter's first possession from the 2nd quarter's last, the Clippers', though Minnesota had the ball (Towns' miss at 11:45). The start moves before the violations.",
+    "files": {
+      "event_order.json": [
+        [
+          291,
+          341
+        ]
+      ]
+    }
+  },
+  "0022100142": {
+    "pbp_sha256": "50e1b7a4bf570d87f954409c8323bee9816b09311704502565d3b1b74159c7b3",
+    "source": "Video review 2026-10-16: at Q2 2:44, after an out of bounds, Holiday came in for Portis, but Portis stayed on the court when play resumed. Hill's 3-point basket at 2:35 (288, which the replay row names and V3 and V2 drop) was taken back for the too many players technical, and play resumed at 2:44 with Washington's ball, as after a made basket, but without the points. V3, V2 and the box score record no turnover, so nothing ends Milwaukee's possession before Washington's technical free throw. A Bucks too many players team turnover (291), the league's record when the team with the ball draws that technical (0022400063), ends it at 2:44.",
+    "files": {
+      "event_turnovers.json": {
+        "291": {
+          "before": 292,
+          "player": 1610612749,
+          "subtype": "Too Many Players Turnover"
+        }
+      }
+    }
+  },
+  "0022100172": {
+    "pbp_sha256": "663826d92bd687867531f6a4147b8b4df684b55e07b03d69c01e0dcd0155d7da",
+    "source": "Reviewed 2026-10-16: at Q4 1:54 Whiteside missed both free throws for Martin's shooting foul, with Martin's technical and Bogdanovic's missed technical free throw between them; the Pacers rebounded the second miss, and the jump ball between Whiteside and Sabonis that followed went to McConnell. V3 and V2 list the second free throw (645) and the Pacers rebound (660, entered later) after the jump ball, though V2 records both at 11:20 PM and the jump ball at 11:21 PM. Both move before the jump ball.",
+    "files": {
+      "event_order.json": [
+        [
+          645,
+          646
+        ],
+        [
+          660,
+          646
+        ]
+      ]
+    }
+  },
+  "0022100179": {
+    "pbp_sha256": "2d49765e17986d48e298f266ab7f9a66cddbdd5bb90e77bb26b49bab9f6ca567",
+    "source": "Reviewed 2026-10-16: at Q4 0:05.4 Griffin blocked Valanciunas' dunk and Durant rebounded at 0:01.8. V3 and V2 list the Nets' delay of game violation (658), entered later, between the miss and the rebound, which the original's event-order repairs cannot place. The rebound moves before the violation.",
+    "files": {
+      "event_order.json": [
+        [
+          650,
+          658
+        ]
+      ]
+    }
+  },
+  "0022100202": {
+    "pbp_sha256": "69a3351dde697376bb46425546cd5b6515db3918df37f65af8f3921c446be613",
+    "source": "Reviewed 2026-10-16: at Q4 4:07 Bogdanovic made the second of two free throws for F. Wagner's foul, Bamba's loose ball foul at the same clock sent Collins to the line for one free throw, and Orlando had the ball after it (Ross' miss at 3:57). V3 and V2 list two substitutions (616, 614) between the second free throw and Bamba's foul, so the original's opponent-foul rule does not apply and the free throw ends Atlanta's possession, leaving Collins' free throw in a possession credited to Orlando. The foul moves before the substitutions.",
+    "files": {
+      "event_order.json": [
+        [
+          619,
+          616
+        ]
+      ]
+    }
+  },
+  "0022100267": {
+    "pbp_sha256": "139f29c1051bb191beaaf415e9b85c89a9e758ba966bdd80f94f1464d0ba0a4a",
+    "source": "Reviewed 2026-10-16: V3 and V2 list the Cavaliers' delay of game violation (487) before the start of the 4th quarter (486), so the original takes the quarter's first possession from the 3rd quarter's last, Phoenix's, though Cleveland had the ball (Rubio's turnover at 11:43). The start moves before the violation.",
+    "files": {
+      "event_order.json": [
+        [
+          486,
+          487
+        ]
+      ]
+    }
+  },
+  "0022100452": {
+    "pbp_sha256": "125e99d69454a24d927be42bd1306a9e2a4691a3f1beccac79caa2b272c01d9a",
+    "source": "Reviewed 2026-10-16: at Q3 9:50 Brown's lane violation on Markkanen's second free throw gave Atlanta the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it, and Markkanen shot one free throw.",
+    "files": {
+      "event_subtypes.json": {
+        "349": "Lane Violation"
+      }
+    }
+  },
+  "0022100596": {
+    "pbp_sha256": "325fec454887f49e27327fe5b5c16397fbe0bed668d95dd980b259483d66eafe",
+    "source": "Reviewed 2026-10-16: at Q1 4:28 Lowry missed a 3-point attempt and Yurtseven rebounded it (82, recorded at 4:26); a replay review then overturned the ruling to Strus stepping out of bounds, giving Phoenix the ball. V3 and V2 list the replay (86) and the turnover (85) between the miss and the rebound, which the original's event-order repairs cannot place. The rebound moves to just after the miss.",
+    "files": {
+      "event_moves.json": {
+        "82": 81
+      }
+    }
+  },
+  "0022100718": {
+    "pbp_sha256": "756a3aa9ac9f160b7d1fab9bf942b5438abe9f6f3f2b98a30dca4e96042a4a6b",
+    "source": "Reviewed 2026-10-16: at Q2 10:14 Horton-Tucker tied up Edwards after his defensive rebound; V2 records the jump ball as won by the Lakers, and Edwards is charged with a lost ball turnover. V3 and V2 list a jump ball violation on Edwards (336), entered later, between the jump ball and the turnover, so the original's same-clock turnover rule does not apply and the jump ball gives the Lakers a possession that Edwards' turnover then ends. The turnover moves before the violation.",
+    "files": {
+      "event_order.json": [
+        [
+          248,
+          336
+        ]
+      ]
+    }
+  },
+  "0022100756": {
+    "pbp_sha256": "2e17b689c91ccf08f785af0aa9f0faeb8801462ad449cff27941f950d2cafa5b",
+    "source": "Video review 2026-10-16: at Q4 1:44 Reed's floater was an airball that Nnaji caught as the shot clock expired, Denver's shot clock turnover at 1:43. V3 and V2 record Nnaji's rebound (582) at 1:42, after the turnover that ends the possession, so the possession's clock runs backward once the original puts the rebound after the miss. The rebound's clock becomes 1:43.",
+    "files": {
+      "event_clocks.json": {
+        "582": "PT01M43.00S"
+      }
+    }
+  },
+  "0022100762": {
+    "pbp_sha256": "2bc27832965737a21be81b43ca05cbc3bfb507b7d2128d5c8fdf0aeba88301be",
+    "source": "Reviewed 2026-10-16: at Q2 11:40 Robinson's offensive loose ball foul gave Boston the ball. V3 and V2 record his turnover with a blank subtype, which the original reads as no turnover; the box score counts it. Ten of the thirteen turnovers recorded with the fouler's own loose ball foul from 2021-22 to 2023-24 are Lost Ball turnovers, and the other three are blank.",
+    "files": {
+      "event_subtypes.json": {
+        "151": "Lost Ball"
+      }
+    }
+  },
+  "0022100819": {
+    "pbp_sha256": "aa34b53023a17abfa79a7fa8acf7412c8bb592bc9ee5b7d4388795d5899ba09f",
+    "source": "Reviewed 2026-10-16: at Q2 1:38 Valanciunas' lane violation on Ingram's second free throw gave Houston the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it, and Ingram shot one free throw.",
+    "files": {
+      "event_subtypes.json": {
+        "304": "Lane Violation"
+      }
+    }
+  },
+  "0022100830": {
+    "pbp_sha256": "6973f657692cc33e2a0901d573a084c488f9def365d29f0ba4b1fb2aed3be269",
+    "source": "Reviewed 2026-10-16: at Q4 0:36.4 Edwards' offensive loose ball foul sent Lamb to the line for two free throws and gave Sacramento the ball. V3 and V2 record his turnover with a blank subtype, which the original reads as no turnover; the box score counts it. Ten of the thirteen turnovers recorded with the fouler's own loose ball foul from 2021-22 to 2023-24 are Lost Ball turnovers, and the other three are blank.",
+    "files": {
+      "event_subtypes.json": {
+        "685": "Lost Ball"
+      }
+    }
+  },
+  "0022100865": {
+    "pbp_sha256": "b17f3d7ee8541872389cb4cc7fe6943a69ca66f093a5f07e42fa465a89ce746e",
+    "source": "Reviewed 2026-10-16: at the end of Q1 Schroder's driving layup missed and the Rockets rebounded; a replay review then put 0.6 seconds back on the clock and called Conley's loose ball foul, and Sengun missed both free throws before Gobert's rebound ended the quarter. V3 and V2 record the miss (176) and the rebound (177), entered before the replay (178), at 0:00, so they sort after Gobert's rebound and give Houston a second possession. Both take the 0:00.6 clock and move before the replay.",
+    "files": {
+      "event_clocks.json": {
+        "176": "PT00M00.60S",
+        "177": "PT00M00.60S"
+      },
+      "event_order.json": [
+        [
+          176,
+          178
+        ],
+        [
+          177,
+          178
+        ]
+      ]
+    }
+  },
+  "0022100968": {
+    "pbp_sha256": "887fd6b8338c42d82c79065a7b3241ece8912db2f37602c9e49db48fdabdda0b",
+    "source": "Reviewed 2026-10-16: at Q4 0:01.6 Bogdanovic's foul (634) sent Cunningham to the line for two free throws, after which Atlanta inbounded and Bagley III's foul sent Collins to the line. V3 and V2 list Bogdanovic's foul after Cunningham's free throws, though it was entered before them, so the original keeps Detroit's possession going past the made second free throw. The foul moves before the first free throw (636).",
+    "files": {
+      "event_order.json": [
+        [
+          634,
+          636
+        ]
+      ]
+    }
+  },
+  "0022101030": {
+    "pbp_sha256": "54754cc3d2138fa59ae83847296fd16a3c0245d98318d12ee744c04a72dcf412",
+    "source": "Reviewed 2026-10-16: at Q1 1:11 Ross missed a 3-point attempt; Brooklyn's coach challenge overturned the call (147, which the replay row names and V3 and V2 drop), and the jump ball between M. Wagner and Claxton at 1:10 went to Ross, so Orlando kept the ball. The scorer added the miss (164) and a Magic team rebound (165) after the game; V3 and V2 record the rebound at 1:09, after the challenge and the jump ball, which the original's event-order repairs cannot place. The rebound moves to just after the miss.",
+    "files": {
+      "event_moves.json": {
+        "165": 164
+      }
+    }
+  },
+  "0022101135": {
+    "pbp_sha256": "0fa76194268e8c0c76aadb43e478d5555eae190e138de71f03d547d7c78b092a",
+    "source": "Reviewed 2026-10-16: at Q4 0:10 Utah called a timeout it did not have: a technical (643) and an excess timeout turnover (644), after which Jackson shot the technical free throw. V3 and V2 record the turnover with neither a team nor a person, as in 0022200323. The turnover is Utah's.",
+    "files": {
+      "event_teams.json": {
+        "644": 1610612762
+      }
+    }
+  },
+  "0022200055": {
+    "pbp_sha256": "548aaffa1cbec456d1c3a10a3f563880a2ea02bd5947e1918a1ba6302f3b6983",
+    "source": "Reviewed 2026-10-13: at Q3 6:31 Booker and Thompson were given a double technical, and Thompson a second technical that ejected him, for which Booker shot one technical free throw. V3 and V2 record the double technical (458) with Booker alone and no names in its text, the only one of 354 double technicals from 2022-23 to 2025-26 that names nobody, and record Thompson's half of it again as a technical of his own (481), beside his second one (455). The double technical names Thompson, and 481 is removed as part of it.",
+    "files": {
+      "event_foul_opponents.json": {
+        "458": 202691
+      },
+      "event_removals.json": {
+        "481": 458
+      }
+    }
+  },
+  "0022200234": {
+    "pbp_sha256": "77b854eb06bc5d82852e0ed5c84863576aeaa9828e5e4a326347b8d555134a9d",
+    "source": "Reviewed 2026-10-13: Schr\u00f6der left at Q2 8:51 for Reaves, in the substitution the scorer added after the game (723). The substitution recorded at 7:08, Nunn for Schr\u00f6der (248), was left behind by that correction: Schr\u00f6der was already off, and Nunn had been on the floor since the quarter began. With 248 removed, every player's minutes match the official box score to within a second.",
+    "files": {
+      "event_removals.json": {
+        "248": 723
+      }
+    }
+  },
+  "0022200323": {
+    "pbp_sha256": "1659a353bcf6b5984a8b1506c3fa4d302c7e4e483cc4b418a284df7108fac1e4",
+    "source": "Reviewed 2026-10-13: at Q4 1:24 Indiana, given the ball by Murray's traveling, called a timeout it did not have: a technical (723) and an excess timeout turnover (724), after which Sacramento shot. V3 and V2 record the turnover with neither a team nor a person; the seven other excess timeout turnovers from 2022-23 to 2025-26 record their team. The turnover is Indiana's.",
+    "files": {
+      "event_teams.json": {
+        "724": 1610612754
+      }
+    }
+  },
+  "0022200325": {
+    "pbp_sha256": "efa5da989d740eaf4cdcc2e4c0bc0275c6a435f27d91d62d00e4277eb8354e4b",
+    "source": "Reviewed 2026-10-13: Bullock made the free throw for Bogdanovic's transition take foul at Q3 6:41, after checking in (399), and Ivey's foul at 6:03 was an and-one with one free throw (410). V3 and V2 record the 6:41 free throw (404) at 6:03 and credit it to Hardaway Jr., as the official box score does. It moves to 6:41, after 399; its credit stays as recorded.",
+    "files": {
+      "event_moves.json": {
+        "404": 399
+      }
+    }
+  },
+  "0022200363": {
+    "pbp_sha256": "2527a3d5827c77cff85e2aff4abca1548f0aac096775251ac6462e86f9778de4",
+    "source": "Reviewed 2026-10-13: at Q4 2:15 M. Wagner's lane violation on Bol's second free throw gave the Clippers the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Wagner 2 TOV), and Bol shot one free throw.",
+    "files": {
+      "event_subtypes.json": {
+        "629": "Lane Violation"
+      }
+    }
+  },
+  "0022200473": {
+    "pbp_sha256": "c1e20278c3de3ee3e0e4627508d614ecda7f3fa19e7ba425174535c64b2725e7",
+    "source": "Reviewed 2026-10-13: at Q1 0:11.9 Reid's foul (150) sent Powell to the line for two free throws. The live play-by-play shows the free throws and their team rebound re-entered after the quarter ended, with an earlier time than the foul, so V3 and V2 list the foul after them. The foul moves before the first free throw (152).",
+    "files": {
+      "event_order.json": [
+        [
+          150,
+          152
+        ]
+      ]
+    }
+  },
+  "0022200591": {
+    "pbp_sha256": "87674e5e97204a56e1a120583e45ff752307055ad8212338b3e444ba7795ceff",
+    "source": "Reviewed 2026-10-13: at Q1 7:42, after Sochan's two free throws and Tatum's out-of-bounds pass gave San Antonio the ball, Brown's away-from-play foul sent Jones to the line for one free throw, and San Antonio kept the ball until Bates-Diop's layup at 7:30. The original's away-from-play rule does not apply when a teammate made free throws at the same clock, so Jones's free throw (83) no longer ends the possession.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        83
+      ]
+    }
+  },
+  "0022200914": {
+    "pbp_sha256": "a04e744511df85615db596c17f2252549338a7025d03f4881e3fdb3274e0b08c",
+    "source": "Reviewed 2026-10-13: at Q4 11:39 Boucher blocked Mobley's layup, and the held ball's jump ball at 11:36 gave Cleveland the ball before LeVert's loose ball foul (463) gave it to Toronto. The Raptors team rebound V3 records at 11:39 (459) is not a real rebound: it becomes V2's placeholder team rebound, and LeVert's foul ends Cleveland's possession.",
+    "files": {
+      "event_subtypes.json": {
+        "459": "Normal Rebound"
+      },
+      "possession_change_event_overrides.json": [
+        463
+      ]
+    }
+  },
+  "0022200996": {
+    "pbp_sha256": "f2074bd64cf2d527bdc2a174aaed5c715d8260be4f873cb258e15180737c67f6",
+    "source": "Reviewed 2026-10-13: V3 and V2 list the Replay Center review (540) before the start of the 4th quarter (541), so the original takes the quarter's first possession from the 3rd quarter's last, Golden State's, though Memphis had the ball. The start moves before the replay.",
+    "files": {
+      "event_order.json": [
+        [
+          541,
+          540
+        ]
+      ]
+    }
+  },
+  "0022201006": {
+    "pbp_sha256": "882cc24101455179ea9e11b4f772656e438d80cb831bc29917012f69c5419b7e",
+    "source": "Reviewed 2026-10-13: V3 lists Detroit's delay of game violation (180) before the start of the 2nd quarter (179), unlike V2 and the action numbers, so the original takes the quarter's first possession from the 1st quarter's last, Indiana's, though Detroit had the ball. The start moves before the violation.",
+    "files": {
+      "event_order.json": [
+        [
+          179,
+          180
+        ]
+      ]
+    }
+  },
+  "0022201115": {
+    "pbp_sha256": "daa7e8f6072d2e826df821f52b043ef4396442133df7cca25d08e492ef5dd44e",
+    "source": "Reviewed 2026-10-13: at Q2 0:06 the foul called on Jackson Jr. at Collins' dunk was overturned on Memphis's challenge to Jackson Jr.'s block, and Morant had the ball after it, ending Atlanta's possession. V3 lists the block (324) and Morant's rebound (326) after the whistles that followed them: the delay of game violation, the technicals on Jackson Jr. and Jenkins, the challenge and the replay. They move before those, so Young's two technical free throws come in Memphis's possession.",
+    "files": {
+      "event_order.json": [
+        [
+          324,
+          317
+        ],
+        [
+          326,
+          317
+        ]
+      ]
+    }
+  },
   "0022300019": {
     "pbp_sha256": "fdd92ef7e9c521bdf6bc29f93e302ad3e76865d63ed38e6cba5b8b188048eaa0",
     "source": "Video review 2026-10-10: at Q4 10:40 Harris was fouled and hurt, and Martin, his substitute, missed both free throws; Morris rebounded, and Maxey missed at 10:33, where Nesmith's rebound and out-of-bounds pass gave the ball back to Philadelphia with a new 24-second clock. V3, V2, the live play-by-play and the box score record Maxey making both free throws, which stay credited; the second no longer ends Philadelphia's possession.",

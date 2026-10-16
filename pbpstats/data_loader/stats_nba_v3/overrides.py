@@ -33,6 +33,14 @@ STARTERS = "missing_period_starters.json"
 # {"clock": V3 clock, "events": [event, ...]}}, records that the game clock was
 # set back to a later time right after an event, and moves the events played
 # after the reset, which V3 sorts among earlier ones by clock, to follow it.
+# A removal entry, {event: kept}, drops an event that another recorded event
+# already records, such as a stale substitution left by a later correction,
+# keeping its recorded rows with that event. A move entry, {event: after},
+# moves an event V3 records at the wrong time to just after another event, at
+# that event's period and clock. A team entry, {event: team}, gives the team
+# of an event V3 records with neither a team nor a person. A foul-opponent
+# entry, {event: person}, names the other party of a double foul whose text
+# names nobody.
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
@@ -43,6 +51,10 @@ EVENT_LIVE_NUMBERS = "event_live_numbers.json"
 EVENT_TIP_RECIPIENTS = "event_tip_recipients.json"
 EVENT_TURNOVERS = "event_turnovers.json"
 EVENT_CLOCK_RESETS = "event_clock_resets.json"
+EVENT_REMOVALS = "event_removals.json"
+EVENT_MOVES = "event_moves.json"
+EVENT_TEAMS = "event_teams.json"
+EVENT_FOUL_OPPONENTS = "event_foul_opponents.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
@@ -50,21 +62,29 @@ SUPPORTED = {
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
+    EVENT_FOUL_OPPONENTS,
     EVENT_LIVE_NUMBERS,
     EVENT_LOCATIONS,
+    EVENT_MOVES,
     EVENT_ORDER,
+    EVENT_REMOVALS,
     EVENT_SUBTYPES,
+    EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
     KEEP_EVENTS,
     STARTERS,
 }
-# Entries that map an event to a number: a kept event, a blocker, a live action
-# or a tip recipient.
+# Entries that map an event to a number: a kept event, a blocker, a live action,
+# a tip recipient, an event to follow, a team or a foul opponent.
 NUMBERED = {
     EVENT_BLOCKS: "block",
     EVENT_DUPLICATES: "duplicate",
+    EVENT_FOUL_OPPONENTS: "foul-opponent",
     EVENT_LIVE_NUMBERS: "live-number",
+    EVENT_MOVES: "move",
+    EVENT_REMOVALS: "removal",
+    EVENT_TEAMS: "team",
     EVENT_TIP_RECIPIENTS: "tip-recipient",
 }
 

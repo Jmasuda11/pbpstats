@@ -169,6 +169,17 @@ TURNOVERS = {
     "Too Many Players Turnover": 44,
     "Out of Bounds - Bad Pass Turnover": 45,
 }
+# Turnovers V3 records as a team's, with the team as the person: every team
+# turnover from 2021-22 to 2025-26 is one of these (Shot Clock 8,301, 5 Second
+# 276, 8 Second 234, Too Many Players 3), as is the excess timeout turnover
+# 0022200323 records without a team.
+TEAM_TURNOVERS = {
+    "5 Second Violation",
+    "8 Second Violation",
+    "Shot Clock Turnover",
+    "Excess Timeout Turnover",
+    "Too Many Players Turnover",
+}
 VIOLATIONS = {
     "Delay Of Game": 1,
     "Defensive Goaltending": 2,
@@ -193,8 +204,15 @@ REPLAYS = {
 EJECTIONS = {"Other": 4}
 # Technicals and ejections can name people outside the player roster: coaches
 # (no team in either feed) and inactive players (with their team). V3 records
-# the same personId/teamId pair as V2 for every paired event.
-NON_ROSTER_ACTOR_FOULS = ("Technical", "Double Technical")
+# the same personId/teamId pair as V2 for every paired event. The original never
+# checks a roster, and its starter inference skips the actor of every foul it
+# classes as technical or double technical, "because a player could get a
+# technical foul when they aren't in the game": V2 codes 11, 12, 13, 18, 19, 25
+# and 30, and 16.
+ORIGINAL_TECHNICAL_FOUL_CODES = {11, 12, 13, 16, 18, 19, 25, 30}
+NON_ROSTER_ACTOR_FOULS = tuple(
+    label for label, code in FOULS.items() if code in ORIGINAL_TECHNICAL_FOUL_CODES
+)
 # V2 never records a fouled player for these subtypes (paired 2024-25 season),
 # so their missing fouled player is not a V3 attribution gap.
 FOULS_WITHOUT_FOULED_PLAYER = {
@@ -304,7 +322,8 @@ def clock_text(value):
 
 class DecodedV3:
     def __init__(
-        self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None
+        self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
+        teams=None, foul_opponents=None, removed=(),
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -317,14 +336,23 @@ class DecodedV3:
         )
         self.recorded_jump_balls = []
         # Reviewed facts an event cannot be decoded without (see overrides):
-        # a team heave's side and a renumbered jump ball's live action. The
-        # recorded rows stay unchanged; each fact must be used by its event.
+        # a team heave's side, a renumbered jump ball's live action, the team of
+        # an event recorded with neither team nor person, and the other party of
+        # a double foul whose text names nobody. The recorded rows stay
+        # unchanged; each fact must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
+        self.reviewed_teams = dict(teams or {})
+        self.reviewed_foul_opponents = dict(foul_opponents or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
+            "team": set(self.reviewed_teams),
+            "foul-opponent": set(self.reviewed_foul_opponents),
         }
+        # Events a reviewed removal drops are not part of the recorded
+        # starter/substitution stream.
+        self.reviewed_removed = set(removed)
         wnba = context.game_id.startswith("10")
         self.timeouts = {**TIMEOUTS, **WNBA_TIMEOUTS} if wnba else TIMEOUTS
         self.clear_path_free_throws = (
@@ -351,6 +379,7 @@ class DecodedV3:
         self.unknown_attribution = []
         self.participant_resolutions = []
         self.non_roster_actors = []
+        self.reviewed_inputs = []
         self.team_heaves = {}
         self._names = defaultdict(set)
         for player, facts in context.roster.items():
@@ -403,7 +432,11 @@ class DecodedV3:
                         else None
                     )
                 projected = self._decode(row, group, active_players)
-                if projected["EVENTMSGTYPE"] == 8 and active_players is not None:
+                if (
+                    projected["EVENTMSGTYPE"] == 8
+                    and active_players is not None
+                    and row["actionNumber"] not in self.reviewed_removed
+                ):
                     outgoing, incoming = (
                         projected["PLAYER1_ID"],
                         projected["PLAYER2_ID"],
@@ -475,6 +508,17 @@ class DecodedV3:
             if team not in (0, player):
                 raise V3DecodeError("Team-valued personId contradicts teamId")
             team, player = player, 0
+        if row["actionNumber"] in self.reviewed_teams:
+            # Only an event V3 records with neither a team nor a person, given
+            # the team as V3 records a team's own event: no person.
+            reviewed = self.reviewed_teams[row["actionNumber"]]
+            if kind == "Heave" or team or player or reviewed not in self.context.team_ids:
+                raise V3DecodeError("Event team override does not fit the recorded event")
+            self._unused_reviewed["team"].discard(row["actionNumber"])
+            team = reviewed
+            self.reviewed_inputs.append(
+                dict(code="reviewed_event_team", event_num=row["actionNumber"], team_id=team)
+            )
         if team and team not in self.context.team_ids:
             raise V3DecodeError("Unknown event team")
         non_roster = (
@@ -666,24 +710,39 @@ class DecodedV3:
                 event["PLAYER2_ID"] = roles.get("stealer")
             elif kind == "Foul" and subtype in DOUBLE_FOULS and not non_roster:
                 match = DOUBLE_FOULS[subtype].fullmatch(row["description"].strip())
-                if not match or self._resolve(match[1], team) != player:
-                    raise V3DecodeError("Double foul requires both recorded participants")
                 opponent = next(t for t in self.context.team_ids if t != team)
-                try:
-                    event["PLAYER2_ID"] = self._resolve(match[2], opponent)
-                except V3DecodeError:
-                    # The other party of a double technical can be a coach, for
-                    # whom V3 records no ID. The original's decisions and
-                    # statistics ignore it; a double personal must resolve.
-                    if subtype != "Double Technical":
-                        raise
-                    self.unknown_attribution.append(
-                        dict(
-                            event_num=row["actionNumber"],
-                            role="double_foul_opponent",
-                            name=match[2],
+                if row["actionNumber"] in self.reviewed_foul_opponents:
+                    # A double foul whose text names nobody: the reviewed other
+                    # party, from the opposing roster, as the text would name them.
+                    reviewed = self.reviewed_foul_opponents[row["actionNumber"]]
+                    if match or self.context.roster.get(reviewed, {}).get("team_id") != opponent:
+                        raise V3DecodeError(
+                            "Event foul-opponent override does not fit the recorded event"
                         )
-                    )
+                    self._unused_reviewed["foul-opponent"].discard(row["actionNumber"])
+                    event["PLAYER2_ID"] = reviewed
+                    self.reviewed_inputs.append(dict(
+                        code="reviewed_foul_opponent", event_num=row["actionNumber"],
+                        player_id=reviewed,
+                    ))
+                elif not match or self._resolve(match[1], team) != player:
+                    raise V3DecodeError("Double foul requires both recorded participants")
+                else:
+                    try:
+                        event["PLAYER2_ID"] = self._resolve(match[2], opponent)
+                    except V3DecodeError:
+                        # The other party of a double technical can be a coach, for
+                        # whom V3 records no ID. The original's decisions and
+                        # statistics ignore it; a double personal must resolve.
+                        if subtype != "Double Technical":
+                            raise
+                        self.unknown_attribution.append(
+                            dict(
+                                event_num=row["actionNumber"],
+                                role="double_foul_opponent",
+                                name=match[2],
+                            )
+                        )
             elif kind == "Foul" and subtype in DOUBLE_FOULS:
                 self.unknown_attribution.append(
                     dict(event_num=row["actionNumber"], role="double_foul_opponent")

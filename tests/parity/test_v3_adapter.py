@@ -11,13 +11,19 @@ from pbpstats.data_loader.stats_nba_v3 import (
     StatsNbaV3PossessionLoader,
     V3Context,
     V3DecodeError,
+    web,
 )
-from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
+from pbpstats.data_loader.stats_nba_v3.decoder import (
+    FOULS,
+    NON_ROSTER_ACTOR_FOULS,
+    DecodedV3,
+)
 from pbpstats.data_loader.stats_nba_v3.possessions import TEAM_IDS_GUARD, V3Possession
 from pbpstats.resources.possessions.possession import Possession
 from pbpstats.resources.enhanced_pbp.stats_nba.enhanced_pbp_factory import (
     StatsNbaEnhancedPbpFactory,
 )
+from pbpstats.resources.enhanced_pbp.stats_nba.foul import StatsFoul
 from tools.parity.reference import ROOT, prepare_reference
 from tools.parity.run import compare, worker
 from tools.parity.scenarios import HOME, AWAY, GAME, catalog, e, encode_v3, wrap
@@ -117,13 +123,14 @@ def test_blank_turnover_reason_is_the_recorded_v2_no_turnover_code():
     assert event.is_no_turnover and not event.is_possession_ending_event
 
 
+@pytest.mark.parametrize("subtype", ("Technical", "Non-Unsportsmanlike Technical"))
 @pytest.mark.parametrize(
     "team", (0, AWAY), ids=("coach_without_team", "inactive_player")
 )
-def test_off_roster_technical_actor_keeps_its_recorded_team(team):
+def test_off_roster_technical_actor_keeps_its_recorded_team(team, subtype):
     # V2 records the same personId/teamId pair; a coach has no team in either
     # feed, and the original then treats the person ID as the event's team.
-    rows = encode_v3(wrap([e("make"), e("foul", 590, AWAY, 11, subtype="Technical")]))
+    rows = encode_v3(wrap([e("make"), e("foul", 590, AWAY, 11, subtype=subtype)]))
     foul = next(row for row in rows if row["actionType"] == "Foul")
     foul.update(personId=99, teamId=team, description="Coach Foul:T.FOUL")
     loaded = load_synthetic_rows(rows)
@@ -131,6 +138,36 @@ def test_off_roster_technical_actor_keeps_its_recorded_team(team):
     assert (event.team_id, event.player1_id) == ((team, 99) if team else (99, 0))
     assert event.is_technical
     assert {d["code"] for d in loaded.diagnostics} == {"non_roster_actor"}
+
+
+def test_off_roster_actors_are_allowed_for_every_foul_the_original_calls_technical():
+    # The original's starter inference skips the actor of these fouls, "because
+    # a player could get a technical foul when they aren't in the game".
+    def technical(code):
+        event = StatsFoul.__new__(StatsFoul)
+        event.event_action_type = code
+        return event.is_technical or event.is_double_technical
+
+    assert set(NON_ROSTER_ACTOR_FOULS) == {
+        label for label, code in FOULS.items() if technical(code)
+    }
+
+
+@pytest.mark.parametrize("game, event, person, team", [
+    ("0022200140", 641, 203471, 1610612747),
+    ("0022200421", 438, 203456, None),
+], ids=["inactive_schroder", "coach_kidd"])
+def test_recorded_non_unsportsmanlike_technicals_outside_the_roster(game, event, person, team):
+    # 0022200140 Q4 5:38: Schroder, inactive, with the Lakers' team, as V2 records
+    # him. 0022200421 Q3 0:02.2: Mavericks coach Jason Kidd, with no team.
+    data = ROOT / "tests/parity/data/recorded_evidence"
+    pbp = (data / f"stats_v3_{game}.json").read_bytes()
+    box = (data / f"stats_v3_boxscore_{game}.json").read_bytes()
+    loader = web.load_game(game, pbp, box, "recorded")
+    foul = next(x for x in loader.events if x.event_num == event)
+    assert foul.event_action_type == 12 and foul.is_technical
+    assert dict(code="non_roster_actor", event_num=event, person_id=person, team_id=team,
+                basis="recorded_personId_and_teamId_as_in_v2") in loader.diagnostics
 
 
 def double_foul_rows(description):
