@@ -40,7 +40,9 @@ STARTERS = "missing_period_starters.json"
 # that event's period and clock. A team entry, {event: team}, gives the team
 # of an event V3 records with neither a team nor a person. A foul-opponent
 # entry, {event: person}, names the other party of a double foul whose text
-# names nobody.
+# names nobody. A block-removal entry, [event, ...], drops the block V3 records
+# with a missed shot that had none, as V2 records the miss with no blocker; the
+# block row stays with the miss.
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
@@ -55,9 +57,11 @@ EVENT_REMOVALS = "event_removals.json"
 EVENT_MOVES = "event_moves.json"
 EVENT_TEAMS = "event_teams.json"
 EVENT_FOUL_OPPONENTS = "event_foul_opponents.json"
+EVENT_BLOCK_REMOVALS = "event_block_removals.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
+    EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
@@ -177,6 +181,12 @@ class V3Overrides:
                         for event, value in entries.items()
                     ):
                         raise V3DecodeError("Invalid event turnover override")
+                    continue
+                if name == EVENT_BLOCK_REMOVALS:
+                    if not isinstance(entries, list) or not entries or any(
+                        type(event) is not int or event < 0 for event in entries
+                    ) or len(set(entries)) != len(entries):
+                        raise V3DecodeError("Invalid event block-removal override")
                     continue
                 if name == EVENT_LOCATIONS:
                     if not isinstance(entries, dict) or not entries or any(

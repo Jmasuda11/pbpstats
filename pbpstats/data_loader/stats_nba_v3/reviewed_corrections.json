@@ -1,4 +1,204 @@
 {
+  "0022000042": {
+    "pbp_sha256": "2de4901fb68a54e0a2aa55ce34185a248d799a0879e496f0f507e4e5c8114ba0",
+    "source": "Reviewed 2026-10-16: at Q3 5:06, after LeVert's layup, Brooklyn was charged a delay of game technical (439) and Brooks shot the technical free throw. V3 and V2 record the technical with neither a team nor a person; the 16 other delay technicals from 2020-21 record their team. The technical is Brooklyn's.",
+    "files": {
+      "event_teams.json": {
+        "439": 1610612751
+      }
+    }
+  },
+  "0022000056": {
+    "pbp_sha256": "c70db48b33991ea6d617759a3c05931051624d5582de75f4db6cbd0c857261bc",
+    "source": "Video review 2026-10-17: at Q3 2:11 Williams' non-shooting foul on Clarke (472) was followed only by substitutions, with Boston leading 86-62; Brooks' bad pass at 1:54 (478) ended that Memphis possession, and Tatum's layup made it 88-62. Clarke's two free throws for that foul in the penalty (486, 487, 488) were shot at the 1:22 stoppage, before Brown's: Memphis had 64 after Dieng's 1:37 layup and 65 before Brown's first free throw, and their numbers fall between Brooks' 1:22 foul (484) and that free throw (489). V3 and V2 record them at 2:11. They are moved to just after Brooks' foul, and Clarke's made second free throw does not end Boston's possession, which continues with Brown's free throws.",
+    "files": {
+      "event_moves.json": {
+        "486": 484,
+        "487": 486,
+        "488": 487
+      },
+      "non_possession_changing_event_overrides.json": [
+        488
+      ]
+    }
+  },
+  "0022000059": {
+    "pbp_sha256": "095999a6d0e6bdebd12ea4f6aaf10f05779d7d2c8224fb622bf6ce4d680e1fee",
+    "source": "Reviewed 2026-10-16: at Q4 5:18, with Charlotte in possession after Brunson's jumper, Hayward's personal foul (659) was charged as his turnover (661), and Powell shot one free throw. V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Hayward 3 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "661": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0022000215": {
+    "pbp_sha256": "e663d2d38352e38611ab9dae5ab900522a6679ecca853cfc97dd2830f7c518e5",
+    "source": "Reviewed 2026-10-16: at Q4 2:22 Washington called a timeout it did not have: the Wizards' excess timeout technical (683) and an excess timeout turnover (713, added after the game), after which Monk shot the technical free throw. V3 and V2 record the turnover with neither a team nor a person, as in 0022200323. The turnover is Washington's.",
+    "files": {
+      "event_teams.json": {
+        "713": 1610612764
+      }
+    }
+  },
+  "0022000248": {
+    "pbp_sha256": "6472ffaffbf161be43a671343d2dbc98c9c80b502b213e2533f3dac325080d57",
+    "source": "Reviewed 2026-10-16: at Q1 12:00 the opening jump ball between Ayton and Jokic is recorded as tipped to Millsap (4), but Jokic's jump ball violation (7) gave Phoenix the ball, and Ayton scored first. Of the 24 opening jump ball violations from 2020-21 to 2024-25, three others also list the jump ball first, and none of those names a tip recipient. The jump ball is awarded to Phoenix.",
+    "files": {
+      "event_tip_recipients.json": {
+        "4": 1610612756
+      }
+    }
+  },
+  "0022000285": {
+    "pbp_sha256": "fddd45194be3dce54163dcf327f04cb2489df549de0532d416ed720b07835b16",
+    "source": "Reviewed 2026-10-16: at Q4 0:27.5, after Adebayo's layup, the Clippers called a timeout they did not have: a technical (629) and an excess timeout turnover (630), after which Herro shot the technical free throw. V3 and V2 record both with neither a team nor a person, as in 0022200323. Both are the Clippers'.",
+    "files": {
+      "event_teams.json": {
+        "629": 1610612746,
+        "630": 1610612746
+      }
+    }
+  },
+  "0022000317": {
+    "pbp_sha256": "20dea05c085aa7c1ba725b8c89307312eea8e2ce1deb167846735986932c4d29",
+    "source": "Reviewed 2026-10-16: at Q2 0:16.2 New Orleans' delay of game violation (346) drew a delay technical (347), and Hield shot the technical free throw. V3 and V2 record the technical with neither a team nor a person; the 16 other delay technicals from 2020-21 record their team. The technical is New Orleans'. At Q4 1:52 Hernangomez's lane violation on Ingram's second free throw gave Sacramento the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Hernangomez 1 TOV), and Ingram shot one free throw.",
+    "files": {
+      "event_subtypes.json": {
+        "669": "Lane Violation"
+      },
+      "event_teams.json": {
+        "347": 1610612740
+      }
+    }
+  },
+  "0022000319": {
+    "pbp_sha256": "2fdc98180a339540358b4719baa0b75231335e89b26c657d1deb07c6af3bfe5b",
+    "source": "Reviewed 2026-10-16: at Q2 1:52 Bridges' shooting foul on Doncic (280), Doncic's free throw 1 of 1 (653, added after the game) and Porzingis' offensive goaltending turnover (480) are one Dallas trip, after which Phoenix had the ball; no basket is recorded, so the made free throw does not end the possession. At Q4 0:54.7 Ayton's away-from-play foul (620) gave Richardson two penalty free throws and Phoenix then had the ball, as after a personal foul, not one free throw and possession. V3 and V2 keep the away-from-play subtype.",
+    "files": {
+      "event_subtypes.json": {
+        "620": "Personal"
+      },
+      "non_possession_changing_event_overrides.json": [
+        653
+      ]
+    }
+  },
+  "0022000559": {
+    "pbp_sha256": "7b5bb6e26d052580fcecd407fa3cda0f4891e5489fd73ce34762f0d808875a40",
+    "source": "Reviewed 2026-10-16: at Q2 1:21, after Trent's first free throw and a double lane violation (369, 370), Kanter's personal foul (337) was charged as his turnover (371, \"Kanter No Turnover\"), and Washington had the ball. V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Kanter 2 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "371": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0022000597": {
+    "pbp_sha256": "682ef4c95b74ca31164c92765aafedf6bc58ab0a7256eb4bafadd7b901088084",
+    "source": "Reviewed 2026-10-16: at Q3 0:38.2, with Atlanta in possession after its team rebound, Bogdanovic's personal foul (455) was charged as his turnover (556, \"Bogdanovic No Turnover\"), and Sexton shot two free throws. V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Bogdanovic 2 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "556": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0022000729": {
+    "pbp_sha256": "a42dee7bc3bdc9f1907154f15d0ac04760e8ddedcf4a1ac07b127609efe0a80d",
+    "source": "Reviewed 2026-10-16: the Lakers' delay of game violation (336) is listed before the start of the third period (334), as in 0022200996.",
+    "files": {
+      "event_order.json": [
+        [
+          334,
+          336
+        ]
+      ]
+    }
+  },
+  "0022000733": {
+    "pbp_sha256": "80a6d594fd1649a95d0edabdb280037b7c2efa920dfef8957f6913d63f6780a4",
+    "source": "Reviewed 2026-10-16: at Q2 0:03.8, after Butler's two made free throws and Green's turnover, Bazemore's away-from-play foul gave Herro one free throw (354) and Miami kept the ball; Bjelica shot next. Because Butler made free throws at the same clock, the original does not recognize Herro's as an away-from-play free throw, as in 0022200591.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        354
+      ]
+    }
+  },
+  "0022000798": {
+    "pbp_sha256": "3f8fc7f2f2f8cfc946dc3cd9ec86c93d2eb0d8a5bd03873019c599d2f6878076",
+    "source": "Reviewed 2026-10-16: at Q4 0:46 Green blocked Hachimura's layup (626) and the two were tied up; Golden State secured the jump ball (618; the live feed records the tip to the team). The miss and the Warriors' team rebound (628) were inserted after the jump ball. They are moved before it, the league's usual order for a block that causes a held ball.",
+    "files": {
+      "event_order.json": [
+        [
+          626,
+          618
+        ],
+        [
+          628,
+          618
+        ]
+      ]
+    }
+  },
+  "0022000853": {
+    "pbp_sha256": "2ad841c37ed6f8ee2186ca54030b4684dbd9035196cc946aa1adaec13c23c1ba",
+    "source": "Reviewed 2026-10-16: at Q3 9:26 Anthony replaced Jones Jr. (621, added after the game), leaving a stale copy of the substitution at 8:13 (371). With the copy dropped every player's minutes match the box score; keeping it instead puts Anthony 73 s short and Jones Jr. 74 s over. As in 0022200234.",
+    "files": {
+      "event_removals.json": {
+        "371": 621
+      }
+    }
+  },
+  "0022000925": {
+    "pbp_sha256": "da8c171504604f870b13e9fe882f5fd2ddfab49f7dc64afe94bbcaed7e8f32db",
+    "source": "Video review 2026-10-17: at the end of Q2 Morant traveled with 0.2 seconds left (337), and the instant replay (338) confirmed the 0.2. Jokic's inbound pass went out of bounds untouched (339), and Memphis' inbound ended in a held ball that Denver won (340; the live feed records the tip to the team) before the period ended, with no time run. V3 records the travel at 0:00, after the 0:00.2 rows. The travel is moved to 0:00.2 before the replay, and the jump ball ends Memphis' possession, which has no other event.",
+    "files": {
+      "event_clocks.json": {
+        "337": "PT00M00.20S"
+      },
+      "event_order.json": [
+        [
+          337,
+          338
+        ]
+      ],
+      "possession_change_event_overrides.json": [
+        340
+      ]
+    }
+  },
+  "0022000997": {
+    "pbp_sha256": "dd0592a35e7bc10db89f77a798bf9ac485db33ea43afeb5d3bceb02d761967d9",
+    "source": "Reviewed 2026-10-16: at Q3 5:09 Birch blocked Beal's layup (420) and the two were tied up; Toronto secured the jump ball (385, tip to Trent Jr.). The miss and the Raptors' team rebound (422), entered again later, follow the jump ball. They are moved before it, the league's usual order for a block that causes a held ball.",
+    "files": {
+      "event_order.json": [
+        [
+          420,
+          385
+        ],
+        [
+          422,
+          385
+        ]
+      ]
+    }
+  },
+  "0022001049": {
+    "pbp_sha256": "abb7fd3c906cc548c61239ce1c8f7fa45ad5f99ae673c6bce5a07bfd36369d92",
+    "source": "Video review 2026-10-17: at Q3 2:33 Brazdeikis' missed three (409) was not blocked. V3 records a block by \"Adair\", person 1627961, who is in no 2020-21 box score or play-by-play; V2 records the miss with no blocker, and the box score credits nobody. The block is dropped.",
+    "files": {
+      "event_block_removals.json": [
+        409
+      ]
+    }
+  },
+  "0022001050": {
+    "pbp_sha256": "3bac87570007961ff4c487aa9d22da9bbf7184954101a101126308f5a0804db6",
+    "source": "Video review 2026-10-17: at Q4 8:39 Dragic's loose ball foul (485), after the 76ers' team rebound, gave Philadelphia the ball, and Philadelphia called a timeout (487). After the timeout Miami had the ball, and Dragic's bad pass at 8:19 (488) turned it over. Video shows no reason for the change, and V3, V2 and the box score record none. Philadelphia's possession ends at its timeout.",
+    "files": {
+      "possession_change_event_overrides.json": [
+        487
+      ]
+    }
+  },
   "0022100039": {
     "pbp_sha256": "8f3250e7ec9e12732df21b81e2e1eab9eef5ae63c46106a877e664c0a5e8423b",
     "source": "Video review 2026-10-16: at Q4 0:59.2 Hield's missed 3-point attempt was first called a shooting foul; Golden State's coach challenge overturned the call (653, which the replay row names and V3 and V2 drop), the loose ball went to a jump ball at 0:56.6, and Sacramento kept the ball until Fox's turnover at 0:49. The scorer added the miss (665) and a Kings team rebound (666) after the game; V3 and V2 record the rebound at 0:52.2, after the challenge and the jump ball, which the original's event-order repairs cannot place. The rebound moves to just after the miss.",

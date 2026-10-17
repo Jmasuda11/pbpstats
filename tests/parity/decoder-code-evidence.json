@@ -33,6 +33,41 @@
         "sha256": "13cdd49b14f49240ad3b258f215545fb096054f32b7cd1dee489e2841c0564cf",
         "source_index": 3
       }
+    },
+    {
+      "label": ["Foul", "Punching"],
+      "code": [6, 8],
+      "label_rows_in_season": 1,
+      "v2": {
+        "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2020.tar.xz",
+        "bytes": 7493576,
+        "sha256": "40a1126ecf66c4068c994d9a207040d0a62e40bd4634949f9b199b86bf5e79af",
+        "git_blob_sha1": "40a922d51a9885b376a7f842a8a2a9e765def872",
+        "member": "nbastats_2020.csv",
+        "member_sha256": "701abce5bbe499b40ae69a11361bc2122860e0bfc9f1190fdbfd72de9d7e1fd8",
+        "retrieved_utc": "2026-10-16",
+        "row": {
+          "GAME_ID": "22000637",
+          "EVENTNUM": "346",
+          "EVENTMSGTYPE": "6",
+          "EVENTMSGACTIONTYPE": "8",
+          "PERIOD": "3",
+          "PCTIMESTRING": "7:49",
+          "HOMEDESCRIPTION": "Barton PUNCH.FOUL (P3.T3) (B.Taylor)",
+          "PLAYER1_ID": "203115",
+          "PLAYER1_TEAM_ID": "1610612743"
+        }
+      },
+      "v3": {
+        "game_id": "0022000637",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0022000637.json",
+        "boxscore_path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022000637.json",
+        "sha256": "9c30422d68561037d7327a48c6beaeb819eae599e54313bf06f8e23844fc3408",
+        "source_index": 253,
+        "period_boxscore_paths": {
+          "5": "tests/parity/data/recorded_evidence/stats_boxscoretraditionalv2_0022000637_period_5.json"
+        }
+      }
     }
   ]
 }

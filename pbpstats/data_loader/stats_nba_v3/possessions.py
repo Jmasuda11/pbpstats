@@ -27,6 +27,7 @@ from .decoder import (
 from .overrides import (
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
+    EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
@@ -627,6 +628,9 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
                 self.overrides, EVENT_FOUL_OPPONENTS, context.game_id, {}
             ),
             removed=reviewed_entries(self.overrides, EVENT_REMOVALS, context.game_id, {}),
+            block_removals=reviewed_entries(
+                self.overrides, EVENT_BLOCK_REMOVALS, context.game_id, []
+            ),
         )
         self.decoded = decoded
         self.game_id = context.game_id

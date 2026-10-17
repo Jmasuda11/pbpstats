@@ -1,6 +1,7 @@
 """Pinned 2024-25 V2/V3 export pairing: factual evidence, never adapter acceptance."""
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -129,6 +130,8 @@ def test_every_decoder_table_entry_is_recorded_or_declared_unobserved(facts):
 def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation):
     # 0022300678 Q1 11:23: Fox's swinging elbows turnover, the only one in the
     # 2023-24 V2 export, whose member hash is pinned with the archive's.
+    # 0022000637 Q3 7:49: Barton's punching foul, the only one in the 2020-21 V2
+    # export; the game went to overtime, so it loads with its period-5 box score.
     v2, v3 = observation["v2"], observation["v3"]
     assert "/datasets/" + v2["member"].replace(".csv", ".tar.xz") in v2["raw_url"]
     row = v2["row"]
@@ -141,7 +144,13 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
     assert action["actionNumber"] == int(row["EVENTNUM"])
     assert action["personId"] == int(row["PLAYER1_ID"])
     box = (ROOT / v3["boxscore_path"]).read_bytes()
-    loader = web.load_game(v3["game_id"], pbp, box, "recorded")
+    periods = v3.get("period_boxscore_paths", {})
+
+    def fetch(period, url, params):
+        return SimpleNamespace(content=(ROOT / periods[str(period)]).read_bytes(), url=url,
+                               status_code=200, reason="OK")
+
+    loader = web.load_game(v3["game_id"], pbp, box, "recorded", fetch_boxscore=fetch)
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
     assert (event.event_type, event.event_action_type) == tuple(observation["code"])
 

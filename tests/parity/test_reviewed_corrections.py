@@ -23,6 +23,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
 )
 from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
 from pbpstats.data_loader.stats_nba_v3.overrides import (
+    EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
@@ -360,6 +361,38 @@ def test_block_edits_are_validated(blocked, values, message):
     values = {str(n.get(key, key)): value for key, value in values.items()}
     with pytest.raises(V3DecodeError, match=message):
         load(rows, files=edits(EVENT_BLOCKS, values))
+
+
+def test_block_removal_edit_drops_a_block_that_did_not_happen():
+    # The block row names a person on neither roster, as V3 can record a block
+    # that V2 and the box score do not.
+    rows, n = missed_and_rebounded(blocked=True)
+    next(r for r in rows if r["description"] == "Player11 BLOCK (1 BLK)")["personId"] = 99
+    with pytest.raises(V3DecodeError, match="must belong to the opposing roster"):
+        load(rows)
+    loaded = load(rows, files={EVENT_BLOCK_REMOVALS: json.dumps({GAME: [n["miss"]]}).encode()})
+    shot = next(x for x in loaded.events if x.event_num == n["miss"])
+    assert not shot.is_blocked
+    assert dict(code="reviewed_block_removal", event_num=n["miss"], recorded_person_id=99,
+                description="Player11 BLOCK (1 BLK)") in loaded.diagnostics
+    # The dropped block row stays with its miss.
+    index = [i for i, r in enumerate(rows) if r["actionNumber"] == n["miss"]]
+    assert shot.v3_source_indices == tuple(index) and len(index) == 2
+    assert sorted(i for x in loaded.events for i in x.v3_source_indices) == list(range(len(rows)))
+
+
+@pytest.mark.parametrize("blocked, values, message", [
+    (False, ["miss"], "block-removal override does not fit"),
+    (True, ["make"], "block-removal override does not fit"),
+    (True, [999], "block-removal override does not fit"),
+    (True, [], "Invalid event block-removal override"),
+    (True, ["miss", "miss"], "Invalid event block-removal override"),
+], ids=["not_blocked", "made_shot", "unknown_event", "empty", "repeated"])
+def test_block_removal_edits_are_validated(blocked, values, message):
+    rows, n = missed_and_rebounded(blocked)
+    values = [n.get(value, value) for value in values]
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files={EVENT_BLOCK_REMOVALS: json.dumps({GAME: values}).encode()})
 
 
 def tipped_to_opponent():
@@ -1255,3 +1288,74 @@ def test_recorded_clock_from_2021_22_review():
     loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
     assert trip(loader) == [(581, 104), (582, 103), (583, 103)]
     assert loader.counts_by_team == {1610612749: 97, 1610612743: 95}
+
+
+@pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
+    ("0022000042", V3DecodeError, [439, 440, 441, 442, 445, 447], 1610612763,
+     {1610612763: 109, 1610612751: 110}, [(439, "team_id", 1610612751)]),
+    ("0022000215", V3DecodeError, [681, 683, 713], 1610612764,
+     {1610612764: 101, 1610612766: 100}, [(713, "team_id", 1610612764)]),
+    ("0022000285", V3DecodeError, [629, 630], 1610612746,
+     {1610612748: 98, 1610612746: 97},
+     [(629, "team_id", 1610612746), (630, "team_id", 1610612746)]),
+    ("0022000317", V3DecodeError, [663, 664, 666, 667, 669], 1610612740,
+     {1610612758: 101, 1610612740: 102},
+     [(347, "team_id", 1610612740), (669, "is_lane_violation", True)]),
+    ("0022000059", TeamHasBackToBackPossessionsException, [659, 661], 1610612766,
+     {1610612742: 101, 1610612766: 101}, [(661, "is_no_turnover", False)]),
+    ("0022000248", TeamHasBackToBackPossessionsException, [2, 4, 7, 8], 1610612756,
+     {1610612756: 112, 1610612743: 112}, []),
+    ("0022000319", TeamHasBackToBackPossessionsException, [620, 623, 624, 625], 1610612742,
+     {1610612756: 99, 1610612742: 98},
+     [(620, "is_away_from_play_foul", False), (653, "is_possession_ending_event", False)]),
+    ("0022000559", TeamHasBackToBackPossessionsException,
+     [331, 365, 366, 347, 369, 370, 337, 371], 1610612757,
+     {1610612764: 97, 1610612757: 98}, [(371, "is_no_turnover", False)]),
+    ("0022000597", TeamHasBackToBackPossessionsException, [451, 453, 455, 556], 1610612737,
+     {1610612737: 87, 1610612739: 88}, [(556, "is_no_turnover", False)]),
+    ("0022000729", TeamHasBackToBackPossessionsException, [334, 336, 337], 1610612747,
+     {1610612749: 101, 1610612747: 102}, []),
+    ("0022000733", TeamHasBackToBackPossessionsException, [342], 1610612744,
+     {1610612744: 98, 1610612748: 99}, [(354, "is_possession_ending_event", False)]),
+    ("0022000798", TeamHasBackToBackPossessionsException, [616, 617, 626, 628], 1610612764,
+     {1610612764: 102, 1610612744: 102}, []),
+    ("0022000853", V3DecodeError, [368, 373, 374, 375], 1610612759,
+     {1610612757: 94, 1610612759: 94}, []),
+    ("0022000997", TeamHasBackToBackPossessionsException, [420, 422], 1610612764,
+     {1610612764: 109, 1610612761: 110}, []),
+    ("0022000925", TeamHasBackToBackPossessionsException, [340], 1610612763,
+     {1610612763: 104, 1610612743: 104}, [(337, "clock", "0:00.2")]),
+    ("0022001049", V3DecodeError, [409, 468, 469], 1610612753,
+     {1610612753: 96, 1610612737: 97},
+     [(409, "is_blocked", False), (409, "v3_source_indices", (330, 331))]),
+    ("0022000056", TeamHasBackToBackPossessionsException, [472, 474, 475, 478], 1610612763,
+     {1610612763: 102, 1610612738: 102},
+     [(486, "clock", "1:22"), (488, "is_possession_ending_event", False)]),
+    ("0022001050", TeamHasBackToBackPossessionsException, [485, 487], 1610612755,
+     {1610612748: 88, 1610612755: 88}, [(487, "is_possession_ending_event", True)]),
+])
+def test_recorded_corrections_from_2020_21_review(game, recorded, trip, offense, counts, checks):
+    # 0022000042 Q3 5:06 and 0022000317 Q2 0:16.2: delay technicals recorded
+    # without a team. 0022000215 Q4 2:22 and 0022000285 Q4 0:27.5: excess
+    # timeout technicals and turnovers recorded without a team. 0022000317 Q4
+    # 1:52: a lane violation recorded without a subtype. 0022000059 Q4 5:18,
+    # 0022000559 Q2 1:21 and 0022000597 Q3 0:38.2: a personal foul by the team
+    # with the ball, charged as a turnover recorded without a subtype.
+    # 0022000248 Q1 12:00: the opening tip, recorded to Millsap before Jokic's
+    # jump ball violation. 0022000319 Q2 1:52: a made free throw 1 of 1 and the
+    # goaltending turnover of the same trip; Q4 0:54.7: an away-from-play foul
+    # that was played as a personal foul. 0022000729 Q3: a delay of game
+    # violation listed before the period's start. 0022000733 Q2 0:03.8: an
+    # away-from-play free throw at the clock of Butler's made free throws.
+    # 0022000798 Q4 0:46 and 0022000997 Q3 5:09: a blocked shot and its team
+    # rebound, listed after the held ball they caused. 0022000853 Q3 8:13: a
+    # stale substitution, left after the real one was added at 9:26.
+    # 0022000925 Q2 0:00.2: Morant's travel, recorded at 0:00 after the replay
+    # that confirmed 0.2 seconds, and Memphis' inbound held ball that Denver
+    # won. 0022001049 Q3 2:33: a block by a person in no 2020-21 game, where
+    # video shows none. 0022000056 Q3: Clarke's free throws for the 2:11 foul,
+    # shot at the 1:22 stoppage but recorded at 2:11. 0022001050 Q4 8:39: Miami
+    # had the ball after Philadelphia's timeout, with no recorded reason.
+    loader = check_recorded_correction(game, recorded, trip, offense, counts)
+    for event, attribute, value in checks:
+        assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

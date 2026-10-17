@@ -118,6 +118,7 @@ FOULS = {
     "Offensive": 4,
     "Inbound": 5,
     "Away From Play": 6,
+    "Punching": 8,
     "Clear Path": 9,
     "Double Personal": 10,
     "Technical": 11,
@@ -323,7 +324,7 @@ def clock_text(value):
 class DecodedV3:
     def __init__(
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
-        teams=None, foul_opponents=None, removed=(),
+        teams=None, foul_opponents=None, removed=(), block_removals=(),
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -337,18 +338,21 @@ class DecodedV3:
         self.recorded_jump_balls = []
         # Reviewed facts an event cannot be decoded without (see overrides):
         # a team heave's side, a renumbered jump ball's live action, the team of
-        # an event recorded with neither team nor person, and the other party of
-        # a double foul whose text names nobody. The recorded rows stay
-        # unchanged; each fact must be used by its event.
+        # an event recorded with neither team nor person, the other party of
+        # a double foul whose text names nobody, and a missed shot's recorded
+        # block that did not happen. The recorded rows stay unchanged; each fact
+        # must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
         self.reviewed_teams = dict(teams or {})
         self.reviewed_foul_opponents = dict(foul_opponents or {})
+        self.reviewed_block_removals = set(block_removals)
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
             "team": set(self.reviewed_teams),
             "foul-opponent": set(self.reviewed_foul_opponents),
+            "block-removal": set(self.reviewed_block_removals),
         }
         # Events a reviewed removal drops are not part of the recorded
         # starter/substitution stream.
@@ -603,6 +607,18 @@ class DecodedV3:
                 not in (("stealer", "Turnover"), ("blocker", "Missed Shot"), ("blocker", "Heave"))
             ):
                 raise V3DecodeError("Unsupported or conflicting secondary row")
+            if (role, kind) == ("blocker", "Missed Shot") and (
+                row["actionNumber"] in self.reviewed_block_removals
+            ):
+                # A reviewed block that did not happen: the miss is decoded as
+                # V2 records it, with no blocker; the row stays in its group.
+                self._unused_reviewed["block-removal"].discard(row["actionNumber"])
+                self.reviewed_inputs.append(dict(
+                    code="reviewed_block_removal", event_num=row["actionNumber"],
+                    recorded_person_id=secondary["personId"],
+                    description=secondary["description"],
+                ))
+                continue
             identity = secondary["personId"]
             if kind == "Heave" and role == "blocker" and identity == 0:
                 opposing = next(t for t in self.context.team_ids if t != team)
