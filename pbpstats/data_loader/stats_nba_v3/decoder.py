@@ -33,6 +33,36 @@ LIVE_JUMP_BALL_FIELDS = (
 )
 
 
+# A jump ball's facts as a reviewed V2 export row records them (see overrides),
+# with the export's own field names.
+V2_JUMP_BALL_FIELDS = (
+    "EVENTNUM",
+    "EVENTMSGTYPE",
+    "EVENTMSGACTIONTYPE",
+    "PERIOD",
+    "PCTIMESTRING",
+    "HOMEDESCRIPTION",
+    "NEUTRALDESCRIPTION",
+    "VISITORDESCRIPTION",
+    "PERSON1TYPE",
+    "PLAYER1_ID",
+    "PERSON2TYPE",
+    "PLAYER2_ID",
+    "PERSON3TYPE",
+    "PLAYER3_ID",
+)
+# V2 person types: 2/3 a home/visitor team, 4/5 a home/visitor player.
+V2_TEAM_TYPES, V2_PLAYER_TYPES = (2, 3), (4, 5)
+
+
+# NBA 2019-20 records most team technicals (a delay technical, or a technical)
+# with neither a team nor a person in V3 and V2 alike: 22 of 33 delay
+# technicals and 3 of 4 technicals. 2020-21 records 2 of 18 delay technicals
+# so; 2018-19 and 2021-22 to 2025-26 always record the team.
+TEAMLESS_TECHNICAL_VERSION = "nba_teamless_team_technical_v1"
+TEAMLESS_TECHNICALS = ("Technical", "Delay Technical")
+
+
 def live_play_by_play_url(game_id):
     league = "WNBA" if game_id.startswith("10") else "NBA"
     return LIVE_PLAY_BY_PLAY_URL.format(league=league, game_id=game_id)
@@ -325,6 +355,7 @@ class DecodedV3:
     def __init__(
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
+        v2_jump_balls=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -339,21 +370,25 @@ class DecodedV3:
         # Reviewed facts an event cannot be decoded without (see overrides):
         # a team heave's side, a renumbered jump ball's live action, the team of
         # an event recorded with neither team nor person, the other party of
-        # a double foul whose text names nobody, and a missed shot's recorded
-        # block that did not happen. The recorded rows stay unchanged; each fact
-        # must be used by its event.
+        # a double foul whose text names nobody, a missed shot's recorded
+        # block that did not happen, and the V2 export row of a jump ball V3
+        # leaves undecided when no live play-by-play records the game. The
+        # recorded rows stay unchanged; each fact must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
         self.reviewed_teams = dict(teams or {})
         self.reviewed_foul_opponents = dict(foul_opponents or {})
         self.reviewed_block_removals = set(block_removals)
+        self.reviewed_v2_jump_balls = dict(v2_jump_balls or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
             "team": set(self.reviewed_teams),
             "foul-opponent": set(self.reviewed_foul_opponents),
             "block-removal": set(self.reviewed_block_removals),
+            "v2-jump-ball": set(self.reviewed_v2_jump_balls),
         }
+        self.team_technicals = []
         # Events a reviewed removal drops are not part of the recorded
         # starter/substitution stream.
         self.reviewed_removed = set(removed)
@@ -525,6 +560,8 @@ class DecodedV3:
             )
         if team and team not in self.context.team_ids:
             raise V3DecodeError("Unknown event team")
+        if kind == "Foul" and subtype in TEAMLESS_TECHNICALS and not team and not player:
+            team = self._teamless_technical_team(row)
         non_roster = (
             player
             and player not in self.context.roster
@@ -808,13 +845,18 @@ class DecodedV3:
                 )
                 recipient_team = self.context.roster[recipient]["team_id"]
             except V3DecodeError as error:
-                if self.live_jump_balls is None:
+                if row["actionNumber"] in self.reviewed_v2_jump_balls:
+                    jumper, recipient, recipient_team = self._reviewed_v2_jump_ball(
+                        row, opponent, match
+                    )
+                elif self.live_jump_balls is None:
                     raise V3JumpBallEvidenceRequired(
                         str(error), url=live_play_by_play_url(self.context.game_id)
                     ) from error
-                jumper, recipient, recipient_team = self._recorded_jump_ball(
-                    row, opponent, match
-                )
+                else:
+                    jumper, recipient, recipient_team = self._recorded_jump_ball(
+                        row, opponent, match
+                    )
             event.update(
                 EVENTMSGTYPE=10,
                 EVENTMSGACTIONTYPE=JUMP_BALLS[subtype],
@@ -860,28 +902,17 @@ class DecodedV3:
             or live["period"] != row["period"]
         ):
             raise V3DecodeError("Recorded live play-by-play lacks this jump ball")
-        player = row["personId"]
-        jumpers = [live.get("jumpBallWonPersonId"), live.get("jumpBallLostPersonId")]
-        if jumpers.count(player) != 1:
-            raise V3DecodeError("Recorded live jumpers disagree with the V3 jumper")
-        jumper = jumpers[1 - jumpers.index(player)]
-        if self.context.roster.get(jumper, {}).get("team_id") != opponent or (
-            match and jumper not in self._candidates(match[2], opponent)
-        ):
-            raise V3DecodeError("Recorded live opposing jumper disagrees with V3")
-        if recovered:
-            if recovered not in self.context.roster or (
-                match and recovered not in self._candidates(match[3])
-            ):
-                raise V3DecodeError("Recorded live tip recipient disagrees with V3")
-            recipient, recipient_team = recovered, self.context.roster[recovered]["team_id"]
-        else:
-            # The live "possession" field can already reflect a held-ball
-            # turnover recorded next; the recovering team is the action's team.
-            winner = live["teamId"]
-            if match or live["personId"] or winner not in self.context.team_ids:
-                raise V3DecodeError("Recorded live team recovery is not explicit")
-            recipient, recipient_team = winner, None
+        # The live "possession" field can already reflect a held-ball turnover
+        # recorded next; a recovering team is the action's team.
+        player, jumper, recipient, recipient_team = self._jump_ball_roles(
+            row,
+            opponent,
+            match,
+            [live.get("jumpBallWonPersonId"), live.get("jumpBallLostPersonId")],
+            recovered,
+            None if live["personId"] else live["teamId"],
+            "Recorded live",
+        )
         self.recorded_jump_balls.append(
             dict(
                 code="recorded_live_jump_ball",
@@ -894,6 +925,114 @@ class DecodedV3:
             )
         )
         return jumper, recipient, recipient_team
+
+    def _reviewed_v2_jump_ball(self, row, opponent, match):
+        """Jump-ball facts V3 omits, from the reviewed V2 export row of a game
+        the live feed does not record.
+
+        V2 records both jumpers as PLAYER1/PLAYER2 and the recovering player,
+        or for a team recovery the team, as PLAYER3. The row must be this
+        event's: the same event number, period and whole-second clock. Every
+        fact V3 itself records must agree, as with the live feed.
+        """
+        v2 = self.reviewed_v2_jump_balls[row["actionNumber"]]
+        minutes, seconds = CLOCK.fullmatch(row["clock"]).groups()
+        if (
+            v2["EVENTMSGTYPE"] != 10
+            or v2["EVENTNUM"] != row["actionNumber"]
+            or v2["PERIOD"] != row["period"]
+            or v2["PCTIMESTRING"] != "{}:{:02d}".format(int(minutes), int(Decimal(seconds)))
+            or v2["PERSON1TYPE"] not in V2_PLAYER_TYPES
+            or v2["PERSON2TYPE"] not in V2_PLAYER_TYPES
+            or v2["PERSON3TYPE"] not in V2_PLAYER_TYPES + V2_TEAM_TYPES
+        ):
+            raise V3DecodeError("Event v2-jump-ball override does not fit the recorded event")
+        self._unused_reviewed["v2-jump-ball"].discard(row["actionNumber"])
+        team_recovery = v2["PERSON3TYPE"] in V2_TEAM_TYPES
+        player, jumper, recipient, recipient_team = self._jump_ball_roles(
+            row,
+            opponent,
+            match,
+            [v2["PLAYER1_ID"], v2["PLAYER2_ID"]],
+            None if team_recovery else v2["PLAYER3_ID"],
+            v2["PLAYER3_ID"] if team_recovery else None,
+            "Reviewed V2 export",
+        )
+        self.reviewed_inputs.append(
+            dict(
+                code="reviewed_v2_jump_ball",
+                event_num=row["actionNumber"],
+                jumpers=[player, jumper],
+                recipient=recipient,
+                team_recovery=team_recovery,
+                basis="V2 event number, period and clock, and V3 jumper personId",
+            )
+        )
+        return jumper, recipient, recipient_team
+
+    def _jump_ball_roles(self, row, opponent, match, jumpers, recovered, winner, source):
+        """The V3 jumper's opponent and the recipient, from recorded jump-ball facts.
+
+        ``jumpers`` are both jumpers' IDs, ``recovered`` the recovering player's
+        or None, and ``winner`` the recovering team when no player recovered.
+        """
+        player = row["personId"]
+        if jumpers.count(player) != 1:
+            raise V3DecodeError(source + " jumpers disagree with the V3 jumper")
+        jumper = jumpers[1 - jumpers.index(player)]
+        if self.context.roster.get(jumper, {}).get("team_id") != opponent or (
+            match and jumper not in self._candidates(match[2], opponent)
+        ):
+            raise V3DecodeError(source + " opposing jumper disagrees with V3")
+        if recovered:
+            if recovered not in self.context.roster or (
+                match and recovered not in self._candidates(match[3])
+            ):
+                raise V3DecodeError(source + " tip recipient disagrees with V3")
+            return player, jumper, recovered, self.context.roster[recovered]["team_id"]
+        if match or winner not in self.context.team_ids:
+            raise V3DecodeError(source + " team recovery is not explicit")
+        return player, jumper, winner, None
+
+    def _teamless_technical_team(self, row):
+        # The team charged is the one that did not shoot the technical free
+        # throw at the technical's period and clock. A delay-of-game violation
+        # recorded there must be that team's: both teams can delay at once (a
+        # warning for one, a technical for the other), so it alone cannot decide.
+        if not self.context.game_id.startswith("00"):
+            raise V3DecodeError("Event requires a known team")
+        same_time = [
+            source for source in self.raw_rows
+            if source is not row
+            and (source["period"], source["clock"]) == (row["period"], row["clock"])
+        ]
+        shooters = {
+            self.context.roster.get(source["personId"], {}).get("team_id")
+            for source in same_time
+            if source["actionType"] == "Free Throw"
+            and source["subType"] == "Free Throw Technical"
+        }
+        if len(shooters) != 1 or not shooters <= set(self.context.team_ids):
+            raise V3DecodeError(
+                "Team technical requires one recorded technical free-throw team"
+            )
+        team = next(t for t in self.context.team_ids if t not in shooters)
+        violations = [
+            source for source in same_time
+            if source["actionType"] == "Violation" and source["subType"] == "Delay Of Game"
+        ]
+        if any((source["teamId"] or source["personId"]) != team for source in violations):
+            raise V3DecodeError("Team technical contradicts a recorded delay-of-game violation")
+        self.team_technicals.append(
+            dict(
+                code=TEAMLESS_TECHNICAL_VERSION,
+                event_num=row["actionNumber"],
+                team_id=team,
+                basis="opponent_of_technical_free_throw_shooter",
+                delay_of_game_violations=sorted(s["actionNumber"] for s in violations),
+            )
+        )
+        return team
 
     def _team_heave_team(self, row):
         from .team_heave import TEAM_HEAVE_VERSION

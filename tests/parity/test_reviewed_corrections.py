@@ -18,10 +18,11 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3Context,
     V3DecodeError,
     V3JumpBallEvidence,
+    V3JumpBallEvidenceRequired,
     V3Overrides,
     web,
 )
-from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
+from pbpstats.data_loader.stats_nba_v3.decoder import V2_JUMP_BALL_FIELDS, DecodedV3
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
@@ -38,6 +39,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
+    EVENT_V2_JUMP_BALLS,
     SUPPORTED,
 )
 from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
@@ -1126,7 +1128,8 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
 
 
 def check_recorded_correction(game, recorded, trip, offense, counts):
-    """The recording fails as recorded and parses with its reviewed correction."""
+    """The recording fails as recorded (or, for ``recorded`` None, parses by a
+    later versioned rule) and parses with its reviewed correction."""
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     live = DATA / f"live_{game}.json"
@@ -1136,8 +1139,9 @@ def check_recorded_correction(game, recorded, trip, offense, counts):
         path = DATA / f"stats_boxscoretraditionalv2_{game}_period_{period}.json"
         return SimpleNamespace(content=path.read_bytes(), url=url, status_code=200, reason="OK")
 
-    with pytest.raises(recorded):
-        web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live)
+    if recorded is not None:
+        with pytest.raises(recorded):
+            web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live)
     loader = web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live,
                            overrides=web.reviewed_overrides(game, pbp))
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
@@ -1291,14 +1295,14 @@ def test_recorded_clock_from_2021_22_review():
 
 
 @pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
-    ("0022000042", V3DecodeError, [439, 440, 441, 442, 445, 447], 1610612763,
+    ("0022000042", None, [439, 440, 441, 442, 445, 447], 1610612763,
      {1610612763: 109, 1610612751: 110}, [(439, "team_id", 1610612751)]),
     ("0022000215", V3DecodeError, [681, 683, 713], 1610612764,
      {1610612764: 101, 1610612766: 100}, [(713, "team_id", 1610612764)]),
     ("0022000285", V3DecodeError, [629, 630], 1610612746,
      {1610612748: 98, 1610612746: 97},
      [(629, "team_id", 1610612746), (630, "team_id", 1610612746)]),
-    ("0022000317", V3DecodeError, [663, 664, 666, 667, 669], 1610612740,
+    ("0022000317", TeamHasBackToBackPossessionsException, [663, 664, 666, 667, 669], 1610612740,
      {1610612758: 101, 1610612740: 102},
      [(347, "team_id", 1610612740), (669, "is_lane_violation", True)]),
     ("0022000059", TeamHasBackToBackPossessionsException, [659, 661], 1610612766,
@@ -1336,7 +1340,8 @@ def test_recorded_clock_from_2021_22_review():
 ])
 def test_recorded_corrections_from_2020_21_review(game, recorded, trip, offense, counts, checks):
     # 0022000042 Q3 5:06 and 0022000317 Q2 0:16.2: delay technicals recorded
-    # without a team. 0022000215 Q4 2:22 and 0022000285 Q4 0:27.5: excess
+    # without a team, which nba_teamless_team_technical_v1 now decodes to the
+    # same teams. 0022000215 Q4 2:22 and 0022000285 Q4 0:27.5: excess
     # timeout technicals and turnovers recorded without a team. 0022000317 Q4
     # 1:52: a lane violation recorded without a subtype. 0022000059 Q4 5:18,
     # 0022000559 Q2 1:21 and 0022000597 Q3 0:38.2: a personal foul by the team
@@ -1357,5 +1362,193 @@ def test_recorded_corrections_from_2020_21_review(game, recorded, trip, offense,
     # shot at the 1:22 stoppage but recorded at 2:11. 0022001050 Q4 8:39: Miami
     # had the ball after Philadelphia's timeout, with no recorded reason.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
+    for event, attribute, value in checks:
+        assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+
+
+def blank_opening_tip():
+    """The opening tip, Player1 against Player11, which HOME recovers as a team;
+    the feed leaves its description blank."""
+    rows = encode_v3(wrap([
+        e("jump", 720, HOME, 1, opponent=11, winner=2),
+        e("make", 700, HOME, 2),
+        e("make", 680, AWAY, 11),
+    ]))
+    jump = numbered(rows, "Jump Ball")
+    next(r for r in rows if r["actionNumber"] == jump)["description"] = " "
+    return rows, jump
+
+
+def v2_jump_ball(event, **changes):
+    """The jump ball's V2 export row: values as the export records them."""
+    row = dict(
+        EVENTNUM=str(event), EVENTMSGTYPE="10", EVENTMSGACTIONTYPE="0", PERIOD="1",
+        PCTIMESTRING="12:00", HOMEDESCRIPTION="", NEUTRALDESCRIPTION="", VISITORDESCRIPTION="",
+        PERSON1TYPE="4", PLAYER1_ID="1", PERSON2TYPE="5", PLAYER2_ID="11",
+        PERSON3TYPE="2", PLAYER3_ID=str(HOME),
+    )
+    row.update(changes)
+    return row
+
+
+@pytest.mark.parametrize("changes, recipient", [
+    ({}, None),
+    ({"PERSON3TYPE": "4", "PLAYER3_ID": "2"}, 2),
+], ids=["team_recovery", "player_recovery"])
+def test_v2_jump_ball_edit_decides_a_jump_ball_the_feed_leaves_blank(changes, recipient):
+    rows, jump = blank_opening_tip()
+    with pytest.raises(V3JumpBallEvidenceRequired):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_V2_JUMP_BALLS, {str(jump): v2_jump_ball(jump, **changes)}))
+    event = next(x for x in loaded.events if x.event_num == jump)
+    # The original reads a jump ball's PLAYER3 into player2_id, the recipient, or
+    # for a team recovery into team_id, and PLAYER2 into player3_id.
+    assert event.player3_id == 11
+    assert (getattr(event, "player2_id", None), event.team_id) == (recipient, HOME)
+    assert offenses(loaded) == [HOME, AWAY, HOME]
+    assert dict(
+        code="reviewed_v2_jump_ball", event_num=jump, jumpers=[1, 11],
+        recipient=recipient or HOME, team_recovery=recipient is None,
+        basis="V2 event number, period and clock, and V3 jumper personId",
+    ) in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("changes, message", [
+    ({"EVENTNUM": "99"}, "v2-jump-ball override does not fit"),
+    ({"PERIOD": "2"}, "v2-jump-ball override does not fit"),
+    ({"PCTIMESTRING": "11:59"}, "v2-jump-ball override does not fit"),
+    ({"EVENTMSGTYPE": "8"}, "v2-jump-ball override does not fit"),
+    ({"PERSON3TYPE": "1"}, "v2-jump-ball override does not fit"),
+    ({"PLAYER1_ID": "3"}, "Reviewed V2 export jumpers disagree with the V3 jumper"),
+    ({"PLAYER2_ID": "2"}, "Reviewed V2 export opposing jumper disagrees with V3"),
+    ({"PLAYER3_ID": "1610612799"}, "Reviewed V2 export team recovery is not explicit"),
+    ({"PERSON3TYPE": "4", "PLAYER3_ID": "99"}, "Reviewed V2 export tip recipient disagrees"),
+    ({"PLAYER1_ID": "Player1"}, "Invalid event v2-jump-ball override"),
+    ({"VISITORDESCRIPTION": None}, "Invalid event v2-jump-ball override"),
+], ids=["other_event", "other_period", "other_clock", "not_a_jump_ball", "unknown_person_type",
+        "other_v3_jumper", "same_team_jumper", "team_not_in_game", "recipient_not_on_roster",
+        "unnumbered_id", "missing_text"])
+def test_v2_jump_ball_edits_are_validated(changes, message):
+    rows, jump = blank_opening_tip()
+    row = v2_jump_ball(jump, **changes)
+    if row["VISITORDESCRIPTION"] is None:
+        del row["VISITORDESCRIPTION"]
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_V2_JUMP_BALLS, {str(jump): row}))
+
+
+def test_v2_jump_ball_edit_needs_a_jump_ball_v3_leaves_undecided():
+    rows, jump = blank_opening_tip()
+    next(r for r in rows if r["actionNumber"] == jump)["description"] = (
+        "Jump Ball Player1 vs. Player11: Tip to Player2"
+    )
+    with pytest.raises(V3DecodeError, match="v2-jump-ball override does not fit"):
+        load(rows, files=edits(EVENT_V2_JUMP_BALLS, {str(jump): v2_jump_ball(jump)}))
+
+
+V2_JUMP_BALLS = json.loads((ROOT / "tests/parity/v2-jump-ball-evidence.json").read_bytes())
+
+
+def test_v2_jump_ball_entries_are_their_pinned_export_rows():
+    # Each entry is the V2_JUMP_BALL_FIELDS of one row of the pinned 2019-20
+    # export archive, whose blob and member hashes are recorded with its rows.
+    archive = V2_JUMP_BALLS["archive"]
+    assert "/" + V2_JUMP_BALLS["revision"] + "/" in archive["raw_url"]
+    assert archive["raw_url"].endswith("/datasets/" + archive["member"].replace(".csv", ".tar.xz"))
+    entries = {
+        game: entry["files"][EVENT_V2_JUMP_BALLS]
+        for game, entry in web.REVIEWED_CORRECTIONS.items()
+        if EVENT_V2_JUMP_BALLS in entry["files"]
+    }
+    assert set(entries) == set(V2_JUMP_BALLS["rows"])
+    for game, rows in V2_JUMP_BALLS["rows"].items():
+        assert entries[game] == {
+            event: {field: row[field] for field in V2_JUMP_BALL_FIELDS} for event, row in rows.items()
+        }
+        assert all(row["GAME_ID"] == game.lstrip("0") for row in rows.values())
+        assert V2_JUMP_BALLS["revision"] in web.REVIEWED_CORRECTIONS[game]["source"]
+        pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+        assert hashlib.sha256(pbp).hexdigest() == web.REVIEWED_CORRECTIONS[game]["pbp_sha256"]
+
+
+@pytest.mark.parametrize("game, trip, offense, counts, checks", [
+    ("0021900319", [686, 690, 691, 692, 693], 1610612756,
+     {1610612740: 117, 1610612756: 115},
+     [(686, 'team_id', 1610612756), (686, 'player3_id', 1626164)]),
+    ("0021900328", [655, 659, 660, 661, 664, 665, 667, 669, 672, 673, 674, 677], 1610612758,
+     {1610612758: 105, 1610612759: 104},
+     [(661, 'team_id', 1610612758), (661, 'player3_id', 1626158)]),
+    ("0021900676", [2, 4, 7, 8], 1610612740,
+     {1610612740: 99, 1610612743: 98},
+     [(4, 'team_id', 1610612740), (4, 'player3_id', 203924)]),
+    ("0021900698", [675, 680, 677, 681, 683, 684], 1610612762,
+     {1610612762: 108, 1610612745: 109},
+     [(677, 'team_id', 1610612762), (677, 'player3_id', 201569)]),
+    ("0021900713", [176, 178, 179, 181, 184, 185, 186, 188], 1610612760,
+     {1610612760: 95, 1610612758: 94},
+     [(181, 'team_id', 1610612760), (181, 'player3_id', 203500)]),
+    ("0021900718", [365, 366, 367, 371, 376, 379], 1610612762,
+     {1610612743: 94, 1610612762: 93},
+     [(371, 'team_id', 1610612762), (371, 'player3_id', 1626220)]),
+    ("0021900763", [375, 376, 377, 380], 1610612746,
+     {1610612746: 100, 1610612748: 101},
+     [(377, 'team_id', 1610612748), (377, 'player3_id', 1629134)]),
+    ("0021900776", [329, 333], 1610612762,
+     {1610612762: 100, 1610612757: 99},
+     [(329, 'team_id', 1610612757), (329, 'player3_id', 1629018)]),
+    ("0021900783", [2, 4, 7], 1610612744,
+     {1610612744: 105, 1610612747: 105},
+     [(4, 'team_id', 1610612744), (4, 'player3_id', 201580)]),
+    ("0021900790", [502, 504, 506, 507, 510, 515, 512, 516, 518, 520, 521], 1610612745,
+     {1610612762: 97, 1610612745: 96},
+     [(512, 'team_id', 1610612745), (512, 'player3_id', 1626220)]),
+    ("0021900793", [416, 418, 421], 1610612766,
+     {1610612766: 88, 1610612765: 88},
+     [(418, 'team_id', 1610612765), (418, 'player3_id', 1628370)]),
+    ("0021900796", [599, 601, 588, 590, 591, 589, 594, 597, 598], 1610612750,
+     {1610612750: 109, 1610612761: 110},
+     [(594, 'player2_id', 201949), (594, 'player3_id', 1626157)]),
+    ("0021900799", [593, 594, 596, 599], 1610612759,
+     {1610612743: 93, 1610612759: 93},
+     [(596, 'player2_id', 1627749), (596, 'player3_id', 200746), (603, 'player2_id', 1627749), (603, 'player3_id', 1626168)]),
+    ("0021900818", [698, 700, 703, 704, 705], 1610612746,
+     {1610612746: 125, 1610612738: 124},
+     [(700, 'player2_id', 101150), (700, 'player3_id', 1626149)]),
+    ("0021900822", [2, 4, 8, 9], 1610612755,
+     {1610612755: 104, 1610612751: 105},
+     [(4, 'player2_id', 202699), (4, 'player3_id', 1628386)]),
+    ("0021900833", [33, 37, 39, 40], 1610612763,
+     {1610612763: 104, 1610612747: 104},
+     [(33, 'team_id', 1610612763), (33, 'player3_id', 1628991)]),
+    ("0021900856", [2, 4, 8, 10, 11, 12], 1610612763,
+     {1610612763: 100, 1610612746: 100},
+     [(4, 'team_id', 1610612763), (4, 'player3_id', 202685)]),
+    ("0021900867", [109, 105, 106, 110, 115], 1610612753,
+     {1610612737: 103, 1610612753: 103},
+     [(110, 'team_id', 1610612753), (110, 'player3_id', 1628964)]),
+    ("0021900914", [432, 434, 409, 412], 1610612756,
+     {1610612761: 106, 1610612756: 106},
+     [(409, 'team_id', 1610612756), (409, 'player3_id', 1626181)]),
+    ("0021900916", [405, 406, 407, 410, 412, 413], 1610612758,
+     {1610612764: 106, 1610612758: 106},
+     [(407, 'team_id', 1610612758), (407, 'player3_id', 202722)]),
+    ("0021900933", [558, 559, 560, 562, 565], 1610612738,
+     {1610612762: 92, 1610612738: 94},
+     [(562, 'team_id', 1610612738), (562, 'player3_id', 1626220)]),
+    ("0021900943", [498, 502, 503], 1610612763,
+     {1610612763: 106, 1610612737: 106},
+     [(498, 'player2_id', 1626145), (498, 'player3_id', 1628381)]),
+    ("0021900967", [2, 4, 7, 8, 9], 1610612746,
+     {1610612746: 99, 1610612744: 98},
+     [(4, 'team_id', 1610612746), (4, 'player3_id', 1627826)])
+])
+def test_recorded_corrections_from_2019_20_review(game, trip, offense, counts, checks):
+    # Jump balls V3 leaves undecided, blank or naming a tip recipient by a
+    # surname several players share, in games the live play-by-play does not
+    # record; each is decided by its V2 export row. The original reads PLAYER3
+    # into player2_id, the recipient (team_id for a team recovery), and PLAYER2
+    # into player3_id, the other jumper.
+    loader = check_recorded_correction(game, V3JumpBallEvidenceRequired, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

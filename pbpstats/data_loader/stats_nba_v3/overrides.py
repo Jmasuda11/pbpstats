@@ -6,7 +6,7 @@ import json
 
 from pbpstats.overrides import IntDecoder
 
-from .decoder import CLOCK, V3DecodeError
+from .decoder import CLOCK, V2_JUMP_BALL_FIELDS, V3DecodeError
 
 
 BAD_POSSESSIONS = "bad_pbp_possessions.json"
@@ -42,7 +42,13 @@ STARTERS = "missing_period_starters.json"
 # entry, {event: person}, names the other party of a double foul whose text
 # names nobody. A block-removal entry, [event, ...], drops the block V3 records
 # with a missed shot that had none, as V2 records the miss with no blocker; the
-# block row stays with the miss.
+# block row stays with the miss. A V2 jump-ball entry, {event: V2 row}, gives
+# the V2 export row (the V2_JUMP_BALL_FIELDS of a pinned season archive) of a
+# jump ball V3 leaves undecided in a game the live play-by-play does not record.
+EVENT_V2_JUMP_BALLS = "event_v2_jump_balls.json"
+V2_TEXT_FIELDS = (
+    "PCTIMESTRING", "HOMEDESCRIPTION", "NEUTRALDESCRIPTION", "VISITORDESCRIPTION"
+)
 EVENT_ORDER = "event_order.json"
 EVENT_SUBTYPES = "event_subtypes.json"
 EVENT_CLOCKS = "event_clocks.json"
@@ -76,6 +82,7 @@ SUPPORTED = {
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
+    EVENT_V2_JUMP_BALLS,
     KEEP_EVENTS,
     STARTERS,
 }
@@ -187,6 +194,24 @@ class V3Overrides:
                         type(event) is not int or event < 0 for event in entries
                     ) or len(set(entries)) != len(entries):
                         raise V3DecodeError("Invalid event block-removal override")
+                    continue
+                if name == EVENT_V2_JUMP_BALLS:
+                    # The export's values as read back: numbers for its numeric
+                    # fields, text for the clock and the descriptions.
+                    if not isinstance(entries, dict) or not entries or any(
+                        type(event) is not int
+                        or event < 0
+                        or not isinstance(row, dict)
+                        or set(row) != set(V2_JUMP_BALL_FIELDS)
+                        or any(
+                            not isinstance(row[field], str)
+                            if field in V2_TEXT_FIELDS
+                            else type(row[field]) is not int or row[field] < 0
+                            for field in row
+                        )
+                        for event, row in entries.items()
+                    ):
+                        raise V3DecodeError("Invalid event v2-jump-ball override")
                     continue
                 if name == EVENT_LOCATIONS:
                     if not isinstance(entries, dict) or not entries or any(

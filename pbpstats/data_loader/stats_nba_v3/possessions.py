@@ -17,6 +17,7 @@ from .decoder import (
     FOULS,
     FREE_THROWS,
     REBOUNDS,
+    TEAMLESS_TECHNICAL_VERSION,
     TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
@@ -42,6 +43,7 @@ from .overrides import (
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
+    EVENT_V2_JUMP_BALLS,
     KEEP_EVENTS,
     STARTERS,
 )
@@ -631,6 +633,9 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             block_removals=reviewed_entries(
                 self.overrides, EVENT_BLOCK_REMOVALS, context.game_id, []
             ),
+            v2_jump_balls=reviewed_entries(
+                self.overrides, EVENT_V2_JUMP_BALLS, context.game_id, {}
+            ),
         )
         self.decoded = decoded
         self.game_id = context.game_id
@@ -654,6 +659,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         self.diagnostics = (
             override_diagnostics + enhanced.repairs
             + deepcopy(list(decoded.team_heaves.values()))
+            + deepcopy(decoded.team_technicals)
             + deepcopy(decoded.non_roster_actors)
             + deepcopy(decoded.reviewed_inputs)
             + ([dict(decoded.live_input)] if decoded.live_input else [])
@@ -691,6 +697,8 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             "defect_guards": [TEAM_IDS_GUARD],
         }
         extensions = [TEAM_HEAVE_VERSION] if decoded.team_heaves else []
+        if decoded.team_technicals:
+            extensions.append(TEAMLESS_TECHNICAL_VERSION)
         if held_balls:
             extensions.append(HELD_BALL_VERSION)
         if extensions:

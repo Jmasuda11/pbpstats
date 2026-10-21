@@ -1,4 +1,572 @@
 {
+  "0021900319": {
+    "pbp_sha256": "1a370089a0956d88c2404c4e43da4d997b16e4703edffaa8f5dfbb122cb03742",
+    "source": "Reviewed 2026-10-17: at Q4 2:07 Holiday and Booker jumped and Phoenix recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 686. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "686": {
+          "EVENTNUM": "686",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "2:07",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "201950",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626164",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612756"
+        }
+      }
+    }
+  },
+  "0021900328": {
+    "pbp_sha256": "3960eccee0570fd142e89709bc610012146347f587aade7e6c1e878b1e710b97",
+    "source": "Reviewed 2026-10-17: at Q4 0:15.1 Aldridge and Holmes jumped and Sacramento recovered the ball; V3 records only \"Coach Challenge\" as the jump ball's description. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 661. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "661": {
+          "EVENTNUM": "661",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "1",
+          "PERIOD": "4",
+          "PCTIMESTRING": "0:15",
+          "HOMEDESCRIPTION": "Coach Challenge",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "200746",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626158",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612758"
+        }
+      }
+    }
+  },
+  "0021900676": {
+    "pbp_sha256": "a85738fb656d6d0cc9fb991fe08d7483ba3e3f13ddd29e97cd92a462583e07ca",
+    "source": "Reviewed 2026-10-17: at Q1 12:00 Favors and Grant jumped and New Orleans recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "4": {
+          "EVENTNUM": "4",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "12:00",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "202324",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "203924",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612740"
+        }
+      }
+    }
+  },
+  "0021900698": {
+    "pbp_sha256": "c9a4ddf92cec2e3299e91daf8e3d0103abcc113d1d0a56fe2eccfb8ad8c320d1",
+    "source": "Reviewed 2026-10-17: at Q4 1:17 Bogdanovi\u0107 and Gordon jumped and Utah recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 677. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "677": {
+          "EVENTNUM": "677",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "1:17",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "202711",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "201569",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612762"
+        }
+      }
+    }
+  },
+  "0021900713": {
+    "pbp_sha256": "4fc69b8fdefae4718cc255922ed392cf44a7547c227e26222e824f6d0b773332",
+    "source": "Reviewed 2026-10-17: at Q2 10:25 Giles III and Adams jumped and Oklahoma City recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 181. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "181": {
+          "EVENTNUM": "181",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "2",
+          "PCTIMESTRING": "10:25",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1628385",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "203500",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612760"
+        }
+      }
+    }
+  },
+  "0021900718": {
+    "pbp_sha256": "1ce4d9ed3fff28c1d560b837a4bbbe987764080a72c1959e85999f6ce93fd416",
+    "source": "Reviewed 2026-10-17: at Q3 4:39 Joki\u0107 and O'Neale jumped and Utah recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 371. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "371": {
+          "EVENTNUM": "371",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "4:39",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "203999",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626220",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612762"
+        }
+      }
+    }
+  },
+  "0021900763": {
+    "pbp_sha256": "9377249b9b1d884400a3e0940098d36eb688eabb4f282b736267c4234a7fa2fb",
+    "source": "Reviewed 2026-10-17: at Q3 9:38 George and Nunn jumped and Miami recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 377. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "377": {
+          "EVENTNUM": "377",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "9:38",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "202331",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1629134",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612748"
+        }
+      }
+    }
+  },
+  "0021900776": {
+    "pbp_sha256": "fb5547d54e926ded9be97d474b21787a203da2aab6a227d3747d6075b55404c8",
+    "source": "Reviewed 2026-10-17: at Q2 0:43.9 Mitchell and Trent Jr. jumped and Portland recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 329. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "329": {
+          "EVENTNUM": "329",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "2",
+          "PCTIMESTRING": "0:43",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1628378",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1629018",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612757"
+        }
+      }
+    }
+  },
+  "0021900783": {
+    "pbp_sha256": "24e3adac8daa2c5feb9f2145b38fb387cadf4a9b82165f8417cfd76de69c8051",
+    "source": "Reviewed 2026-10-17: at Q1 11:57 Chriss and McGee jumped and Golden State recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "4": {
+          "EVENTNUM": "4",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "11:57",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1627737",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "201580",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612744"
+        }
+      }
+    }
+  },
+  "0021900790": {
+    "pbp_sha256": "084d17e5bc3f48acc24ab4925bfb1804b313e83de0df61ef3e432f7811bdbaa2",
+    "source": "Reviewed 2026-10-17: at Q4 10:02 Westbrook and O'Neale jumped and Houston recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 512. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "512": {
+          "EVENTNUM": "512",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "10:02",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "201566",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626220",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612745"
+        }
+      }
+    }
+  },
+  "0021900793": {
+    "pbp_sha256": "b878e5919ae96430a6fb360eae95e3835b50ae70b1f9a26d6e42932b3a4d1d65",
+    "source": "Reviewed 2026-10-17: at Q3 4:45 Galloway and Monk jumped and Detroit recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 418. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "418": {
+          "EVENTNUM": "418",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "4:45",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "204038",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1628370",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612765"
+        }
+      }
+    }
+  },
+  "0021900796": {
+    "pbp_sha256": "91ddd304b47c42987c0af584bf861a3479f0c9b912fd9db9997784fdc5405fca",
+    "source": "Reviewed 2026-10-17: at Q4 8:20 McCaw and Towns jumped and Johnson secured it; V3 names the tip recipient only as \"Johnson\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 594. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "594": {
+          "EVENTNUM": "594",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "1",
+          "PERIOD": "4",
+          "PCTIMESTRING": "8:20",
+          "HOMEDESCRIPTION": "Jump Ball (CC) McCaw vs. Towns: Tip to Johnson",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1627775",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626157",
+          "PERSON3TYPE": "5",
+          "PLAYER3_ID": "201949"
+        }
+      }
+    }
+  },
+  "0021900799": {
+    "pbp_sha256": "bb55580dacee95b914a5efe1e11324163e1789a2128eb89a965f6e205d3ff750",
+    "source": "Reviewed 2026-10-17: at Q4 2:11 Joki\u0107 and Aldridge jumped and Murray secured it; V3 names the tip recipient only as \"Murray\", which matches more than one player. At Q4 1:34 Grant and Lyles jumped and Murray secured it; V3 names the tip recipient only as \"Murray\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as events 596 and 603. The entry is those V2 rows.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "596": {
+          "EVENTNUM": "596",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "2:11",
+          "HOMEDESCRIPTION": "Jump Ball Jokic vs. Aldridge: Tip to Murray",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "203999",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "200746",
+          "PERSON3TYPE": "5",
+          "PLAYER3_ID": "1627749"
+        },
+        "603": {
+          "EVENTNUM": "603",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "1:34",
+          "HOMEDESCRIPTION": "Jump Ball Grant vs. Lyles: Tip to Murray",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "203924",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626168",
+          "PERSON3TYPE": "5",
+          "PLAYER3_ID": "1627749"
+        }
+      }
+    }
+  },
+  "0021900818": {
+    "pbp_sha256": "6cf92f52b151467759f3affe4663ac4bc81902c3d59a82d3f894e87c395fe2d0",
+    "source": "Reviewed 2026-10-17: at OT 5:00 Theis and Harrell jumped and Williams secured it; V3 names the tip recipient only as \"Williams\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 700. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "700": {
+          "EVENTNUM": "700",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "5",
+          "PCTIMESTRING": "5:00",
+          "HOMEDESCRIPTION": "Jump Ball Theis vs. Harrell: Tip to Williams",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1628464",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626149",
+          "PERSON3TYPE": "5",
+          "PLAYER3_ID": "101150"
+        }
+      }
+    }
+  },
+  "0021900822": {
+    "pbp_sha256": "f36d6f4f5e8f778f4917e3490a09f70e6def6cd764b70399c7d7fc5f8a0c9892",
+    "source": "Reviewed 2026-10-17: at Q1 12:00 Embiid and Allen jumped and Harris secured it; V3 names the tip recipient only as \"Harris\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "4": {
+          "EVENTNUM": "4",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "12:00",
+          "HOMEDESCRIPTION": "Jump Ball Embiid vs. Allen: Tip to Harris",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "203954",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1628386",
+          "PERSON3TYPE": "4",
+          "PLAYER3_ID": "202699"
+        }
+      }
+    }
+  },
+  "0021900833": {
+    "pbp_sha256": "351e4d4d73f17a5bccc29da4f61d19c8e20b612953ae401a261e3166c19f9f2c",
+    "source": "Reviewed 2026-10-17: at Q1 10:12 McGee and Jackson Jr. jumped and Memphis recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 33. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "33": {
+          "EVENTNUM": "33",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "10:12",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "201580",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1628991",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612763"
+        }
+      }
+    }
+  },
+  "0021900856": {
+    "pbp_sha256": "b7bc28ae36e63cf81369d6d2f50915b740b736a44637083616fd049e41ad2d5c",
+    "source": "Reviewed 2026-10-17: at Q1 12:00 Zubac and Valan\u010di\u016bnas jumped and Memphis recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "4": {
+          "EVENTNUM": "4",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "12:00",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1627826",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "202685",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612763"
+        }
+      }
+    }
+  },
+  "0021900867": {
+    "pbp_sha256": "b37110573d8aaa4a482896a0e2977ee2d9db3a9a550b444b50a96e24a9cea7a2",
+    "source": "Reviewed 2026-10-17: at Q1 2:37 Fernando and Bamba jumped and Orlando recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 110. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "110": {
+          "EVENTNUM": "110",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "2:37",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1628981",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1628964",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612753"
+        }
+      }
+    }
+  },
+  "0021900914": {
+    "pbp_sha256": "baae2c5084d7ed7c79b7de52d316d2ec366b5e7406c8120380ca96134fcf57e0",
+    "source": "Reviewed 2026-10-17: at Q3 7:52 Rubio and Powell jumped and Phoenix recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 409. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "409": {
+          "EVENTNUM": "409",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "7:52",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "201937",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626181",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612756"
+        }
+      }
+    }
+  },
+  "0021900916": {
+    "pbp_sha256": "ec56a06b8e060f1c985242afa02d708b499a7e6f7729a4bd524f7e20ff459d0c",
+    "source": "Reviewed 2026-10-17: at Q3 5:12 Len and Bertans jumped and Sacramento recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 407. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "407": {
+          "EVENTNUM": "407",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "5:12",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "203458",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "202722",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612758"
+        }
+      }
+    }
+  },
+  "0021900933": {
+    "pbp_sha256": "1a2a61ae61ca0606eafce0fd618fe90c06bc83d5ba713070375ad1ae62b817ad",
+    "source": "Reviewed 2026-10-17: at Q4 5:08 Theis and O'Neale jumped and Boston recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 562. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "562": {
+          "EVENTNUM": "562",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "4",
+          "PCTIMESTRING": "5:08",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1628464",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1626220",
+          "PERSON3TYPE": "2",
+          "PLAYER3_ID": "1610612738"
+        }
+      }
+    }
+  },
+  "0021900943": {
+    "pbp_sha256": "7271f26a36b94e56bddcf9caf377fe69741b76bd4f59efcf1f3f3a3dabc8ccc9",
+    "source": "Reviewed 2026-10-17: at Q3 3:26 Valan\u010di\u016bnas and Collins jumped and Jones secured it; V3 names the tip recipient only as \"Jones\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 498. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "498": {
+          "EVENTNUM": "498",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "3",
+          "PCTIMESTRING": "3:26",
+          "HOMEDESCRIPTION": "Jump Ball Valanciunas vs. Collins: Tip to Jones",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "202685",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1628381",
+          "PERSON3TYPE": "4",
+          "PLAYER3_ID": "1626145"
+        }
+      }
+    }
+  },
+  "0021900967": {
+    "pbp_sha256": "3ba57052d756ff569d94c53458dc1fecb1f09480e18504d7453052217c1fe534",
+    "source": "Reviewed 2026-10-17: at Q1 12:00 Chriss and Zubac jumped and LA recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
+    "files": {
+      "event_v2_jump_balls.json": {
+        "4": {
+          "EVENTNUM": "4",
+          "EVENTMSGTYPE": "10",
+          "EVENTMSGACTIONTYPE": "0",
+          "PERIOD": "1",
+          "PCTIMESTRING": "12:00",
+          "HOMEDESCRIPTION": "",
+          "NEUTRALDESCRIPTION": "",
+          "VISITORDESCRIPTION": "",
+          "PERSON1TYPE": "4",
+          "PLAYER1_ID": "1627737",
+          "PERSON2TYPE": "5",
+          "PLAYER2_ID": "1627826",
+          "PERSON3TYPE": "3",
+          "PLAYER3_ID": "1610612746"
+        }
+      }
+    }
+  },
   "0022000042": {
     "pbp_sha256": "2de4901fb68a54e0a2aa55ce34185a248d799a0879e496f0f507e4e5c8114ba0",
     "source": "Reviewed 2026-10-16: at Q3 5:06, after LeVert's layup, Brooklyn was charged a delay of game technical (439) and Brooks shot the technical free throw. V3 and V2 record the technical with neither a team nor a person; the 16 other delay technicals from 2020-21 record their team. The technical is Brooklyn's.",
