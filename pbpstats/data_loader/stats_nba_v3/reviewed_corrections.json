@@ -1527,6 +1527,30 @@
       }
     }
   },
+  "0022600002": {
+    "pbp_sha256": "3a380204e905ad65477ce14f1eff16991f394689b4a07e7da2dce9047e196575",
+    "source": "Reviewed 2026-10-21: at Q2 4:12 Embiid fouled Towns on his made jumper, an and-one; V3 records the shot at 4:13 but the foul and the free throw at 4:12, where 17,361 of the 17,363 and-ones from 2023-24 to 2026-27 are recorded at one clock, so the shot takes the foul's clock. At Q2 0:11.9 Brunson's free throw for James' defensive three seconds is labeled Free Throw 1 of 1, where all 619 from 2024-25 to 2025-26 are Free Throw Technical; New York kept the ball, so the free throw does not end its possession.",
+    "files": {
+      "event_clocks.json": {
+        "330": "PT04M12.00S"
+      },
+      "non_possession_changing_event_overrides.json": [
+        412
+      ]
+    }
+  },
+  "0022600003": {
+    "pbp_sha256": "1f4132ed18b0973eceaee0a4a8275d88206ce24d51fe7806510fbc0f3330fd4e",
+    "source": "Reviewed 2026-10-21: at Q3 10:00 San Antonio had the ball after Oklahoma City's shot clock violation at 10:07, exactly 24 seconds after its 10:31 inbound, and Gilgeous-Alexander's foul is a personal foul on defense; V3 also records his offensive foul turnover at 10:00, left behind when the foul was changed, and the box score counts it (Gilgeous-Alexander 2 TOV), so it stays credited but does not end a possession. At Q3 0:10.3 Castle fouled Gilgeous-Alexander on his made jumper, an and-one; V3 records the shot at 0:10.5 but the foul, three substitutions and the free throw at 0:10.3, so the shot takes the foul's clock.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        425
+      ],
+      "event_clocks.json": {
+        "600": "PT00M10.30S"
+      }
+    }
+  },
   "1042600201": {
     "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
     "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",

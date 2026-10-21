@@ -1127,6 +1127,26 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
     check_recorded_correction(game, recorded, trip, offense, counts)
 
 
+@pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
+    ("0022600002", TeamHasBackToBackPossessionsException, [330, 331, 333], 1610612752,
+     {1610612755: 102, 1610612752: 102},
+     [(330, "clock", "4:12"), (412, "is_possession_ending_event", False)]),
+    ("0022600003", TeamHasBackToBackPossessionsException, [423, 425, 426, 427, 429],
+     1610612759, {1610612759: 102, 1610612760: 101},
+     [(425, "is_possession_ending_event", False), (600, "clock", "0:10.3")]),
+])
+def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
+    # 0022600002 Q2 4:12: Towns' and-one, its made jumper recorded a second early.
+    # Q2 0:11.9: Brunson's free throw for a defensive three seconds, labeled 1 of 1
+    # instead of technical; New York kept the ball. 0022600003 Q3 10:00: an
+    # offensive foul turnover left behind when Gilgeous-Alexander's foul, made
+    # while San Antonio had the ball, was changed to a personal foul. Q3 0:10.3:
+    # Gilgeous-Alexander's and-one, its made jumper recorded 0.2 seconds early.
+    loader = check_recorded_correction(game, recorded, trip, offense, counts)
+    for event, attribute, value in checks:
+        assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+
+
 def check_recorded_correction(game, recorded, trip, offense, counts):
     """The recording fails as recorded (or, for ``recorded`` None, parses by a
     later versioned rule) and parses with its reviewed correction."""
