@@ -132,6 +132,9 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
     # 2023-24 V2 export, whose member hash is pinned with the archive's.
     # 0022000637 Q3 7:49: Barton's punching foul, the only one in the 2020-21 V2
     # export; the game went to overtime, so it loads with its period-5 box score.
+    # 0021500087 Q3 1:51: Noel's flagrant 2 ejection, one of 13 in the 2015-16 V2
+    # export, all 11/3; the decoder cannot load a 2015-16 game, so the code is
+    # checked with the table, and 2026-27 game 0022600091 loads with it.
     v2, v3 = observation["v2"], observation["v3"]
     assert "/datasets/" + v2["member"].replace(".csv", ".tar.xz") in v2["raw_url"]
     row = v2["row"]
@@ -143,6 +146,8 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
     assert [action["actionType"], action["subType"]] == observation["label"]
     assert action["actionNumber"] == int(row["EVENTNUM"])
     assert action["personId"] == int(row["PLAYER1_ID"])
+    if "unloadable" in v3:
+        return
     box = (ROOT / v3["boxscore_path"]).read_bytes()
     periods = v3.get("period_boxscore_paths", {})
 

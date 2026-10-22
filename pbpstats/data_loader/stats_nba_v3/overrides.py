@@ -45,7 +45,10 @@ STARTERS = "missing_period_starters.json"
 # block row stays with the miss. A V2 jump-ball entry, {event: V2 row}, gives
 # the V2 export row (the V2_JUMP_BALL_FIELDS of a pinned season archive) of a
 # jump ball V3 leaves undecided in a game the live play-by-play does not record.
+# A free-throw-subtype entry, {event: V3 label}, gives the subtype of a free
+# throw V3 records with neither category nor numbering, in its subtype or text.
 EVENT_V2_JUMP_BALLS = "event_v2_jump_balls.json"
+EVENT_FREE_THROW_SUBTYPES = "event_free_throw_subtypes.json"
 V2_TEXT_FIELDS = (
     "PCTIMESTRING", "HOMEDESCRIPTION", "NEUTRALDESCRIPTION", "VISITORDESCRIPTION"
 )
@@ -73,6 +76,7 @@ SUPPORTED = {
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
+    EVENT_FREE_THROW_SUBTYPES,
     EVENT_LIVE_NUMBERS,
     EVENT_LOCATIONS,
     EVENT_MOVES,
@@ -143,7 +147,7 @@ class V3Overrides:
                     ):
                         raise V3DecodeError("Invalid event-order override move")
                     continue
-                if name in (EVENT_SUBTYPES, EVENT_CLOCKS):
+                if name in (EVENT_SUBTYPES, EVENT_CLOCKS, EVENT_FREE_THROW_SUBTYPES):
                     if not isinstance(entries, dict) or not entries or any(
                         type(event) is not int
                         or event < 0
@@ -152,8 +156,10 @@ class V3Overrides:
                         or name == EVENT_CLOCKS and not CLOCK.fullmatch(value)
                         for event, value in entries.items()
                     ):
-                        raise V3DecodeError("Invalid event {} override".format(
-                            "subtype" if name == EVENT_SUBTYPES else "clock"))
+                        raise V3DecodeError("Invalid event {} override".format({
+                            EVENT_SUBTYPES: "subtype", EVENT_CLOCKS: "clock",
+                            EVENT_FREE_THROW_SUBTYPES: "free-throw-subtype",
+                        }[name]))
                     continue
                 if name == EVENT_CLOCK_RESETS:
                     if not isinstance(entries, dict) or not entries or any(

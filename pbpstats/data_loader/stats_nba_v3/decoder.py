@@ -61,6 +61,19 @@ V2_TEAM_TYPES, V2_PLAYER_TYPES = (2, 3), (4, 5)
 # so; 2018-19 and 2021-22 to 2025-26 always record the team.
 TEAMLESS_TECHNICAL_VERSION = "nba_teamless_team_technical_v1"
 TEAMLESS_TECHNICALS = ("Technical", "Delay Technical")
+# NBA 2026-27 V3 records the free throw for a defensive three seconds as "Free
+# Throw 1 of 1". From 2017-18 to 2025-26, 3,555 of the 3,557 defensive three
+# seconds with one free throw and no other foul by the team at its clock record
+# it as "Free Throw Technical", V2's 16; the other two, in 2017-18, as 1 of 1.
+DEFENSIVE_THREE_SECOND_FT_VERSION = "nba_defensive_three_second_free_throw_v1"
+# NBA 2026-27 V3 records a transition take foul as a "Personal Take" foul, with
+# its one free throw. From 2022-23 to 2025-26, 575 transition take fouls with one
+# free throw and no other foul by the team at its clock record "Transition
+# Take", V2's 31. A "Personal Take" with that free throw is otherwise recorded 5
+# times from 2017-18: 4 with the team in the penalty (".PN"), and 2024-25 game
+# 0022400625's, which video review found to be a transition take foul.
+TRANSITION_TAKE_FOUL_VERSION = "nba_transition_take_foul_v1"
+TEAM_FOUL_COUNT = re.compile(r"\(P\d+\.T\d+\)")
 
 
 def live_play_by_play_url(game_id):
@@ -232,7 +245,9 @@ REPLAYS = {
     "Coach Challenge Ruling Stands": 6,
     "Replay Center": 7,
 }
-EJECTIONS = {"Other": 4}
+# V3 labels a flagrant 2 ejection "Other" from 2017-18 to 2025-26, but "First
+# Flagrant Type 2" in 2015-16, 2016-17 and again in 2026-27; V2 codes it 3.
+EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3}
 # Technicals and ejections can name people outside the player roster: coaches
 # (no team in either feed) and inactive players (with their team). V3 records
 # the same personId/teamId pair as V2 for every paired event. The original never
@@ -355,7 +370,7 @@ class DecodedV3:
     def __init__(
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
-        v2_jump_balls=None,
+        v2_jump_balls=None, free_throw_subtypes=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -371,15 +386,17 @@ class DecodedV3:
         # a team heave's side, a renumbered jump ball's live action, the team of
         # an event recorded with neither team nor person, the other party of
         # a double foul whose text names nobody, a missed shot's recorded
-        # block that did not happen, and the V2 export row of a jump ball V3
-        # leaves undecided when no live play-by-play records the game. The
-        # recorded rows stay unchanged; each fact must be used by its event.
+        # block that did not happen, the V2 export row of a jump ball V3
+        # leaves undecided when no live play-by-play records the game, and the
+        # subtype of a free throw V3 records with none. The recorded rows stay
+        # unchanged; each fact must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
         self.reviewed_teams = dict(teams or {})
         self.reviewed_foul_opponents = dict(foul_opponents or {})
         self.reviewed_block_removals = set(block_removals)
         self.reviewed_v2_jump_balls = dict(v2_jump_balls or {})
+        self.reviewed_free_throw_subtypes = dict(free_throw_subtypes or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
@@ -387,8 +404,10 @@ class DecodedV3:
             "foul-opponent": set(self.reviewed_foul_opponents),
             "block-removal": set(self.reviewed_block_removals),
             "v2-jump-ball": set(self.reviewed_v2_jump_balls),
+            "free-throw-subtype": set(self.reviewed_free_throw_subtypes),
         }
         self.team_technicals = []
+        self.label_rules = []
         # Events a reviewed removal drops are not part of the recorded
         # starter/substitution stream.
         self.reviewed_removed = set(removed)
@@ -716,12 +735,38 @@ class DecodedV3:
             event.update(EVENTMSGTYPE=2, EVENTMSGACTIONTYPE=None)
             event["PLAYER3_ID"] = roles.get("blocker")
         elif kind == "Free Throw":
+            description = row["description"]
+            if row["actionNumber"] in self.reviewed_free_throw_subtypes:
+                # A free throw V3 records with neither category nor numbering,
+                # in its subtype or its text: the reviewed subtype, which the
+                # derived text then names as V3's would.
+                reviewed = self.reviewed_free_throw_subtypes[row["actionNumber"]]
+                if subtype or not re.fullmatch(
+                    r"(?:MISS )?.+ Free Throw(?: \(\d+ PTS\))?", description
+                ):
+                    raise V3DecodeError(
+                        "Event free-throw-subtype override does not fit the recorded event"
+                    )
+                self._unused_reviewed["free-throw-subtype"].discard(row["actionNumber"])
+                subtype = reviewed
+                description = description.replace(" Free Throw", " " + reviewed, 1)
+                self.reviewed_inputs.append(dict(
+                    code="reviewed_free_throw_subtype", event_num=row["actionNumber"],
+                    subtype=reviewed,
+                ))
             match = re.fullmatch(
                 r"Free Throw(?: (Technical|Clear Path|Flagrant))? ([1-3]) of ([1-3])",
                 subtype,
             )
             if subtype == "Free Throw Technical":
                 code = 16
+            elif subtype == "Free Throw 1 of 1" and self._defensive_three_second_free_throw(
+                row, team
+            ):
+                # The original reads a technical free throw from its text.
+                code = 16
+                description = description.replace(subtype, "Free Throw Technical")
+                subtype = "Free Throw Technical"
             elif match:
                 category, attempt, total = match[1], int(match[2]), int(match[3])
                 if attempt > total or (
@@ -745,9 +790,9 @@ class DecodedV3:
                     raise V3DecodeError("Unsupported flagrant attempt pattern")
             else:
                 raise V3DecodeError("Unsupported free throw subtype")
-            event.update(EVENTMSGTYPE=3, EVENTMSGACTIONTYPE=code)
+            event.update(EVENTMSGTYPE=3, EVENTMSGACTIONTYPE=code, NEUTRALDESCRIPTION=description)
             # Outcome is described by MISS; category/numbering must be explicit.
-            if subtype not in row["description"]:
+            if subtype not in description:
                 raise V3DecodeError("Free throw description disagrees with subtype")
         elif kind in ("Foul", "Turnover", "Violation"):
             table = {"Foul": FOULS, "Turnover": TURNOVERS, "Violation": VIOLATIONS}[
@@ -755,9 +800,14 @@ class DecodedV3:
             ]
             if subtype not in table:
                 raise V3DecodeError("Unsupported {} subtype {!r}".format(kind, subtype))
+            code = table[subtype]
+            if kind == "Foul" and subtype == "Personal Take" and self._transition_take_foul(
+                row, team
+            ):
+                code = FOULS["Transition Take"]
             event.update(
                 EVENTMSGTYPE={"Foul": 6, "Turnover": 5, "Violation": 7}[kind],
-                EVENTMSGACTIONTYPE=table[subtype],
+                EVENTMSGACTIONTYPE=code,
             )
             if kind == "Turnover":
                 event["PLAYER2_ID"] = roles.get("stealer")
@@ -1033,6 +1083,59 @@ class DecodedV3:
             )
         )
         return team
+
+    def _same_clock(self, row, kind, team):
+        return [
+            source for source in self.raw_rows
+            if source is not row
+            and (source["period"], source["clock"]) == (row["period"], row["clock"])
+            and source["actionType"] == kind
+            and (
+                self.context.roster.get(source["personId"], {}).get("team_id")
+                or source["teamId"]
+            ) == team
+        ]
+
+    def _defensive_three_second_free_throw(self, row, team):
+        # A defensive three seconds awards one technical free throw. A lone
+        # "1 of 1" where the other team's only foul at that period and clock is
+        # a defensive three seconds can be no other free throw.
+        if not self.context.game_id.startswith("00"):
+            return False
+        opponent = next(t for t in self.context.team_ids if t != team)
+        fouls = self._same_clock(row, "Foul", opponent)
+        if [f["subType"] for f in fouls] != ["Defense 3 Second"] or self._same_clock(
+            row, "Free Throw", team
+        ):
+            return False
+        self.label_rules.append(dict(
+            code=DEFENSIVE_THREE_SECOND_FT_VERSION, event_num=row["actionNumber"],
+            foul_event_num=fouls[0]["actionNumber"], recorded=row["subType"],
+            decoded="Free Throw Technical",
+        ))
+        return True
+
+    def _transition_take_foul(self, row, team):
+        # A transition take foul awards one free throw whatever the team fouls;
+        # a personal take foul awards none, or two in the penalty. A take foul
+        # outside the penalty, the team's only foul at that period and clock,
+        # with one "1 of 1" for the other team there, is a transition take foul.
+        if not self.context.game_id.startswith("00") or not TEAM_FOUL_COUNT.search(
+            row["description"]
+        ):
+            return False
+        opponent = next(t for t in self.context.team_ids if t != team)
+        free_throws = self._same_clock(row, "Free Throw", opponent)
+        if self._same_clock(row, "Foul", team) or [
+            f["subType"] for f in free_throws
+        ] != ["Free Throw 1 of 1"]:
+            return False
+        self.label_rules.append(dict(
+            code=TRANSITION_TAKE_FOUL_VERSION, event_num=row["actionNumber"],
+            free_throw_event_num=free_throws[0]["actionNumber"], recorded=row["subType"],
+            decoded="Transition Take",
+        ))
+        return True
 
     def _team_heave_team(self, row):
         from .team_heave import TEAM_HEAVE_VERSION

@@ -22,7 +22,11 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3Overrides,
     web,
 )
-from pbpstats.data_loader.stats_nba_v3.decoder import V2_JUMP_BALL_FIELDS, DecodedV3
+from pbpstats.data_loader.stats_nba_v3.decoder import (
+    FLAGRANT_FREE_THROWS,
+    V2_JUMP_BALL_FIELDS,
+    DecodedV3,
+)
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
@@ -30,6 +34,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
+    EVENT_FREE_THROW_SUBTYPES,
     EVENT_LIVE_NUMBERS,
     EVENT_LOCATIONS,
     EVENT_MOVES,
@@ -736,6 +741,67 @@ def test_foul_opponent_edit_needs_a_double_foul_that_names_nobody():
         load(rows, files=edits(EVENT_FOUL_OPPONENTS, {str(n["double"]): 12}))
 
 
+def flagrant_free_throws_without_subtypes():
+    """AWAY's flagrant foul gives HOME two free throws and the ball; the feed
+    records both free throws with no subtype and text that numbers neither."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("foul", 590, AWAY, 12, subtype="Flagrant Type 1"),
+        e("ft", 590, HOME, 1, category="Flagrant", attempt=1, total=2, made=False),
+        e("ft", 590, HOME, 1, category="Flagrant", attempt=2, total=2, made=True),
+        e("make", 570, HOME, 2),
+        e("make", 550, AWAY, 11),
+    ]))
+    first, second = (r for r in rows if r["actionType"] == "Free Throw")
+    first.update(subType="", description="MISS Player1 Free Throw")
+    second.update(subType="", description="Player1 Free Throw (1 PTS)")
+    return rows, dict(first=first["actionNumber"], second=second["actionNumber"],
+                      make=numbered(rows, "Made Shot"))
+
+
+def test_free_throw_subtype_edit_numbers_a_flagrant_trip():
+    rows, n = flagrant_free_throws_without_subtypes()
+    with pytest.raises(V3DecodeError, match="Unsupported free throw subtype"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_FREE_THROW_SUBTYPES, {
+        str(n["first"]): "Free Throw Flagrant 1 of 2",
+        str(n["second"]): "Free Throw Flagrant 2 of 2",
+    }))
+    first, second = (x for x in loaded.events if x.event_num in (n["first"], n["second"]))
+    assert (first.event_action_type, second.event_action_type) == (
+        FLAGRANT_FREE_THROWS[1, 2], FLAGRANT_FREE_THROWS[2, 2]
+    )
+    assert first.description == "MISS Player1 Free Throw Flagrant 1 of 2"
+    assert second.description == "Player1 Free Throw Flagrant 2 of 2 (1 PTS)"
+    # The flagrant trip keeps the ball: the miss and the make stay in it.
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME]
+    assert dict(code="reviewed_free_throw_subtype", event_num=n["first"],
+                subtype="Free Throw Flagrant 1 of 2") in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("change, values, message", [
+    (dict(subType="Free Throw 1 of 2", description="MISS Player1 Free Throw 1 of 2"),
+     {"first": "Free Throw Flagrant 1 of 2"}, "free-throw-subtype override does not fit"),
+    (dict(description="MISS Player1 Free Throw Flagrant"),
+     {"first": "Free Throw Flagrant 1 of 2"}, "free-throw-subtype override does not fit"),
+    ({}, {"first": "Free Throw Flagrant 1 of 2", "make": "Free Throw Flagrant 1 of 2"},
+     "free-throw-subtype override does not fit"),
+    ({}, {"first": "Free Throw Flagrant 1 of 2", "999": "Free Throw Flagrant 2 of 2"},
+     "free-throw-subtype override does not fit"),
+    ({}, {"first": "Free Throw 4 of 4"}, "Unsupported free throw subtype"),
+    ({}, {"first": " "}, "Invalid event free-throw-subtype override"),
+], ids=["recorded_subtype", "text_names_a_category", "not_a_free_throw", "unknown_event",
+        "unsupported_label", "blank_label"])
+def test_free_throw_subtype_edits_are_validated(change, values, message):
+    rows, n = flagrant_free_throws_without_subtypes()
+    next(r for r in rows if r["actionNumber"] == n["first"]).update(change)
+    values = {str(n.get(key, key)): value for key, value in values.items()}
+    values.setdefault(str(n["second"]), "Free Throw Flagrant 2 of 2")
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_FREE_THROW_SUBTYPES, values))
+
+
 def teamless_excess_timeout_turnover():
     """HOME calls a timeout it does not have: a technical and a turnover, which the
     feed records with neither a team nor a person."""
@@ -1044,7 +1110,7 @@ def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense
      {1610612763: 108, 1610612738: 108}),
     ("0022400512", TeamHasBackToBackPossessionsException, [588, 634, 658], 1610612764,
      {1610612764: 90, 1610612755: 90}),
-    ("0022400625", TeamHasBackToBackPossessionsException, [615, 617, 618, 619], 1610612742,
+    ("0022400625", None, [615, 617, 618, 619], 1610612742,
      {1610612742: 99, 1610612760: 100}),
     ("0022400739", TeamHasBackToBackPossessionsException, [492, 499, 500, 501, 502, 503],
      1610612760, {1610612761: 95, 1610612760: 95}),
@@ -1063,16 +1129,22 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     # 0022400116 Q1 6:40, 0022400739 Q3 1:54: the jump ball's tip recipient.
     # 0022400313 Q4 11:25: an offensive foul turnover. 0022400326 Q3 3:07: the
     # technical free throw between two free throws. 0022400512 Q4 3:21: a free
-    # throw 1 of 2. 0022400625 Q4 9:43: a transition take foul. 0022400345 Q4
-    # 0:19.1, 0022400758 Q1 3:39, 0022400862 Q2 1:06: a successful challenge.
+    # throw 1 of 2. 0022400625 Q4 9:43: a transition take foul, which
+    # nba_transition_take_foul_v1 now decodes as the reviewed entry does.
+    # 0022400345 Q4 0:19.1, 0022400758 Q1 3:39, 0022400862 Q2 1:06: a successful
+    # challenge.
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     live = DATA / f"live_{game}.json"
     fetch = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
     # 0022400116's box score lists Brandon Boston without the "Jr." its rows use.
     aliases = {1630527: ["Boston Jr."]} if game == "0022400116" else None
-    with pytest.raises(recorded):
-        web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
+    if recorded is not None:
+        with pytest.raises(recorded):
+            web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
+    else:
+        loader = web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
+        assert loader.counts_by_team == counts
     loader = web.load_game(game, pbp, box, "recorded", aliases=aliases,
                            overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
@@ -1130,18 +1202,31 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
 @pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
     ("0022600002", TeamHasBackToBackPossessionsException, [330, 331, 333], 1610612752,
      {1610612755: 102, 1610612752: 102},
-     [(330, "clock", "4:12"), (412, "is_possession_ending_event", False)]),
+     [(330, "clock", "4:12"), (412, "is_possession_ending_event", False),
+      (412, "is_technical_ft", True)]),
     ("0022600003", TeamHasBackToBackPossessionsException, [423, 425, 426, 427, 429],
      1610612759, {1610612759: 102, 1610612760: 101},
      [(425, "is_possession_ending_event", False), (600, "clock", "0:10.3")]),
+    ("0022600089", TeamHasBackToBackPossessionsException, [44, 45, 47, 49, 50], 1610612762,
+     {1610612763: 104, 1610612762: 103}, [(45, "clock", "8:10")]),
+    ("0022600091", V3DecodeError, [562, 564, 567, 566, 568, 569, 570, 571], 1610612742,
+     {1610612745: 98, 1610612742: 99},
+     [(130, "event_action_type", 3), (413, "is_transition_take_foul", True),
+      (566, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
+      (570, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
     # 0022600002 Q2 4:12: Towns' and-one, its made jumper recorded a second early.
     # Q2 0:11.9: Brunson's free throw for a defensive three seconds, labeled 1 of 1
-    # instead of technical; New York kept the ball. 0022600003 Q3 10:00: an
-    # offensive foul turnover left behind when Gilgeous-Alexander's foul, made
-    # while San Antonio had the ball, was changed to a personal foul. Q3 0:10.3:
-    # Gilgeous-Alexander's and-one, its made jumper recorded 0.2 seconds early.
+    # instead of technical, which nba_defensive_three_second_free_throw_v1 now
+    # decodes; New York kept the ball. 0022600003 Q3 10:00: an offensive foul
+    # turnover left behind when Gilgeous-Alexander's foul, made while San Antonio
+    # had the ball, was changed to a personal foul. Q3 0:10.3: Gilgeous-Alexander's
+    # and-one, its made jumper recorded 0.2 seconds early. 0022600089 Q1 8:10:
+    # George's and-one, its made 3 recorded a second early. 0022600091 Q4 11:37:
+    # Flagg's three free throws for Durant's flagrant foul, recorded with neither
+    # category nor numbering; Q1 2:47 Eason's "First Flagrant Type 2" ejection,
+    # V2's 11/3, and Q3 9:43 Sengun's transition take foul labeled "Personal Take".
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

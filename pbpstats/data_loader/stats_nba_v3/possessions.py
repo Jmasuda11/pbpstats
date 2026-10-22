@@ -16,8 +16,10 @@ from pbpstats.resources.possessions.possession import Possession
 from .decoder import (
     FOULS,
     FREE_THROWS,
+    DEFENSIVE_THREE_SECOND_FT_VERSION,
     REBOUNDS,
     TEAMLESS_TECHNICAL_VERSION,
+    TRANSITION_TAKE_FOUL_VERSION,
     TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
@@ -34,6 +36,7 @@ from .overrides import (
     EVENT_CLOCKS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
+    EVENT_FREE_THROW_SUBTYPES,
     EVENT_LIVE_NUMBERS,
     EVENT_LOCATIONS,
     EVENT_MOVES,
@@ -636,6 +639,9 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             v2_jump_balls=reviewed_entries(
                 self.overrides, EVENT_V2_JUMP_BALLS, context.game_id, {}
             ),
+            free_throw_subtypes=reviewed_entries(
+                self.overrides, EVENT_FREE_THROW_SUBTYPES, context.game_id, {}
+            ),
         )
         self.decoded = decoded
         self.game_id = context.game_id
@@ -660,6 +666,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             override_diagnostics + enhanced.repairs
             + deepcopy(list(decoded.team_heaves.values()))
             + deepcopy(decoded.team_technicals)
+            + deepcopy(decoded.label_rules)
             + deepcopy(decoded.non_roster_actors)
             + deepcopy(decoded.reviewed_inputs)
             + ([dict(decoded.live_input)] if decoded.live_input else [])
@@ -699,6 +706,12 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         extensions = [TEAM_HEAVE_VERSION] if decoded.team_heaves else []
         if decoded.team_technicals:
             extensions.append(TEAMLESS_TECHNICAL_VERSION)
+        rules = {rule["code"] for rule in decoded.label_rules}
+        extensions += [
+            version
+            for version in (DEFENSIVE_THREE_SECOND_FT_VERSION, TRANSITION_TAKE_FOUL_VERSION)
+            if version in rules
+        ]
         if held_balls:
             extensions.append(HELD_BALL_VERSION)
         if extensions:

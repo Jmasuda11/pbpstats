@@ -1551,6 +1551,26 @@
       }
     }
   },
+  "0022600089": {
+    "pbp_sha256": "0229ae3db542f96b2c4d2970d5b65e712d66a0b39f76df008d161c424b1bbb53",
+    "source": "Reviewed 2026-10-22: at Q1 8:10 Wells fouled George on his made 3, an and-one; V3 records the shot at 8:11 but the foul and the missed free throw at 8:10, where 17,361 of the 17,363 and-ones from 2023-24 to 2025-26 are recorded at one clock, so the shot takes the foul's clock.",
+    "files": {
+      "event_clocks.json": {
+        "45": "PT08M10.00S"
+      }
+    }
+  },
+  "0022600091": {
+    "pbp_sha256": "2ee01caee861987d5a3ad7c74827511b43151a276e823251e306150c089187d2",
+    "source": "Reviewed 2026-10-22: at Q4 11:37 Durant's flagrant 1 foul, upheld on replay, gave Flagg three free throws (missed, made, made) and Dallas the ball. V3 records the three with no subtype and text that names neither category nor numbering, where every other flagrant free throw from 2023-24 to 2026-27 has both; they are the Flagrant 1, 2 and 3 of 3 the trip's three attempts make them.",
+    "files": {
+      "event_free_throw_subtypes.json": {
+        "566": "Free Throw Flagrant 1 of 3",
+        "569": "Free Throw Flagrant 2 of 3",
+        "570": "Free Throw Flagrant 3 of 3"
+      }
+    }
+  },
   "1042600201": {
     "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
     "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",

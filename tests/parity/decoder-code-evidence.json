@@ -68,6 +68,38 @@
           "5": "tests/parity/data/recorded_evidence/stats_boxscoretraditionalv2_0022000637_period_5.json"
         }
       }
+    },
+    {
+      "label": ["Ejection", "First Flagrant Type 2"],
+      "code": [11, 3],
+      "label_rows_in_season": 13,
+      "v2": {
+        "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2015.tar.xz",
+        "bytes": 8307212,
+        "sha256": "217087b27259e34ec9c82a596335a36ce6580e5f9129e186e6a1b4f0dc592ebf",
+        "git_blob_sha1": "3999459f889654db35c7cd0341bcfc336c79955c",
+        "member": "nbastats_2015.csv",
+        "member_sha256": "e1354d12dbb4fea9f8ad515be03bcd6a9428e188a34a72ec7ddfac51167c4ea8",
+        "retrieved_utc": "2026-10-17",
+        "row": {
+          "GAME_ID": "21500087",
+          "EVENTNUM": "588",
+          "EVENTMSGTYPE": "11",
+          "EVENTMSGACTIONTYPE": "3",
+          "PERIOD": "3",
+          "PCTIMESTRING": "1:51",
+          "HOMEDESCRIPTION": "Noel Ejection:First Flagrant Type 2",
+          "PLAYER1_ID": "203457",
+          "PLAYER1_TEAM_ID": "1610612755"
+        }
+      },
+      "v3": {
+        "game_id": "0021500087",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0021500087.json",
+        "sha256": "ec95f1dc62a8d1d7c5c328dd188be7a432492e9a6a34b76f553688e7c8ebab8b",
+        "source_index": 335,
+        "unloadable": "2015-16 labels the decoder does not read, first a Timeout 'Short' at source row 49; 2026-27 game 0022600091 loads with this code"
+      }
     }
   ]
 }
