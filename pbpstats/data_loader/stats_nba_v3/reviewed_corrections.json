@@ -1551,6 +1551,16 @@
       }
     }
   },
+  "0022600009": {
+    "pbp_sha256": "af9ec62875a5421a19d0a148153b649f8b2c95e068ee2c336db43115d34d5b47",
+    "source": "Reviewed 2026-10-25: at Q1 2:15 Eason's running layup was an and-one. V3 and the live play-by-play record Johnson's shooting foul, which names Eason's one free throw, and the free throw at 2:06, nine seconds later with no other play between, where 17,361 of the 17,363 and-ones from 2023-24 to 2025-26 are recorded at one clock; the foul and the free throw move to just after the layup, at its clock.",
+    "files": {
+      "event_moves.json": {
+        "147": 145,
+        "153": 147
+      }
+    }
+  },
   "0022600089": {
     "pbp_sha256": "0229ae3db542f96b2c4d2970d5b65e712d66a0b39f76df008d161c424b1bbb53",
     "source": "Reviewed 2026-10-22: at Q1 8:10 Wells fouled George on his made 3, an and-one; V3 records the shot at 8:11 but the foul and the missed free throw at 8:10, where 17,361 of the 17,363 and-ones from 2023-24 to 2025-26 are recorded at one clock, so the shot takes the foul's clock.",
@@ -1568,6 +1578,48 @@
         "566": "Free Throw Flagrant 1 of 3",
         "569": "Free Throw Flagrant 2 of 3",
         "570": "Free Throw Flagrant 3 of 3"
+      }
+    }
+  },
+  "0022600096": {
+    "pbp_sha256": "3bf8669492dec38258734b3200fab19e95b04df26bd0a5eac8332ed7f34eabec",
+    "source": "Reviewed 2026-10-25: at Q2 9:59 da Silva's loose ball foul on Lyles as Gobert's floater went in gave Lyles one free throw, which he missed. V3 records the basket at 10:01 but the foul, the free throw and its rebound at 9:59, where the live play-by-play shows all four entered within 20 milliseconds, so the basket takes the foul's clock.",
+    "files": {
+      "event_clocks.json": {
+        "194": "PT09M59.00S"
+      }
+    }
+  },
+  "0022600099": {
+    "pbp_sha256": "f77a377f4afcc738c7be34a44a4a109152ff7db2f4dc43fa684244706fdd34ba",
+    "source": "Reviewed 2026-10-25: at Q2 9:46 Burries' flagrant 1 foul, upheld on replay, gave Powell three free throws, all made, and Chicago the ball. V3 records the three with no subtype and text that names neither category nor numbering, as the live play-by-play's \"Free Throw other\" does, whose foul names Powell's three free throws; they are the Flagrant 1, 2 and 3 of 3.",
+    "files": {
+      "event_free_throw_subtypes.json": {
+        "235": "Free Throw Flagrant 1 of 3",
+        "239": "Free Throw Flagrant 2 of 3",
+        "240": "Free Throw Flagrant 3 of 3"
+      }
+    }
+  },
+  "0022600101": {
+    "pbp_sha256": "1f32ff5e10300c74397db8ddd33e13b5188fee046eeab8137a5a2acfe8f70b4e",
+    "source": "Reviewed 2026-10-25: at Q4 3:33 Curry fouled Wells on his made 3, an and-one. V3 records the shot at 3:34 but the foul and the free throw at 3:33, where the live play-by-play shows the shot and the foul entered 10 milliseconds apart, so the shot takes the foul's clock.",
+    "files": {
+      "event_clocks.json": {
+        "772": "PT03M33.00S"
+      }
+    }
+  },
+  "0022600102": {
+    "pbp_sha256": "9558ab768bf03ae77c122d4bc1ab93ae340d2f1fba5e97cfbb7908d313a2f806",
+    "source": "Reviewed 2026-10-25: at Q1 7:21 the jump ball after the Lakers' coach challenge is recorded three times, 90, 120 and 365, where the live play-by-play has only 365, so 90 and 120 are dropped as its copies. At 7:03 Dunn's rebound of Doncic's miss is recorded twice, 58 before the miss and 65 after it, as the live play-by-play also records them; 58 is dropped, though the box score counts both (Dunn 5 defensive rebounds).",
+    "files": {
+      "event_duplicates.json": {
+        "90": 365,
+        "120": 365
+      },
+      "event_removals.json": {
+        "58": 65
       }
     }
   },

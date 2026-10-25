@@ -17,7 +17,7 @@ from pbpstats.resources.enhanced_pbp.stats_nba.jump_ball import StatsJumpBall
 from tools.parity.reference import ROOT
 
 DATA = ROOT / "tests/parity/data/recorded_evidence"
-ORL, CHI, OKC = 1610612753, 1610612741, 1610612760
+ORL, CHI, OKC, IND = 1610612753, 1610612741, 1610612760, 1610612754
 CARTER, VUCEVIC, TYUS_JONES, BANCHERO = 1628976, 202696, 1626145, 1631094
 
 
@@ -90,6 +90,40 @@ def test_team_won_jump_ball_takes_the_opposing_jumper_and_team_from_live():
     assert jump.team_id == OKC and not hasattr(jump, "player2_id")
     assert [d["event_num"] for d in result.recorded_jump_balls] == [424]
     assert result.recorded_jump_balls[0]["team_recovery"] is True
+
+
+def team_recovery_2026_27(change=None):
+    """0022600095 Q4 2:56: live records "Jump Ball P. Siakam vs. Z. Risacher: Tip
+    to Team (IND)" in the 2026-27 form, descriptor "team" and no personId."""
+    _, _, live = recorded("0022600095")
+    payload = json.loads(live)
+    action = next(a for a in payload["game"]["actions"] if a["actionNumber"] == 744)
+    assert action["descriptor"] == "team" and "personId" not in action
+    action.update(change or {})
+    return json.dumps(payload).encode()
+
+
+def test_2026_27_live_team_recovery_without_a_person_is_a_team_recovery():
+    result = decoded("0022600095", team_recovery_2026_27())
+    row = next(r for r in result.projected if r["EVENTNUM"] == 744)
+    assert (row["PLAYER1_ID"], row["PLAYER2_ID"]) == (1627783, 1642258)
+    assert (row["PLAYER3_ID"], row["PLAYER3_TEAM_ID"]) == (IND, None)
+    assert result.recorded_jump_balls == [dict(
+        code="recorded_live_jump_ball", event_num=744, jumpers=[1627783, 1642258],
+        recipient=IND, team_recovery=True,
+        basis="live action number, period and V3 jumper personId",
+        live_format="2026-27 team recovery",
+    )]
+
+
+@pytest.mark.parametrize("change", [
+    dict(jumpBallRecoveredName="Team (DAL)"),
+    dict(descriptor="heldball"),
+    dict(jumpBallRecoverdPersonId=1627783),
+], ids=["names_another_team", "other_descriptor", "names_a_player"])
+def test_2026_27_live_team_recovery_must_say_so(change):
+    with pytest.raises(V3DecodeError):
+        decoded("0022600095", team_recovery_2026_27(change))
 
 
 @pytest.mark.parametrize("change, message", [

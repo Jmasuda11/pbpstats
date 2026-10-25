@@ -16,9 +16,9 @@ from pbpstats.resources.possessions.possession import Possession
 from .decoder import (
     FOULS,
     FREE_THROWS,
-    DEFENSIVE_THREE_SECOND_FT_VERSION,
     REBOUNDS,
     TEAMLESS_TECHNICAL_VERSION,
+    TECHNICAL_FREE_THROW_VERSION,
     TRANSITION_TAKE_FOUL_VERSION,
     TEAM_TURNOVERS,
     TURNOVERS,
@@ -709,7 +709,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         rules = {rule["code"] for rule in decoded.label_rules}
         extensions += [
             version
-            for version in (DEFENSIVE_THREE_SECOND_FT_VERSION, TRANSITION_TAKE_FOUL_VERSION)
+            for version in (TECHNICAL_FREE_THROW_VERSION, TRANSITION_TAKE_FOUL_VERSION)
             if version in rules
         ]
         if held_balls:

@@ -1,4 +1,4 @@
-"""Versioned rules for NBA 2026-27 V3 labels: defensive three seconds free throws and transition take fouls."""
+"""Versioned rules for NBA 2026-27 V3 labels: technical free throws and transition take fouls."""
 
 import hashlib
 import json
@@ -10,15 +10,15 @@ from pbpstats.data_loader.stats_nba.possessions.loader import (
 )
 from pbpstats.data_loader.stats_nba_v3 import StatsNbaV3PossessionLoader, V3Context, web
 from pbpstats.data_loader.stats_nba_v3.decoder import (
-    DEFENSIVE_THREE_SECOND_FT_VERSION,
     FOULS,
+    TECHNICAL_FREE_THROW_VERSION,
     TRANSITION_TAKE_FOUL_VERSION,
 )
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 
 DATA = ROOT / "tests/parity/data/recorded_evidence"
-POR, PHX = 1610612757, 1610612756
+POR, PHX, SAC, NOP, UTA = 1610612757, 1610612756, 1610612758, 1610612740, 1610612762
 
 
 def load(rows, game="0022600001", validate_possessions=True):
@@ -40,49 +40,51 @@ def number(rows, kind):
     return next(r["actionNumber"] for r in rows if r["actionType"] == kind)
 
 
-def defensive_three_seconds(and_one=False):
-    """AWAY's defensive three seconds while HOME has the ball; HOME's one free
-    throw is recorded as "Free Throw 1 of 1", and HOME keeps the ball and scores.
+def technical_foul(subtype="Defense 3 Second", and_one=False):
+    """AWAY's technical-type foul while HOME has the ball; HOME's one free throw
+    is recorded as "Free Throw 1 of 1", and HOME keeps the ball and scores.
     ``and_one`` adds a HOME basket and an AWAY shooting foul at the same clock."""
     events = [e("make", 600, AWAY, 11)]
     if and_one:
         events += [e("make", 590, HOME, 2), e("foul", 590, AWAY, 13, subtype="Shooting")]
     events += [
-        e("foul", 590, AWAY, 12, subtype="Defense 3 Second"),
+        e("foul", 590, AWAY, 12, subtype=subtype),
         e("ft", 590, HOME, 1, attempt=1, total=1, made=True),
         e("make", 570, HOME, 3),
         e("make", 550, AWAY, 11),
     ]
     rows = encode_v3(wrap(events))
     return rows, number(rows, "Free Throw"), next(
-        r["actionNumber"] for r in rows if r["subType"] == "Defense 3 Second"
+        r["actionNumber"] for r in rows if r["subType"] == subtype
     )
 
 
-def test_defensive_three_seconds_one_of_one_is_its_technical_free_throw():
-    rows, ft, foul = defensive_three_seconds()
+@pytest.mark.parametrize("subtype", ["Defense 3 Second", "Hanging Technical", "Technical"])
+def test_technical_foul_one_of_one_is_its_technical_free_throw(subtype):
+    rows, ft, foul = technical_foul(subtype)
     loaded = load(rows)
     free_throw = next(x for x in loaded.events if x.event_num == ft)
     assert free_throw.event_action_type == 16 and free_throw.is_technical_ft
     assert free_throw.description == "Player1 Free Throw Technical (1 PTS)"
     assert [p.offense_team_id for p in loaded.items] == [AWAY, HOME, AWAY, HOME]
     assert dict(
-        code=DEFENSIVE_THREE_SECOND_FT_VERSION, event_num=ft, foul_event_num=foul,
+        code=TECHNICAL_FREE_THROW_VERSION, event_num=ft, foul_event_num=foul, foul=subtype,
         recorded="Free Throw 1 of 1", decoded="Free Throw Technical",
     ) in loaded.diagnostics
-    assert DEFENSIVE_THREE_SECOND_FT_VERSION in loaded.capabilities["extensions"]
+    assert TECHNICAL_FREE_THROW_VERSION in loaded.capabilities["extensions"]
     assert loaded.decoded.raw_rows == rows
 
 
-@pytest.mark.parametrize("game, and_one", [
-    ("0022600001", True),
-    ("1022600001", False),
-], ids=["another_foul_at_the_clock", "wnba"])
-def test_defensive_three_seconds_rule_leaves_other_one_of_ones(game, and_one):
-    rows, ft, _ = defensive_three_seconds(and_one)
+@pytest.mark.parametrize("game, subtype, and_one", [
+    ("0022600001", "Defense 3 Second", True),
+    ("0022600001", "Personal", False),
+    ("1022600001", "Defense 3 Second", False),
+], ids=["another_foul_at_the_clock", "not_a_technical_type_foul", "wnba"])
+def test_technical_free_throw_rule_leaves_other_one_of_ones(game, subtype, and_one):
+    rows, ft, _ = technical_foul(subtype, and_one)
     loaded = load(rows, game, validate_possessions=False)
     assert next(x for x in loaded.events if x.event_num == ft).event_action_type == 10
-    assert not any(d["code"] == DEFENSIVE_THREE_SECOND_FT_VERSION for d in loaded.diagnostics)
+    assert not any(d["code"] == TECHNICAL_FREE_THROW_VERSION for d in loaded.diagnostics)
 
 
 def take_foul(text="(P1.T2)", attempts=1):
@@ -144,14 +146,37 @@ def test_recorded_2026_27_labels_decode_without_review():
     loader = web.load_game(game, pbp, box, "recorded")
     rules = [
         (d["code"], d["event_num"]) for d in loader.diagnostics
-        if d["code"] in (DEFENSIVE_THREE_SECOND_FT_VERSION, TRANSITION_TAKE_FOUL_VERSION)
+        if d["code"] in (TECHNICAL_FREE_THROW_VERSION, TRANSITION_TAKE_FOUL_VERSION)
     ]
     assert rules == [
         (TRANSITION_TAKE_FOUL_VERSION, 52),
-        (DEFENSIVE_THREE_SECOND_FT_VERSION, 151),
-        (DEFENSIVE_THREE_SECOND_FT_VERSION, 422),
+        (TECHNICAL_FREE_THROW_VERSION, 151),
+        (TECHNICAL_FREE_THROW_VERSION, 422),
         (TRANSITION_TAKE_FOUL_VERSION, 686),
     ]
     assert loader.counts_by_team == {POR: 97, PHX: 96}
     rows = json.loads(pbp)["game"]["actions"]
     assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))
+
+
+@pytest.mark.parametrize("game, rules, checks, counts", [
+    # 0022600100 Q4 8:14: Bey's free throw for Hayes' rim-hanging technical.
+    ("0022600100", [(TECHNICAL_FREE_THROW_VERSION, 595)], [(595, "is_technical_ft", True)],
+     {UTA: 102, NOP: 102}),
+    # 0022600103 Q2 1:19: Sacramento's short timeout, V2's 9/2; and a free throw
+    # for a defensive three seconds.
+    ("0022600103", [(TECHNICAL_FREE_THROW_VERSION, 594)], [(354, "event_action_type", 2)],
+     {POR: 105, SAC: 104}),
+])
+def test_recorded_2026_27_technical_free_throws_and_short_timeout(game, rules, checks, counts):
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    assert game not in web.REVIEWED_CORRECTIONS
+    loader = web.load_game(game, pbp, box, "recorded")
+    assert [
+        (d["code"], d["event_num"]) for d in loader.diagnostics
+        if d["code"] in (TECHNICAL_FREE_THROW_VERSION, TRANSITION_TAKE_FOUL_VERSION)
+    ] == rules
+    for event, attribute, value in checks:
+        assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+    assert loader.counts_by_team == counts

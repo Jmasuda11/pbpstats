@@ -100,6 +100,37 @@
         "source_index": 335,
         "unloadable": "2015-16 labels the decoder does not read, first a Timeout 'Short' at source row 49; 2026-27 game 0022600091 loads with this code"
       }
+    },
+    {
+      "label": ["Timeout", "Short"],
+      "code": [9, 2],
+      "label_rows_in_season": 2848,
+      "v2": {
+        "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2015.tar.xz",
+        "bytes": 8307212,
+        "sha256": "217087b27259e34ec9c82a596335a36ce6580e5f9129e186e6a1b4f0dc592ebf",
+        "git_blob_sha1": "3999459f889654db35c7cd0341bcfc336c79955c",
+        "member": "nbastats_2015.csv",
+        "member_sha256": "e1354d12dbb4fea9f8ad515be03bcd6a9428e188a34a72ec7ddfac51167c4ea8",
+        "retrieved_utc": "2026-10-17",
+        "row": {
+          "GAME_ID": "21500002",
+          "EVENTNUM": "555",
+          "EVENTMSGTYPE": "9",
+          "EVENTMSGACTIONTYPE": "2",
+          "PERIOD": "4",
+          "PCTIMESTRING": "0:10",
+          "VISITORDESCRIPTION": "Cavaliers Timeout: Short (Reg.5 Short 1)",
+          "PLAYER1_ID": "1610612739"
+        }
+      },
+      "v3": {
+        "game_id": "0021500002",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0021500002.json",
+        "sha256": "bf89ac1a0e96f9bf869f13ba5c151eec0516ff95d5d3b548e3ef4637d59446c0",
+        "source_index": 504,
+        "unloadable": "2015-16 labels the decoder does not read, first a Turnover 'Poss Lost Ball Turnover' at source rows 77 and 78; 2026-27 game 0022600103 loads with this code"
+      }
     }
   ]
 }

@@ -61,11 +61,13 @@ V2_TEAM_TYPES, V2_PLAYER_TYPES = (2, 3), (4, 5)
 # so; 2018-19 and 2021-22 to 2025-26 always record the team.
 TEAMLESS_TECHNICAL_VERSION = "nba_teamless_team_technical_v1"
 TEAMLESS_TECHNICALS = ("Technical", "Delay Technical")
-# NBA 2026-27 V3 records the free throw for a defensive three seconds as "Free
-# Throw 1 of 1". From 2017-18 to 2025-26, 3,555 of the 3,557 defensive three
-# seconds with one free throw and no other foul by the team at its clock record
-# it as "Free Throw Technical", V2's 16; the other two, in 2017-18, as 1 of 1.
-DEFENSIVE_THREE_SECOND_FT_VERSION = "nba_defensive_three_second_free_throw_v1"
+# NBA 2026-27 V3 records the free throw for a defensive three seconds or a
+# hanging technical as "Free Throw 1 of 1", though still "Free Throw Technical"
+# for a technical. From 2017-18 to 2025-26, 6,881 of the 6,887 lone free throws
+# for the team's only technical-type foul at its clock record "Free Throw
+# Technical", V2's 16; five in 2017-18 record 1 of 1, and one a numbered
+# technical. Version 1 decoded only a defensive three seconds' free throw.
+TECHNICAL_FREE_THROW_VERSION = "nba_technical_free_throw_v2"
 # NBA 2026-27 V3 records a transition take foul as a "Personal Take" foul, with
 # its one free throw. From 2022-23 to 2025-26, 575 transition take fouls with one
 # free throw and no other foul by the team at its clock record "Transition
@@ -233,7 +235,9 @@ VIOLATIONS = {
     "Double Lane": 6,
 }
 REBOUNDS = {"Unknown": 0, "Normal Rebound": 1}
-TIMEOUTS = {"Regular": 1, "Coach Challenge": 7}
+# V3 records a short timeout in 2015-16, 2016-17 and again in 2026-27; V2 codes
+# it 2.
+TIMEOUTS = {"Regular": 1, "Short": 2, "Coach Challenge": 7}
 JUMP_BALLS = {"": 0, "Coach Challenge": 1}
 REPLAYS = {
     "Support Ruling": 0,
@@ -258,6 +262,12 @@ EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3}
 ORIGINAL_TECHNICAL_FOUL_CODES = {11, 12, 13, 16, 18, 19, 25, 30}
 NON_ROSTER_ACTOR_FOULS = tuple(
     label for label, code in FOULS.items() if code in ORIGINAL_TECHNICAL_FOUL_CODES
+)
+# Fouls that award one technical free throw: a defensive three seconds and
+# those the original classes as technical, but a double technical, which
+# awards none.
+TECHNICAL_FREE_THROW_FOULS = ("Defense 3 Second",) + tuple(
+    label for label in NON_ROSTER_ACTOR_FOULS if label != "Double Technical"
 )
 # V2 never records a fouled player for these subtypes (paired 2024-25 season),
 # so their missing fouled player is not a V3 attribution gap.
@@ -760,9 +770,7 @@ class DecodedV3:
             )
             if subtype == "Free Throw Technical":
                 code = 16
-            elif subtype == "Free Throw 1 of 1" and self._defensive_three_second_free_throw(
-                row, team
-            ):
+            elif subtype == "Free Throw 1 of 1" and self._technical_free_throw(row, team):
                 # The original reads a technical free throw from its text.
                 code = 16
                 description = description.replace(subtype, "Free Throw Technical")
@@ -945,6 +953,17 @@ class DecodedV3:
             number, basis = self.reviewed_live_numbers[number], "reviewed live action number"
         found = self.live_jump_balls.get(number, [])
         live = found[0] if len(found) == 1 else {}
+        team_descriptor = (
+            "personId" not in live
+            and live.get("descriptor") == "team"
+            and "jumpBallRecoverdPersonId" not in live
+            and live.get("jumpBallRecoveredName") == "Team ({})".format(live.get("teamTricode"))
+        )
+        if team_descriptor:
+            # NBA 2026-27's live feed records a team recovery with no person:
+            # descriptor "team", the recovering team as the action's team and as
+            # the recovered name, where 2023-24 to 2025-26 record personId 0.
+            live = dict(live, personId=0)
         recovered = live.get("jumpBallRecoverdPersonId")
         if (
             any(type(live.get(key)) is not int for key in LIVE_JUMP_BALL_FIELDS)
@@ -972,6 +991,7 @@ class DecodedV3:
                 team_recovery=recipient_team is None,
                 basis=basis + ", period and V3 jumper personId",
                 **({} if number == row["actionNumber"] else dict(live_action_number=number)),
+                **(dict(live_format="2026-27 team recovery") if team_descriptor else {}),
             )
         )
         return jumper, recipient, recipient_team
@@ -1096,22 +1116,24 @@ class DecodedV3:
             ) == team
         ]
 
-    def _defensive_three_second_free_throw(self, row, team):
-        # A defensive three seconds awards one technical free throw. A lone
-        # "1 of 1" where the other team's only foul at that period and clock is
-        # a defensive three seconds can be no other free throw.
+    def _technical_free_throw(self, row, team):
+        # A technical-type foul awards one technical free throw. A lone "1 of
+        # 1" where the other team's only foul at that period and clock is one
+        # can be no other free throw.
         if not self.context.game_id.startswith("00"):
             return False
         opponent = next(t for t in self.context.team_ids if t != team)
         fouls = self._same_clock(row, "Foul", opponent)
-        if [f["subType"] for f in fouls] != ["Defense 3 Second"] or self._same_clock(
-            row, "Free Throw", team
+        if (
+            len(fouls) != 1
+            or fouls[0]["subType"] not in TECHNICAL_FREE_THROW_FOULS
+            or self._same_clock(row, "Free Throw", team)
         ):
             return False
         self.label_rules.append(dict(
-            code=DEFENSIVE_THREE_SECOND_FT_VERSION, event_num=row["actionNumber"],
-            foul_event_num=fouls[0]["actionNumber"], recorded=row["subType"],
-            decoded="Free Throw Technical",
+            code=TECHNICAL_FREE_THROW_VERSION, event_num=row["actionNumber"],
+            foul_event_num=fouls[0]["actionNumber"], foul=fouls[0]["subType"],
+            recorded=row["subType"], decoded="Free Throw Technical",
         ))
         return True
 

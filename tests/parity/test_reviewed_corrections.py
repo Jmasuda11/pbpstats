@@ -1214,12 +1214,24 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
      [(130, "event_action_type", 3), (413, "is_transition_take_foul", True),
       (566, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
       (570, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
+    ("0022600009", TeamHasBackToBackPossessionsException, [145, 147, 153], 1610612745,
+     {1610612759: 98, 1610612745: 99}, [(147, "clock", "2:15"), (153, "clock", "2:15")]),
+    ("0022600096", TeamHasBackToBackPossessionsException, [194, 196, 198, 199], 1610612750,
+     {1610612753: 100, 1610612750: 100}, [(194, "clock", "9:59")]),
+    ("0022600099", V3DecodeError, [233, 238, 235, 239, 240, 259, 241, 242], 1610612741,
+     {1610612741: 110, 1610612749: 109},
+     [(235, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
+      (240, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
+    ("0022600101", TeamHasBackToBackPossessionsException, [772, 774, 776], 1610612763,
+     {1610612763: 97, 1610612744: 98}, [(772, "clock", "3:33")]),
+    ("0022600102", V3DecodeError, [54, 55, 365, 57, 65], 1610612747,
+     {1610612747: 102, 1610612746: 103}, [(65, "player1_id", 1627739)]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
     # 0022600002 Q2 4:12: Towns' and-one, its made jumper recorded a second early.
     # Q2 0:11.9: Brunson's free throw for a defensive three seconds, labeled 1 of 1
-    # instead of technical, which nba_defensive_three_second_free_throw_v1 now
-    # decodes; New York kept the ball. 0022600003 Q3 10:00: an offensive foul
+    # instead of technical, which nba_technical_free_throw_v2 now decodes; New
+    # York kept the ball. 0022600003 Q3 10:00: an offensive foul
     # turnover left behind when Gilgeous-Alexander's foul, made while San Antonio
     # had the ball, was changed to a personal foul. Q3 0:10.3: Gilgeous-Alexander's
     # and-one, its made jumper recorded 0.2 seconds early. 0022600089 Q1 8:10:
@@ -1227,9 +1239,20 @@ def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense,
     # Flagg's three free throws for Durant's flagrant foul, recorded with neither
     # category nor numbering; Q1 2:47 Eason's "First Flagrant Type 2" ejection,
     # V2's 11/3, and Q3 9:43 Sengun's transition take foul labeled "Personal Take".
+    # 0022600009 Q1 2:15: Eason's and-one, its foul and free throw recorded nine
+    # seconds after the layup. 0022600096 Q2 9:59: a loose ball foul and its free
+    # throw as Gobert's basket went in, the basket recorded two seconds early.
+    # 0022600099 Q2 9:46: Powell's three flagrant free throws, recorded with
+    # neither category nor numbering. 0022600101 Q4 3:33: Wells' and-one, its made
+    # 3 recorded a second early, in a game whose live team recoveries carry no
+    # person. 0022600102 Q1 7:21: two copies of a coach challenge's jump ball, and
+    # Q1 7:03 Dunn's rebound recorded again before the miss.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+    files = web.REVIEWED_CORRECTIONS[game]["files"]
+    dropped = {**files.get(EVENT_REMOVALS, {}), **files.get(EVENT_DUPLICATES, {})}
+    assert not {int(n) for n in dropped} & {x.event_num for x in loader.events}
 
 
 def check_recorded_correction(game, recorded, trip, offense, counts):
