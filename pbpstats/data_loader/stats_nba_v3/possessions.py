@@ -14,12 +14,15 @@ from pbpstats.resources.enhanced_pbp.stats_nba.enhanced_pbp_factory import (
 from pbpstats.resources.possessions.possession import Possession
 
 from .decoder import (
+    BLANK_FLAGRANT_FREE_THROW_VERSION,
     FOULS,
     FREE_THROWS,
     REBOUNDS,
+    TEAMLESS_EXCESS_TIMEOUT_VERSION,
     TEAMLESS_TECHNICAL_VERSION,
     TECHNICAL_FREE_THROW_VERSION,
     TRANSITION_TAKE_FOUL_VERSION,
+    VOIDED_SECOND_FREE_THROW_VERSION,
     TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
@@ -56,6 +59,24 @@ from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 
 
 TEAM_IDS_GUARD = "possession_team_ids_skip_teamless_events_v1"
+# NBA V3 records an and-one's basket, foul and free throw at one clock: from
+# 2018-19 to 2025-26, 44,766 of the 44,772 baskets followed, past substitutions,
+# timeouts and replays, by the other team's shooting or shooting block foul and
+# the shooter's lone 1 of 1 at the foul's clock, or by its loose ball foul and a
+# teammate's. The other six, as do 30 of 5,460 in 2017-18 and 5 of the first
+# 142 in 2026-27, record the basket up to two seconds before the foul. The original
+# decides an and-one from the events at the basket's clock alone, so a basket
+# recorded early ends the possession before its free throw.
+AND_ONE_CLOCK_VERSION = "nba_and_one_clock_v1"
+AND_ONE_FOULS = {FOULS[label] for label in ("Shooting", "Shooting Block", "Loose Ball")}
+# Rows a basket's foul can follow: substitutions, timeouts and replays.
+DEAD_BALL_TYPES = (8, 9, 18)
+
+
+def clock_seconds(text):
+    """Seconds left in the period on an original "M:SS" clock."""
+    minutes, _, rest = text.partition(":")
+    return Decimal(minutes) * 60 + Decimal(rest)
 
 
 # V3 subtype labels a reviewed correction may give each kind of event, with the
@@ -154,6 +175,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         self._apply_reviewed_subtypes()
         self._apply_reviewed_clocks()
         self._apply_reviewed_moves()
+        self._apply_and_one_clocks()
         self.added_rows = self._apply_reviewed_turnovers()
         self.clock_resets = self._apply_reviewed_clock_resets()
         self._apply_reviewed_event_order()
@@ -331,16 +353,11 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         )
         rows = result["rowSet"]
         index = {row[number]: i for i, row in enumerate(rows)}
-
-        def seconds(text):
-            minutes, _, rest = text.partition(":")
-            return Decimal(minutes) * 60 + Decimal(rest)
-
         for event, value in sorted(clocks.items()):
             if event not in index:
                 raise V3DecodeError("Event clock override names an event not in the source")
             row, new = rows[index[event]], clock_text(value)
-            if abs(seconds(new) - seconds(row[clock])) > 2:
+            if abs(clock_seconds(new) - clock_seconds(row[clock])) > 2:
                 raise V3DecodeError("Event clock override moves an event more than two seconds")
             recorded, row[clock] = row[clock], new
             self.repairs.append(dict(
@@ -351,7 +368,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         for event in clocks:
             i = index[event]
             for before, after in ((i - 1, i), (i, i + 1)):
-                if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and seconds(rows[before][clock]) < seconds(rows[after][clock]):
+                if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and clock_seconds(rows[before][clock]) < clock_seconds(rows[after][clock]):
                     raise V3DecodeError("Event clock override breaks the recorded order")
 
     def _apply_reviewed_moves(self):
@@ -375,6 +392,58 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             self.repairs.append(dict(
                 code="reviewed_moved_event", event_num=event, after=after,
                 recorded=recorded, reviewed=moved[clock],
+            ))
+
+    def _apply_and_one_clocks(self):
+        # A basket recorded up to two seconds before the foul that makes it an
+        # and-one takes the foul's clock (AND_ONE_CLOCK_VERSION), after the
+        # reviewed clocks and moves. Only substitutions, timeouts and replays,
+        # all at the foul's clock, may come between them.
+        if not self.game_id.startswith("00"):
+            return
+        result = self.source_data["resultSets"][0]
+        headers, rows = result["headers"], result["rowSet"]
+        kind, action, number, period, clock, player, team = (
+            headers.index(key)
+            for key in (
+                "EVENTMSGTYPE", "EVENTMSGACTIONTYPE", "EVENTNUM", "PERIOD",
+                "PCTIMESTRING", "PLAYER1_ID", "PLAYER1_TEAM_ID",
+            )
+        )
+        for i, shot in enumerate(rows):
+            if shot[kind] != 1:
+                continue
+            j = next(
+                (j for j in range(i + 1, len(rows)) if rows[j][kind] not in DEAD_BALL_TYPES),
+                None,
+            )
+            if j is None:
+                continue
+            foul = rows[j]
+            if (
+                foul[kind] != 6
+                or foul[action] not in AND_ONE_FOULS
+                or foul[period] != shot[period]
+                or foul[team] in (None, shot[team])
+                or not 0 < clock_seconds(shot[clock]) - clock_seconds(foul[clock]) <= 2
+                or any(row[clock] != foul[clock] for row in rows[i + 1:j])
+            ):
+                continue
+            at_foul = [r for r in rows if (r[period], r[clock]) == (foul[period], foul[clock])]
+            fouls = [r for r in at_foul if r[kind] == 6 and r[team] == foul[team]]
+            free_throws = [r for r in at_foul if r[kind] == 3 and r[team] == shot[team]]
+            if (
+                len(fouls) != 1
+                or len(free_throws) != 1
+                or free_throws[0][action] != FREE_THROWS[1, 1]
+                or foul[action] != FOULS["Loose Ball"] and free_throws[0][player] != shot[player]
+            ):
+                continue
+            recorded, shot[clock] = shot[clock], foul[clock]
+            self.repairs.append(dict(
+                code=AND_ONE_CLOCK_VERSION, event_num=shot[number],
+                foul_event_num=foul[number], free_throw_event_num=free_throws[0][number],
+                recorded=recorded, decoded=foul[clock],
             ))
 
     def _apply_reviewed_turnovers(self):
@@ -448,10 +517,6 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
         )
 
-        def seconds(text):
-            minutes, _, rest = text.partition(":")
-            return Decimal(minutes) * 60 + Decimal(rest)
-
         applied = {}
         for event, entry in sorted(resets.items()):
             index = {row[number]: i for i, row in enumerate(rows)}
@@ -466,8 +531,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             first = index[moved[0]]
             if (
                 any(row[period] != anchor[period] for row in block)
-                or seconds(reset) <= seconds(anchor[clock])
-                or seconds(block[0][clock]) > seconds(reset)
+                or clock_seconds(reset) <= clock_seconds(anchor[clock])
+                or clock_seconds(block[0][clock]) > clock_seconds(reset)
             ):
                 raise V3DecodeError("Event clock-reset override does not fit the recorded events")
             for row in block:
@@ -479,7 +544,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 if (
                     before is not anchor
                     and before[period] == after[period]
-                    and seconds(before[clock]) < seconds(after[clock])
+                    and clock_seconds(before[clock]) < clock_seconds(after[clock])
                 ):
                     raise V3DecodeError("Event clock-reset override breaks a running clock")
             applied[event] = reset
@@ -704,12 +769,21 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             "defect_guards": [TEAM_IDS_GUARD],
         }
         extensions = [TEAM_HEAVE_VERSION] if decoded.team_heaves else []
-        if decoded.team_technicals:
-            extensions.append(TEAMLESS_TECHNICAL_VERSION)
-        rules = {rule["code"] for rule in decoded.label_rules}
+        rules = {
+            rule.get("code")
+            for rule in decoded.team_technicals + decoded.label_rules + enhanced.repairs
+        }
         extensions += [
             version
-            for version in (TECHNICAL_FREE_THROW_VERSION, TRANSITION_TAKE_FOUL_VERSION)
+            for version in (
+                TEAMLESS_TECHNICAL_VERSION,
+                TEAMLESS_EXCESS_TIMEOUT_VERSION,
+                TECHNICAL_FREE_THROW_VERSION,
+                TRANSITION_TAKE_FOUL_VERSION,
+                BLANK_FLAGRANT_FREE_THROW_VERSION,
+                VOIDED_SECOND_FREE_THROW_VERSION,
+                AND_ONE_CLOCK_VERSION,
+            )
             if version in rules
         ]
         if held_balls:

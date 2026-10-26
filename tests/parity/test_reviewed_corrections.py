@@ -27,6 +27,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     V2_JUMP_BALL_FIELDS,
     DecodedV3,
 )
+from pbpstats.data_loader.stats_nba_v3.possessions import AND_ONE_CLOCK_VERSION
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
@@ -54,6 +55,9 @@ from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 from tools.parity.team_heave_cases import catalog as heave_cases, v3_inputs as heave_rows
 
 GAME = "0022500001"
+# A WNBA game, whose plays no NBA versioned rule decodes: an edit's fixture
+# then fails as recorded.
+WNBA = "1022500001"
 DATA = ROOT / "tests/parity/data/recorded_evidence"
 
 
@@ -85,7 +89,8 @@ def technical_after_last_free_throw():
 
 def violation_on_second_free_throw():
     """HOME's second free throw ends in its own lane violation; the feed logs the
-    made first free throw as 1 of 1, the league's label when one attempt counts."""
+    made first free throw as 1 of 1, which NBA V3 records 4 times in 43
+    (nba_voided_second_free_throw_v1 decodes them), and 1 of 2 otherwise."""
     rows = encode_v3(wrap([
         e("make", 600, AWAY, 11),
         e("foul", 590, AWAY, 11, subtype="Shooting"),
@@ -96,24 +101,24 @@ def violation_on_second_free_throw():
     return rows, numbered(rows, "Free Throw")
 
 
-def edits(name, values):
-    return {name: json.dumps({GAME: values}).encode()}
+def edits(name, values, game=GAME):
+    return {name: json.dumps({game: values}).encode()}
 
 
-def load(rows, moves=None, files=None):
-    source = json.dumps({"game": {"gameId": GAME, "actions": rows}}).encode()
+def load(rows, moves=None, files=None, game=GAME):
+    source = json.dumps({"game": {"gameId": game, "actions": rows}}).encode()
     roster = {
         p: {"team_id": team, "names": [f"Player{p}"]}
         for team, players in ((HOME, range(1, 9)), (AWAY, range(11, 19)))
         for p in players
     }
     context = V3Context(
-        GAME, (HOME, AWAY), roster,
+        game, (HOME, AWAY), roster,
         {1: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]}},
         "Controlled correction context", hashlib.sha256(source).hexdigest(),
     )
     if moves is not None:
-        files = edits(EVENT_ORDER, moves)
+        files = edits(EVENT_ORDER, moves, game)
     overrides = (
         V3Overrides(files, "Controlled review", hashlib.sha256(source).hexdigest())
         if files is not None else None
@@ -162,8 +167,9 @@ def test_event_order_edit_stays_within_one_clock():
 def test_free_throw_subtype_edit_ends_the_trip_at_the_violation():
     rows, ft = violation_on_second_free_throw()
     with pytest.raises(TeamHasBackToBackPossessionsException):
-        load(rows)
-    loaded = load(rows, files=edits(EVENT_SUBTYPES, {str(ft): "Free Throw 1 of 2"}))
+        load(rows, game=WNBA)
+    loaded = load(rows, files=edits(EVENT_SUBTYPES, {str(ft): "Free Throw 1 of 2"}, WNBA),
+                  game=WNBA)
     throw = next(x for x in loaded.events if x.event_num == ft)
     assert throw.is_ft_1_of_2 and not throw.is_possession_ending_event
     assert "Free Throw 1 of 2" in throw.description
@@ -262,14 +268,20 @@ def and_one_a_tenth_later():
 def test_clock_edit_restores_an_and_one():
     rows, foul, ft = and_one_a_tenth_later()
     with pytest.raises(TeamHasBackToBackPossessionsException):
-        load(rows)
+        load(rows, game=WNBA)
+    # As recorded, nba_and_one_clock_v1 gives the basket the foul's clock. The
+    # reviewed clocks come first, and leave the rule nothing to move.
+    recorded = load(rows)
+    assert next(x for x in recorded.events if x.event_num == foul - 1).clock == "0:19.3"
     loaded = load(rows, files=edits(EVENT_CLOCKS, {str(foul): "PT00M19.40S", str(ft): "PT00M19.40S"}))
     throw = next(x for x in loaded.events if x.event_num == ft)
     assert throw.clock == "0:19.4" and throw.free_throw_type == "2pt And 1"
+    assert next(x for x in loaded.events if x.event_num == foul - 1).clock == "0:19.4"
     trip = next(p for p in loaded.items if throw in p.events)
     assert trip.offense_team_id == HOME and trip.events[-1].event_num == ft + 1
     assert dict(code="reviewed_event_clock", event_num=foul, recorded="0:19.3",
                 reviewed="0:19.4") in loaded.diagnostics
+    assert not any(d["code"] == AND_ONE_CLOCK_VERSION for d in loaded.diagnostics)
 
 
 @pytest.mark.parametrize("values, message", [
@@ -762,11 +774,11 @@ def flagrant_free_throws_without_subtypes():
 def test_free_throw_subtype_edit_numbers_a_flagrant_trip():
     rows, n = flagrant_free_throws_without_subtypes()
     with pytest.raises(V3DecodeError, match="Unsupported free throw subtype"):
-        load(rows)
+        load(rows, game=WNBA)
     loaded = load(rows, files=edits(EVENT_FREE_THROW_SUBTYPES, {
         str(n["first"]): "Free Throw Flagrant 1 of 2",
         str(n["second"]): "Free Throw Flagrant 2 of 2",
-    }))
+    }, WNBA), game=WNBA)
     first, second = (x for x in loaded.events if x.event_num in (n["first"], n["second"]))
     assert (first.event_action_type, second.event_action_type) == (
         FLAGRANT_FREE_THROWS[1, 2], FLAGRANT_FREE_THROWS[2, 2]
@@ -818,8 +830,8 @@ def teamless_excess_timeout_turnover():
 def test_team_edit_gives_a_teamless_turnover_its_team():
     rows, n = teamless_excess_timeout_turnover()
     with pytest.raises(V3DecodeError, match="requires a known team"):
-        load(rows)
-    loaded = load(rows, files=edits(EVENT_TEAMS, {str(n["turnover"]): HOME}))
+        load(rows, game=WNBA)
+    loaded = load(rows, files=edits(EVENT_TEAMS, {str(n["turnover"]): HOME}, WNBA), game=WNBA)
     turnover = next(x for x in loaded.events if x.event_num == n["turnover"])
     assert (turnover.team_id, turnover.player1_id) == (HOME, 0)
     assert turnover.is_possession_ending_event
@@ -1031,20 +1043,15 @@ def test_recorded_correction_moves_curry_technical_free_throw():
 
 @pytest.mark.parametrize("game, trip, code", [
     ("0022500775", [448, 450, 459, 451, 462], "reviewed_event_order"),
-    ("0022500054", [190, 192, 262], "reviewed_event_subtype"),
-    ("0022501009", [158, 182, 674], "reviewed_event_subtype"),
     ("0022500944", [391, 393, 394, 396], "reviewed_event_subtype"),
     ("0022501070", [500, 503, 504, 505], "reviewed_event_subtype"),
     ("0022501079", [684, 686, 687, 688], "reviewed_event_subtype"),
-    ("0022500684", [151, 152, 154, 155], "reviewed_event_clock"),
 ])
 def test_recorded_corrections_from_video_review(game, trip, code):
-    # 0022500775 Q3 6:58: Ball's technical free throw came first. 0022500054 Q2
-    # 11:06 and 0022501009 Q1 0:47: the made free throw was 1 of 2, and a
-    # violation on the second ended the trip. 0022500944 Q3 9:38: a lane
-    # violation turnover. 0022501070 Q3 2:27: replay made the foul a personal
-    # foul. 0022501079 Q4 8:09: Miller's lane violation gave Memphis the ball.
-    # 0022500684 Q1 0:19.4: Hardaway Jr.'s and-one.
+    # 0022500775 Q3 6:58: Ball's technical free throw came first. 0022500944 Q3
+    # 9:38: a lane violation turnover. 0022501070 Q3 2:27: replay made the foul a
+    # personal foul. 0022501079 Q4 8:09: Miller's lane violation gave Memphis the
+    # ball.
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     with pytest.raises(TeamHasBackToBackPossessionsException):
@@ -1057,6 +1064,27 @@ def test_recorded_corrections_from_video_review(game, trip, code):
     assert following.offense_team_id != possession.offense_team_id
     assert following.start_time == possession.end_time
     assert any(d["code"] == code for d in loader.diagnostics)
+
+
+def test_recorded_and_one_keeps_its_reviewed_clock():
+    # 0022500684 Q1 0:19.4: Hardaway Jr.'s and-one, whose foul and free throw V3
+    # records a tenth after the basket. nba_and_one_clock_v1 alone gives the
+    # basket the foul's 0:19.3; the reviewed entry, from video, puts all three
+    # at 0:19.4 before the rule runs.
+    game = "0022500684"
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    ruled = web.load_game(game, pbp, box, "recorded")
+    reviewed = web.load_game(game, pbp, box, "recorded",
+                             overrides=web.reviewed_overrides(game, pbp))
+    for loader, clock, rule in ((ruled, "0:19.3", True), (reviewed, "0:19.4", False)):
+        possession = next(p for p in loader.items if any(x.event_num == 151 for x in p.events))
+        assert [x.event_num for x in possession.events][-4:] == [151, 152, 154, 155]
+        assert [x.clock for x in possession.events[-4:-1]] == [clock] * 3
+        following = loader.items[loader.items.index(possession) + 1]
+        assert following.offense_team_id != possession.offense_team_id
+        assert any(d["code"] == AND_ONE_CLOCK_VERSION for d in loader.diagnostics) == rule
+    assert ruled.counts_by_team == reviewed.counts_by_team
 
 
 @pytest.mark.parametrize("game, recorded, trip, offense, check, counts", [
@@ -1108,10 +1136,6 @@ def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense
     ("0022400345", TeamHasBackToBackPossessionsException,
      [726, 727, 729, 735, 734, 736, 738, 741, 742], 1610612763,
      {1610612763: 108, 1610612738: 108}),
-    ("0022400512", TeamHasBackToBackPossessionsException, [588, 634, 658], 1610612764,
-     {1610612764: 90, 1610612755: 90}),
-    ("0022400625", None, [615, 617, 618, 619], 1610612742,
-     {1610612742: 99, 1610612760: 100}),
     ("0022400739", TeamHasBackToBackPossessionsException, [492, 499, 500, 501, 502, 503],
      1610612760, {1610612761: 95, 1610612760: 95}),
     ("0022400758", TeamHasBackToBackPossessionsException,
@@ -1128,9 +1152,7 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     # in the league's order: miss, the jump-ball winner's team rebound, jump ball.
     # 0022400116 Q1 6:40, 0022400739 Q3 1:54: the jump ball's tip recipient.
     # 0022400313 Q4 11:25: an offensive foul turnover. 0022400326 Q3 3:07: the
-    # technical free throw between two free throws. 0022400512 Q4 3:21: a free
-    # throw 1 of 2. 0022400625 Q4 9:43: a transition take foul, which
-    # nba_transition_take_foul_v1 now decodes as the reviewed entry does.
+    # technical free throw between two free throws.
     # 0022400345 Q4 0:19.1, 0022400758 Q1 3:39, 0022400862 Q2 1:06: a successful
     # challenge.
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
@@ -1139,12 +1161,8 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     fetch = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
     # 0022400116's box score lists Brandon Boston without the "Jr." its rows use.
     aliases = {1630527: ["Boston Jr."]} if game == "0022400116" else None
-    if recorded is not None:
-        with pytest.raises(recorded):
-            web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
-    else:
-        loader = web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
-        assert loader.counts_by_team == counts
+    with pytest.raises(recorded):
+        web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
     loader = web.load_game(game, pbp, box, "recorded", aliases=aliases,
                            overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
@@ -1160,8 +1178,6 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
      1610612763, {1610612763: 100, 1610612761: 101}),
     ("0022300512", InvalidNumberOfStartersException, [359, 345, 361, 360], 1610612765,
      {1610612758: 103, 1610612765: 102}),
-    ("0022300866", TeamHasBackToBackPossessionsException, [431, 432, 433, 435, 437, 439],
-     1610612751, {1610612751: 93, 1610612737: 93}),
     ("0022300019", TeamHasBackToBackPossessionsException, [577, 580, 582, 590, 586, 587],
      1610612755, {1610612755: 107, 1610612754: 107}),
     ("0022300910", TeamHasBackToBackPossessionsException, [524, 528, 529], 1610612764,
@@ -1185,7 +1201,6 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
     # Toronto the ball, so its team rebound is real. 0022300512 Q3: Burks'
     # flopping technical at the start came from the bench; the period-start box
     # score the original then reads lists six Kings, so the starters are reviewed.
-    # 0022300866 Q3 4:03: Johnson's and-one, its made 3 recorded a second early.
     # 0022300019 Q4 10:40: the free throws recorded as Maxey's makes were missed,
     # and Philadelphia kept the ball. 0022300910 Q4 9:34 and 0022301024 Q3 5:43: a
     # successful challenge's turnover, which V3 does not record, is added.
@@ -1200,52 +1215,21 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
 
 
 @pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
-    ("0022600002", TeamHasBackToBackPossessionsException, [330, 331, 333], 1610612752,
-     {1610612755: 102, 1610612752: 102},
-     [(330, "clock", "4:12"), (412, "is_possession_ending_event", False),
-      (412, "is_technical_ft", True)]),
     ("0022600003", TeamHasBackToBackPossessionsException, [423, 425, 426, 427, 429],
      1610612759, {1610612759: 102, 1610612760: 101},
      [(425, "is_possession_ending_event", False), (600, "clock", "0:10.3")]),
-    ("0022600089", TeamHasBackToBackPossessionsException, [44, 45, 47, 49, 50], 1610612762,
-     {1610612763: 104, 1610612762: 103}, [(45, "clock", "8:10")]),
-    ("0022600091", V3DecodeError, [562, 564, 567, 566, 568, 569, 570, 571], 1610612742,
-     {1610612745: 98, 1610612742: 99},
-     [(130, "event_action_type", 3), (413, "is_transition_take_foul", True),
-      (566, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
-      (570, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
     ("0022600009", TeamHasBackToBackPossessionsException, [145, 147, 153], 1610612745,
      {1610612759: 98, 1610612745: 99}, [(147, "clock", "2:15"), (153, "clock", "2:15")]),
-    ("0022600096", TeamHasBackToBackPossessionsException, [194, 196, 198, 199], 1610612750,
-     {1610612753: 100, 1610612750: 100}, [(194, "clock", "9:59")]),
-    ("0022600099", V3DecodeError, [233, 238, 235, 239, 240, 259, 241, 242], 1610612741,
-     {1610612741: 110, 1610612749: 109},
-     [(235, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
-      (240, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
-    ("0022600101", TeamHasBackToBackPossessionsException, [772, 774, 776], 1610612763,
-     {1610612763: 97, 1610612744: 98}, [(772, "clock", "3:33")]),
     ("0022600102", V3DecodeError, [54, 55, 365, 57, 65], 1610612747,
      {1610612747: 102, 1610612746: 103}, [(65, "player1_id", 1627739)]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
-    # 0022600002 Q2 4:12: Towns' and-one, its made jumper recorded a second early.
-    # Q2 0:11.9: Brunson's free throw for a defensive three seconds, labeled 1 of 1
-    # instead of technical, which nba_technical_free_throw_v2 now decodes; New
-    # York kept the ball. 0022600003 Q3 10:00: an offensive foul
-    # turnover left behind when Gilgeous-Alexander's foul, made while San Antonio
-    # had the ball, was changed to a personal foul. Q3 0:10.3: Gilgeous-Alexander's
-    # and-one, its made jumper recorded 0.2 seconds early. 0022600089 Q1 8:10:
-    # George's and-one, its made 3 recorded a second early. 0022600091 Q4 11:37:
-    # Flagg's three free throws for Durant's flagrant foul, recorded with neither
-    # category nor numbering; Q1 2:47 Eason's "First Flagrant Type 2" ejection,
-    # V2's 11/3, and Q3 9:43 Sengun's transition take foul labeled "Personal Take".
-    # 0022600009 Q1 2:15: Eason's and-one, its foul and free throw recorded nine
-    # seconds after the layup. 0022600096 Q2 9:59: a loose ball foul and its free
-    # throw as Gobert's basket went in, the basket recorded two seconds early.
-    # 0022600099 Q2 9:46: Powell's three flagrant free throws, recorded with
-    # neither category nor numbering. 0022600101 Q4 3:33: Wells' and-one, its made
-    # 3 recorded a second early, in a game whose live team recoveries carry no
-    # person. 0022600102 Q1 7:21: two copies of a coach challenge's jump ball, and
+    # 0022600003 Q3 10:00: an offensive foul turnover left behind when
+    # Gilgeous-Alexander's foul, made while San Antonio had the ball, was changed
+    # to a personal foul; Q3 0:10.3: his and-one, its made jumper recorded 0.2
+    # seconds early, which nba_and_one_clock_v1 now decodes. 0022600009 Q1 2:15:
+    # Eason's and-one, its foul and free throw recorded nine seconds after the
+    # layup. 0022600102 Q1 7:21: two copies of a coach challenge's jump ball, and
     # Q1 7:03 Dunn's rebound recorded again before the miss.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
@@ -1289,8 +1273,6 @@ def check_recorded_correction(game, recorded, trip, offense, counts):
      [(458, "player3_id", 202691), (458, "v3_source_indices", (329, 330))]),
     ("0022200234", V3DecodeError, [225, 227, 723, 230], 1610612747,
      {1610612747: 104, 1610612765: 103}, [(723, "v3_source_indices", (161, 174))]),
-    ("0022200323", V3DecodeError, [718, 719, 720, 723, 724], 1610612754,
-     {1610612754: 112, 1610612758: 113}, [(724, "team_id", 1610612754)]),
     ("0022200325", TeamHasBackToBackPossessionsException, [396, 398, 399, 404, 402], 1610612742,
      {1610612742: 105, 1610612765: 107},
      [(404, "clock", "6:41"), (404, "is_transition_take_foul_ft", True)]),
@@ -1315,9 +1297,8 @@ def test_recorded_corrections_from_2022_23_review(game, recorded, trip, offense,
     # 0022200055 Q3 6:31: Booker and Thompson's double technical, which names
     # nobody, with Thompson's half recorded again as his own technical (481).
     # 0022200234 Q2 7:08: a stale Nunn-for-Schroder substitution (248), left by
-    # the scorer's later one at 8:51 (723). 0022200323 Q4 1:24: Indiana's excess
-    # timeout turnover, recorded without a team. 0022200325 Q3 6:41: Bullock's
-    # free throw for the transition take foul, recorded at the 6:03 and-one.
+    # the scorer's later one at 8:51 (723). 0022200325 Q3 6:41: Bullock's free
+    # throw for the transition take foul, recorded at the 6:03 and-one.
     # 0022200363 Q4 2:15: Wagner's lane violation, recorded without a subtype.
     # 0022200473 Q1 0:11.9: Reid's foul, listed after the free throws it caused.
     # 0022200591 Q1 7:42: Jones's away-from-play free throw, at a clock with
@@ -1372,8 +1353,6 @@ def test_recorded_corrections_from_2022_23_review(game, recorded, trip, offense,
      {1610612737: 100, 1610612765: 99}, [(641, "is_possession_ending_event", True)]),
     ("0022101030", V3DecodeError, [164, 165, 149, 150, 184, 185, 153, 156, 157, 158, 159],
      1610612753, {1610612751: 104, 1610612753: 106}, [(165, "clock", "1:11")]),
-    ("0022101135", V3DecodeError, [643, 644], 1610612762,
-     {1610612762: 94, 1610612746: 93}, [(644, "team_id", 1610612762)]),
 ])
 def test_recorded_corrections_from_2021_22_review(game, recorded, trip, offense, counts, checks):
     # 0022100039 Q4 0:59.2 and 0022101030 Q1 1:11: a miss and its team rebound,
@@ -1397,8 +1376,7 @@ def test_recorded_corrections_from_2021_22_review(game, recorded, trip, offense,
     # Lakers won and Edwards' held ball turnover. 0022100762 Q2 11:40 and
     # 0022100830 Q4 0:36.4: offensive loose ball foul turnovers recorded
     # without a subtype. 0022100968 Q4 0:01.6: Bogdanovic's foul, listed after
-    # the free throws it caused. 0022101135 Q4 0:10: Utah's excess timeout
-    # turnover, recorded without a team.
+    # the free throws it caused.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
@@ -1423,13 +1401,6 @@ def test_recorded_clock_from_2021_22_review():
 
 
 @pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
-    ("0022000042", None, [439, 440, 441, 442, 445, 447], 1610612763,
-     {1610612763: 109, 1610612751: 110}, [(439, "team_id", 1610612751)]),
-    ("0022000215", V3DecodeError, [681, 683, 713], 1610612764,
-     {1610612764: 101, 1610612766: 100}, [(713, "team_id", 1610612764)]),
-    ("0022000285", V3DecodeError, [629, 630], 1610612746,
-     {1610612748: 98, 1610612746: 97},
-     [(629, "team_id", 1610612746), (630, "team_id", 1610612746)]),
     ("0022000317", TeamHasBackToBackPossessionsException, [663, 664, 666, 667, 669], 1610612740,
      {1610612758: 101, 1610612740: 102},
      [(347, "team_id", 1610612740), (669, "is_lane_violation", True)]),
@@ -1467,17 +1438,16 @@ def test_recorded_clock_from_2021_22_review():
      {1610612748: 88, 1610612755: 88}, [(487, "is_possession_ending_event", True)]),
 ])
 def test_recorded_corrections_from_2020_21_review(game, recorded, trip, offense, counts, checks):
-    # 0022000042 Q3 5:06 and 0022000317 Q2 0:16.2: delay technicals recorded
-    # without a team, which nba_teamless_team_technical_v1 now decodes to the
-    # same teams. 0022000215 Q4 2:22 and 0022000285 Q4 0:27.5: excess
-    # timeout technicals and turnovers recorded without a team. 0022000317 Q4
-    # 1:52: a lane violation recorded without a subtype. 0022000059 Q4 5:18,
+    # 0022000317 Q4 1:52: a lane violation recorded without a subtype; its Q2
+    # 0:16.2 delay technical, recorded without a team, nba_teamless_team_technical_v1
+    # decodes. 0022000059 Q4 5:18,
     # 0022000559 Q2 1:21 and 0022000597 Q3 0:38.2: a personal foul by the team
     # with the ball, charged as a turnover recorded without a subtype.
     # 0022000248 Q1 12:00: the opening tip, recorded to Millsap before Jokic's
-    # jump ball violation. 0022000319 Q2 1:52: a made free throw 1 of 1 and the
-    # goaltending turnover of the same trip; Q4 0:54.7: an away-from-play foul
-    # that was played as a personal foul. 0022000729 Q3: a delay of game
+    # jump ball violation. 0022000319 Q4 0:54.7: an away-from-play foul that was
+    # played as a personal foul; its Q2 1:52 made free throw 1 of 1, before the
+    # goaltending turnover of the same trip, nba_voided_second_free_throw_v1
+    # decodes as 1 of 2. 0022000729 Q3: a delay of game
     # violation listed before the period's start. 0022000733 Q2 0:03.8: an
     # away-from-play free throw at the clock of Butler's made free throws.
     # 0022000798 Q4 0:46 and 0022000997 Q3 5:09: a blocked shot and its team

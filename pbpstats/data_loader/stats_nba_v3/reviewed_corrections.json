@@ -567,15 +567,6 @@
       }
     }
   },
-  "0022000042": {
-    "pbp_sha256": "2de4901fb68a54e0a2aa55ce34185a248d799a0879e496f0f507e4e5c8114ba0",
-    "source": "Reviewed 2026-10-16: at Q3 5:06, after LeVert's layup, Brooklyn was charged a delay of game technical (439) and Brooks shot the technical free throw. V3 and V2 record the technical with neither a team nor a person; the 16 other delay technicals from 2020-21 record their team. The technical is Brooklyn's.",
-    "files": {
-      "event_teams.json": {
-        "439": 1610612751
-      }
-    }
-  },
   "0022000056": {
     "pbp_sha256": "c70db48b33991ea6d617759a3c05931051624d5582de75f4db6cbd0c857261bc",
     "source": "Video review 2026-10-17: at Q3 2:11 Williams' non-shooting foul on Clarke (472) was followed only by substitutions, with Boston leading 86-62; Brooks' bad pass at 1:54 (478) ended that Memphis possession, and Tatum's layup made it 88-62. Clarke's two free throws for that foul in the penalty (486, 487, 488) were shot at the 1:22 stoppage, before Brown's: Memphis had 64 after Dieng's 1:37 layup and 65 before Brown's first free throw, and their numbers fall between Brooks' 1:22 foul (484) and that free throw (489). V3 and V2 record them at 2:11. They are moved to just after Brooks' foul, and Clarke's made second free throw does not end Boston's possession, which continues with Brown's free throws.",
@@ -599,15 +590,6 @@
       }
     }
   },
-  "0022000215": {
-    "pbp_sha256": "e663d2d38352e38611ab9dae5ab900522a6679ecca853cfc97dd2830f7c518e5",
-    "source": "Reviewed 2026-10-16: at Q4 2:22 Washington called a timeout it did not have: the Wizards' excess timeout technical (683) and an excess timeout turnover (713, added after the game), after which Monk shot the technical free throw. V3 and V2 record the turnover with neither a team nor a person, as in 0022200323. The turnover is Washington's.",
-    "files": {
-      "event_teams.json": {
-        "713": 1610612764
-      }
-    }
-  },
   "0022000248": {
     "pbp_sha256": "6472ffaffbf161be43a671343d2dbc98c9c80b502b213e2533f3dac325080d57",
     "source": "Reviewed 2026-10-16: at Q1 12:00 the opening jump ball between Ayton and Jokic is recorded as tipped to Millsap (4), but Jokic's jump ball violation (7) gave Phoenix the ball, and Ayton scored first. Of the 24 opening jump ball violations from 2020-21 to 2024-25, three others also list the jump ball first, and none of those names a tip recipient. The jump ball is awarded to Phoenix.",
@@ -617,38 +599,22 @@
       }
     }
   },
-  "0022000285": {
-    "pbp_sha256": "fddd45194be3dce54163dcf327f04cb2489df549de0532d416ed720b07835b16",
-    "source": "Reviewed 2026-10-16: at Q4 0:27.5, after Adebayo's layup, the Clippers called a timeout they did not have: a technical (629) and an excess timeout turnover (630), after which Herro shot the technical free throw. V3 and V2 record both with neither a team nor a person, as in 0022200323. Both are the Clippers'.",
-    "files": {
-      "event_teams.json": {
-        "629": 1610612746,
-        "630": 1610612746
-      }
-    }
-  },
   "0022000317": {
     "pbp_sha256": "20dea05c085aa7c1ba725b8c89307312eea8e2ce1deb167846735986932c4d29",
-    "source": "Reviewed 2026-10-16: at Q2 0:16.2 New Orleans' delay of game violation (346) drew a delay technical (347), and Hield shot the technical free throw. V3 and V2 record the technical with neither a team nor a person; the 16 other delay technicals from 2020-21 record their team. The technical is New Orleans'. At Q4 1:52 Hernangomez's lane violation on Ingram's second free throw gave Sacramento the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Hernangomez 1 TOV), and Ingram shot one free throw.",
+    "source": "Reviewed 2026-10-16: at Q4 1:52 Hernangomez's lane violation on Ingram's second free throw gave Sacramento the ball. V3 leaves the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Hernangomez 1 TOV), and Ingram shot one free throw.",
     "files": {
       "event_subtypes.json": {
         "669": "Lane Violation"
-      },
-      "event_teams.json": {
-        "347": 1610612740
       }
     }
   },
   "0022000319": {
     "pbp_sha256": "2fdc98180a339540358b4719baa0b75231335e89b26c657d1deb07c6af3bfe5b",
-    "source": "Reviewed 2026-10-16: at Q2 1:52 Bridges' shooting foul on Doncic (280), Doncic's free throw 1 of 1 (653, added after the game) and Porzingis' offensive goaltending turnover (480) are one Dallas trip, after which Phoenix had the ball; no basket is recorded, so the made free throw does not end the possession. At Q4 0:54.7 Ayton's away-from-play foul (620) gave Richardson two penalty free throws and Phoenix then had the ball, as after a personal foul, not one free throw and possession. V3 and V2 keep the away-from-play subtype.",
+    "source": "Reviewed 2026-10-16: at Q4 0:54.7 Ayton's away-from-play foul (620) gave Richardson two penalty free throws and Phoenix then had the ball, as after a personal foul, not one free throw and possession. V3 and V2 keep the away-from-play subtype.",
     "files": {
       "event_subtypes.json": {
         "620": "Personal"
-      },
-      "non_possession_changing_event_overrides.json": [
-        653
-      ]
+      }
     }
   },
   "0022000559": {
@@ -973,15 +939,6 @@
       }
     }
   },
-  "0022101135": {
-    "pbp_sha256": "0fa76194268e8c0c76aadb43e478d5555eae190e138de71f03d547d7c78b092a",
-    "source": "Reviewed 2026-10-16: at Q4 0:10 Utah called a timeout it did not have: a technical (643) and an excess timeout turnover (644), after which Jackson shot the technical free throw. V3 and V2 record the turnover with neither a team nor a person, as in 0022200323. The turnover is Utah's.",
-    "files": {
-      "event_teams.json": {
-        "644": 1610612762
-      }
-    }
-  },
   "0022200055": {
     "pbp_sha256": "548aaffa1cbec456d1c3a10a3f563880a2ea02bd5947e1918a1ba6302f3b6983",
     "source": "Reviewed 2026-10-13: at Q3 6:31 Booker and Thompson were given a double technical, and Thompson a second technical that ejected him, for which Booker shot one technical free throw. V3 and V2 record the double technical (458) with Booker alone and no names in its text, the only one of 354 double technicals from 2022-23 to 2025-26 that names nobody, and record Thompson's half of it again as a technical of his own (481), beside his second one (455). The double technical names Thompson, and 481 is removed as part of it.",
@@ -1000,15 +957,6 @@
     "files": {
       "event_removals.json": {
         "248": 723
-      }
-    }
-  },
-  "0022200323": {
-    "pbp_sha256": "1659a353bcf6b5984a8b1506c3fa4d302c7e4e483cc4b418a284df7108fac1e4",
-    "source": "Reviewed 2026-10-13: at Q4 1:24 Indiana, given the ball by Murray's traveling, called a timeout it did not have: a technical (723) and an excess timeout turnover (724), after which Sacramento shot. V3 and V2 record the turnover with neither a team nor a person; the seven other excess timeout turnovers from 2022-23 to 2025-26 record their team. The turnover is Indiana's.",
-    "files": {
-      "event_teams.json": {
-        "724": 1610612754
       }
     }
   },
@@ -1189,15 +1137,6 @@
       }
     }
   },
-  "0022300866": {
-    "pbp_sha256": "dafde58c3602c5aac389cd71aa13d2fdb2af430964797a03bad1ea90c7248a6a",
-    "source": "Reviewed 2026-10-10: at Q3 4:03 Mathews fouled Johnson on his made 3, an and-one. V3, like V2, records the shot at 4:04 but the foul, a substitution and the free throw at 4:03, where the official minutes also put the substitution; 17,005 of the 17,007 and-ones from 2023-24 to 2025-26 are recorded at one clock.",
-    "files": {
-      "event_clocks.json": {
-        "433": "PT04M03.00S"
-      }
-    }
-  },
   "0022300910": {
     "pbp_sha256": "84925b243259cb06856b455e22c7e35cfd7dd0836756dd3f8c389864a3059a7a",
     "source": "Video review 2026-10-10: at Q4 9:34 Charlotte's coach challenge turned the call into Holmes' offensive foul, a turnover that gave Charlotte the ball. V3, V2 and the box score record the foul but no turnover, the only one of 10,868 offensive fouls from 2023-24 to 2025-26 without its turnover. It is added as 529, the number V3 leaves free after the foul.",
@@ -1327,24 +1266,6 @@
       ]
     }
   },
-  "0022400512": {
-    "pbp_sha256": "c428b29b7fdc514925c01906358d55607ba9cd825e4c3f7ee396bbe09dc56e24",
-    "source": "Video review 2026-10-09: at Q4 3:21 Holmes made the first of two free throws, and the second did not count: Kuzma's offensive goaltending ended Washington's possession. V3 logs the made free throw as 1 of 1. Same pattern as reviewed 0022500054 and 0022501009.",
-    "files": {
-      "event_subtypes.json": {
-        "634": "Free Throw 1 of 2"
-      }
-    }
-  },
-  "0022400625": {
-    "pbp_sha256": "b6f9b3bcacd7de36fe4dabf70fc07c7b1b34fb01077f2fecc1f1fb615ff08f63",
-    "source": "Video review 2026-10-09: at Q4 9:43 Jal. Williams fouled Washington right after his defensive rebound, a transition take foul: one free throw, and Dallas kept the ball. V3 labels it Personal Take, which the original ends the possession on.",
-    "files": {
-      "event_subtypes.json": {
-        "615": "Transition Take"
-      }
-    }
-  },
   "0022400739": {
     "pbp_sha256": "6a8e7cfc7360cb27b4e1a250904bcd6a3e7893e9e5321c2286e7a7f3381e9732",
     "source": "Video review 2026-10-09: at Q3 1:54 Barnes touched the jump ball after Walter's miss, but Kenrich Williams secured it for Oklahoma City, whose team rebound is credited for winning it. V3 and the live play-by-play credit the tip to Barnes (Toronto).",
@@ -1386,15 +1307,6 @@
       "non_possession_changing_event_overrides.json": [
         302
       ]
-    }
-  },
-  "0022500054": {
-    "pbp_sha256": "73c6e095c19810c10d7e30d003948a04c1c6948796a9d56b4c8ffaa16b7d85b4",
-    "source": "Video review 2026-10-07: at Q2 11:06 Sengun made the first of two free throws, and Adams' lane violation on the second ended Houston's possession. V3 logs the made free throw as 1 of 1.",
-    "files": {
-      "event_subtypes.json": {
-        "192": "Free Throw 1 of 2"
-      }
     }
   },
   "0022500119": {
@@ -1500,15 +1412,6 @@
       }
     }
   },
-  "0022501009": {
-    "pbp_sha256": "b18373b5f12fdf41a03a3832b0876974ea5f8529947d4b13ce759f6e1995b5e3",
-    "source": "Video review 2026-10-07: at Q1 0:47 Watkins made the first of two free throws, and Gill's offensive goaltending on the second ended Washington's possession. V3 logs the made free throw as 1 of 1.",
-    "files": {
-      "event_subtypes.json": {
-        "182": "Free Throw 1 of 2"
-      }
-    }
-  },
   "0022501070": {
     "pbp_sha256": "c7fd9cc475bcf9e85babef86e074d9d53ebbc10e8130a744a6f4f16f59bdc677",
     "source": "Video review 2026-10-07: at Q3 2:27 the instant replay changed Yabusele's away-from-play foul to a personal foul. V3 keeps the away-from-play subtype.",
@@ -1527,28 +1430,13 @@
       }
     }
   },
-  "0022600002": {
-    "pbp_sha256": "3a380204e905ad65477ce14f1eff16991f394689b4a07e7da2dce9047e196575",
-    "source": "Reviewed 2026-10-21: at Q2 4:12 Embiid fouled Towns on his made jumper, an and-one; V3 records the shot at 4:13 but the foul and the free throw at 4:12, where 17,361 of the 17,363 and-ones from 2023-24 to 2026-27 are recorded at one clock, so the shot takes the foul's clock. At Q2 0:11.9 Brunson's free throw for James' defensive three seconds is labeled Free Throw 1 of 1, where all 619 from 2024-25 to 2025-26 are Free Throw Technical; New York kept the ball, so the free throw does not end its possession.",
-    "files": {
-      "event_clocks.json": {
-        "330": "PT04M12.00S"
-      },
-      "non_possession_changing_event_overrides.json": [
-        412
-      ]
-    }
-  },
   "0022600003": {
     "pbp_sha256": "1f4132ed18b0973eceaee0a4a8275d88206ce24d51fe7806510fbc0f3330fd4e",
-    "source": "Reviewed 2026-10-21: at Q3 10:00 San Antonio had the ball after Oklahoma City's shot clock violation at 10:07, exactly 24 seconds after its 10:31 inbound, and Gilgeous-Alexander's foul is a personal foul on defense; V3 also records his offensive foul turnover at 10:00, left behind when the foul was changed, and the box score counts it (Gilgeous-Alexander 2 TOV), so it stays credited but does not end a possession. At Q3 0:10.3 Castle fouled Gilgeous-Alexander on his made jumper, an and-one; V3 records the shot at 0:10.5 but the foul, three substitutions and the free throw at 0:10.3, so the shot takes the foul's clock.",
+    "source": "Reviewed 2026-10-21: at Q3 10:00 San Antonio had the ball after Oklahoma City's shot clock violation at 10:07, exactly 24 seconds after its 10:31 inbound, and Gilgeous-Alexander's foul is a personal foul on defense; V3 also records his offensive foul turnover at 10:00, left behind when the foul was changed, and the box score counts it (Gilgeous-Alexander 2 TOV), so it stays credited but does not end a possession.",
     "files": {
       "non_possession_changing_event_overrides.json": [
         425
-      ],
-      "event_clocks.json": {
-        "600": "PT00M10.30S"
-      }
+      ]
     }
   },
   "0022600009": {
@@ -1558,55 +1446,6 @@
       "event_moves.json": {
         "147": 145,
         "153": 147
-      }
-    }
-  },
-  "0022600089": {
-    "pbp_sha256": "0229ae3db542f96b2c4d2970d5b65e712d66a0b39f76df008d161c424b1bbb53",
-    "source": "Reviewed 2026-10-22: at Q1 8:10 Wells fouled George on his made 3, an and-one; V3 records the shot at 8:11 but the foul and the missed free throw at 8:10, where 17,361 of the 17,363 and-ones from 2023-24 to 2025-26 are recorded at one clock, so the shot takes the foul's clock.",
-    "files": {
-      "event_clocks.json": {
-        "45": "PT08M10.00S"
-      }
-    }
-  },
-  "0022600091": {
-    "pbp_sha256": "2ee01caee861987d5a3ad7c74827511b43151a276e823251e306150c089187d2",
-    "source": "Reviewed 2026-10-22: at Q4 11:37 Durant's flagrant 1 foul, upheld on replay, gave Flagg three free throws (missed, made, made) and Dallas the ball. V3 records the three with no subtype and text that names neither category nor numbering, where every other flagrant free throw from 2023-24 to 2026-27 has both; they are the Flagrant 1, 2 and 3 of 3 the trip's three attempts make them.",
-    "files": {
-      "event_free_throw_subtypes.json": {
-        "566": "Free Throw Flagrant 1 of 3",
-        "569": "Free Throw Flagrant 2 of 3",
-        "570": "Free Throw Flagrant 3 of 3"
-      }
-    }
-  },
-  "0022600096": {
-    "pbp_sha256": "3bf8669492dec38258734b3200fab19e95b04df26bd0a5eac8332ed7f34eabec",
-    "source": "Reviewed 2026-10-25: at Q2 9:59 da Silva's loose ball foul on Lyles as Gobert's floater went in gave Lyles one free throw, which he missed. V3 records the basket at 10:01 but the foul, the free throw and its rebound at 9:59, where the live play-by-play shows all four entered within 20 milliseconds, so the basket takes the foul's clock.",
-    "files": {
-      "event_clocks.json": {
-        "194": "PT09M59.00S"
-      }
-    }
-  },
-  "0022600099": {
-    "pbp_sha256": "f77a377f4afcc738c7be34a44a4a109152ff7db2f4dc43fa684244706fdd34ba",
-    "source": "Reviewed 2026-10-25: at Q2 9:46 Burries' flagrant 1 foul, upheld on replay, gave Powell three free throws, all made, and Chicago the ball. V3 records the three with no subtype and text that names neither category nor numbering, as the live play-by-play's \"Free Throw other\" does, whose foul names Powell's three free throws; they are the Flagrant 1, 2 and 3 of 3.",
-    "files": {
-      "event_free_throw_subtypes.json": {
-        "235": "Free Throw Flagrant 1 of 3",
-        "239": "Free Throw Flagrant 2 of 3",
-        "240": "Free Throw Flagrant 3 of 3"
-      }
-    }
-  },
-  "0022600101": {
-    "pbp_sha256": "1f32ff5e10300c74397db8ddd33e13b5188fee046eeab8137a5a2acfe8f70b4e",
-    "source": "Reviewed 2026-10-25: at Q4 3:33 Curry fouled Wells on his made 3, an and-one. V3 records the shot at 3:34 but the foul and the free throw at 3:33, where the live play-by-play shows the shot and the foul entered 10 milliseconds apart, so the shot takes the foul's clock.",
-    "files": {
-      "event_clocks.json": {
-        "772": "PT03M33.00S"
       }
     }
   },

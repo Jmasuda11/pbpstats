@@ -76,6 +76,26 @@ TECHNICAL_FREE_THROW_VERSION = "nba_technical_free_throw_v2"
 # 0022400625's, which video review found to be a transition take foul.
 TRANSITION_TAKE_FOUL_VERSION = "nba_transition_take_foul_v1"
 TEAM_FOUL_COUNT = re.compile(r"\(P\d+\.T\d+\)")
+# NBA V3 records an excess timeout's turnover with neither a team nor a person
+# in four games from 2020-21 to 2022-23, and its technical so in one of them
+# (0022000285); from 2017-18 to 2025-26 the 9 other excess timeout turnovers
+# and the 17 other excess timeout technicals record their team. The team
+# charged is the one that did not shoot the technical free throw.
+TEAMLESS_EXCESS_TIMEOUT_VERSION = "nba_teamless_excess_timeout_v1"
+EXCESS_TIMEOUTS = ("Excess Timeout Technical", "Excess Timeout Turnover")
+# NBA 2026-27 V3 records the three free throws of two flagrant 1 fouls with
+# neither category nor numbering, in subtype or text (0022600091, 0022600099),
+# each after a replay that overturned the call; from 2017-18 to 2025-26 all
+# 2,826 flagrant free throws record both. Such a free throw is its trip's
+# attempt in recorded order.
+BLANK_FLAGRANT_FREE_THROW_VERSION = "nba_blank_flagrant_free_throw_v1"
+# When the shooting team's lane violation or offensive goaltending voids a
+# shooting foul's second free throw, NBA V3 records the made first one as "Free
+# Throw 1 of 2" 39 of 43 times from 2017-18 to 2025-26, and never 1 of 3. The
+# other four record "Free Throw 1 of 1", which the original reads as the trip's
+# last free throw, so the possession ends before the turnover.
+VOIDED_SECOND_FREE_THROW_VERSION = "nba_voided_second_free_throw_v1"
+VOIDING_TURNOVERS = ("Lane Violation", "Offensive Goaltending")
 
 
 def live_play_by_play_url(game_id):
@@ -376,6 +396,12 @@ def clock_text(value):
     )
 
 
+def v3_clock_seconds(value):
+    """Seconds left in the period on a V3 clock that clock_text accepts."""
+    match = CLOCK.fullmatch(value)
+    return int(match[1]) * 60 + Decimal(match[2])
+
+
 class DecodedV3:
     def __init__(
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
@@ -591,6 +617,11 @@ class DecodedV3:
             raise V3DecodeError("Unknown event team")
         if kind == "Foul" and subtype in TEAMLESS_TECHNICALS and not team and not player:
             team = self._teamless_technical_team(row)
+        elif (
+            kind in ("Foul", "Turnover") and subtype in EXCESS_TIMEOUTS
+            and not team and not player
+        ):
+            team = self._teamless_excess_timeout_team(row)
         non_roster = (
             player
             and player not in self.context.roster
@@ -764,6 +795,12 @@ class DecodedV3:
                     code="reviewed_free_throw_subtype", event_num=row["actionNumber"],
                     subtype=reviewed,
                 ))
+            elif not subtype and self._blank_flagrant_free_throw(row, team):
+                subtype = self.label_rules[-1]["decoded"]
+                description = description.replace(" Free Throw", " " + subtype, 1)
+            elif subtype == "Free Throw 1 of 1" and self._voided_second_free_throw(row, team):
+                subtype = "Free Throw 1 of 2"
+                description = description.replace("Free Throw 1 of 1", subtype)
             match = re.fullmatch(
                 r"Free Throw(?: (Technical|Clear Path|Flagrant))? ([1-3]) of ([1-3])",
                 subtype,
@@ -1064,11 +1101,9 @@ class DecodedV3:
             raise V3DecodeError(source + " team recovery is not explicit")
         return player, jumper, winner, None
 
-    def _teamless_technical_team(self, row):
-        # The team charged is the one that did not shoot the technical free
-        # throw at the technical's period and clock. A delay-of-game violation
-        # recorded there must be that team's: both teams can delay at once (a
-        # warning for one, a technical for the other), so it alone cannot decide.
+    def _technical_free_throw_opponent(self, row):
+        # The team that did not shoot the technical free throw at the row's
+        # period and clock, with the other rows recorded there.
         if not self.context.game_id.startswith("00"):
             raise V3DecodeError("Event requires a known team")
         same_time = [
@@ -1086,7 +1121,40 @@ class DecodedV3:
             raise V3DecodeError(
                 "Team technical requires one recorded technical free-throw team"
             )
-        team = next(t for t in self.context.team_ids if t not in shooters)
+        return next(t for t in self.context.team_ids if t not in shooters), same_time
+
+    def _teamless_excess_timeout_team(self, row):
+        # The team charged is the one that did not shoot the technical free
+        # throw at the event's period and clock. An excess timeout technical
+        # or turnover recorded there with its team must be that team's.
+        team, same_time = self._technical_free_throw_opponent(row)
+        witnesses = [
+            source for source in same_time
+            if source["actionType"] in ("Foul", "Turnover")
+            and source["subType"] in EXCESS_TIMEOUTS
+            and (source["teamId"] or source["personId"])
+        ]
+        if any(
+            (source["teamId"] or source["personId"]) != team for source in witnesses
+        ):
+            raise V3DecodeError("Excess timeout team contradicts its recorded technical or turnover")
+        self.team_technicals.append(
+            dict(
+                code=TEAMLESS_EXCESS_TIMEOUT_VERSION,
+                event_num=row["actionNumber"],
+                team_id=team,
+                basis="opponent_of_technical_free_throw_shooter",
+                recorded_team_events=sorted(s["actionNumber"] for s in witnesses),
+            )
+        )
+        return team
+
+    def _teamless_technical_team(self, row):
+        # The team charged is the one that did not shoot the technical free
+        # throw at the technical's period and clock. A delay-of-game violation
+        # recorded there must be that team's: both teams can delay at once (a
+        # warning for one, a technical for the other), so it alone cannot decide.
+        team, same_time = self._technical_free_throw_opponent(row)
         violations = [
             source for source in same_time
             if source["actionType"] == "Violation" and source["subType"] == "Delay Of Game"
@@ -1156,6 +1224,76 @@ class DecodedV3:
             code=TRANSITION_TAKE_FOUL_VERSION, event_num=row["actionNumber"],
             free_throw_event_num=free_throws[0]["actionNumber"], recorded=row["subType"],
             decoded="Transition Take",
+        ))
+        return True
+
+    def _blank_flagrant_free_throw(self, row, team):
+        # A free throw with neither category nor numbering, in subtype or text,
+        # in one shooter's trip of such free throws, where the other team's only
+        # foul at that period and clock is a flagrant 1: the trip's attempt, in
+        # recorded order, of as many as the trip records.
+        if not self.context.game_id.startswith("00"):
+            return False
+        blank = r"(?:MISS )?.+ Free Throw(?: \(\d+ PTS\))?"
+        opponent = next(t for t in self.context.team_ids if t != team)
+        fouls = self._same_clock(row, "Foul", opponent)
+        trip = [row] + self._same_clock(row, "Free Throw", team)
+        trip.sort(key=lambda source: next(
+            i for i, recorded in enumerate(self.raw_rows) if recorded is source
+        ))
+        attempt, total = trip.index(row) + 1, len(trip)
+        if (
+            [foul["subType"] for foul in fouls] != ["Flagrant Type 1"]
+            or any(
+                source["subType"] or source["personId"] != row["personId"]
+                or not re.fullmatch(blank, source["description"])
+                for source in trip
+            )
+            or (attempt, total) not in FLAGRANT_FREE_THROWS
+        ):
+            return False
+        self.label_rules.append(dict(
+            code=BLANK_FLAGRANT_FREE_THROW_VERSION, event_num=row["actionNumber"],
+            foul_event_num=fouls[0]["actionNumber"], recorded="",
+            decoded="Free Throw Flagrant {} of {}".format(attempt, total),
+        ))
+        return True
+
+    def _voided_second_free_throw(self, row, team):
+        # A made 1 of 1, the team's only free throw at its period and clock,
+        # where the other team's only foul there is a shooting foul, followed by
+        # the team's lane violation or offensive goaltending turnover there,
+        # with no basket by the team at that clock or the two seconds before it:
+        # the first of the two free throws a missed shot's foul awards.
+        if not self.context.game_id.startswith("00") or row["description"].startswith("MISS "):
+            return False
+        opponent = next(t for t in self.context.team_ids if t != team)
+        fouls = self._same_clock(row, "Foul", opponent)
+        turnovers = [
+            source for source in self._same_clock(row, "Turnover", team)
+            if source["subType"] in VOIDING_TURNOVERS
+        ]
+        position = {id(source): i for i, source in enumerate(self.raw_rows)}
+        clock = v3_clock_seconds(row["clock"])
+        if (
+            [foul["subType"] for foul in fouls] != ["Shooting"]
+            or self._same_clock(row, "Free Throw", team)
+            or len(turnovers) != 1
+            or position[id(turnovers[0])] < position[id(row)]
+            or any(
+                source["actionType"] == "Made Shot"
+                and source["period"] == row["period"]
+                and self.context.roster.get(source["personId"], {}).get("team_id") == team
+                and 0 <= v3_clock_seconds(source["clock"]) - clock <= 2
+                for source in self.raw_rows
+            )
+        ):
+            return False
+        self.label_rules.append(dict(
+            code=VOIDED_SECOND_FREE_THROW_VERSION, event_num=row["actionNumber"],
+            foul_event_num=fouls[0]["actionNumber"],
+            turnover_event_num=turnovers[0]["actionNumber"],
+            recorded="Free Throw 1 of 1", decoded="Free Throw 1 of 2",
         ))
         return True
 

@@ -1,4 +1,5 @@
-"""Versioned rule for NBA team technicals recorded with neither a team nor a person."""
+"""Versioned rules for NBA team technicals and excess timeouts recorded with neither a team
+nor a person."""
 
 import hashlib
 import json
@@ -11,7 +12,10 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3DecodeError,
     web,
 )
-from pbpstats.data_loader.stats_nba_v3.decoder import TEAMLESS_TECHNICAL_VERSION
+from pbpstats.data_loader.stats_nba_v3.decoder import (
+    TEAMLESS_EXCESS_TIMEOUT_VERSION,
+    TEAMLESS_TECHNICAL_VERSION,
+)
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 
@@ -101,9 +105,65 @@ def test_teamless_technical_rule_is_nba_only():
 
 def test_teamless_event_other_than_a_technical_still_rejects():
     rows, foul, _ = delay_technical()
-    next(r for r in rows if r["actionNumber"] == foul)["subType"] = "Excess Timeout Technical"
+    next(r for r in rows if r["actionNumber"] == foul)["subType"] = "Too Many Players Technical"
     with pytest.raises(V3DecodeError, match="requires a known team"):
         load(rows)
+
+
+def excess_timeout(technical_team=HOME, free_throw=True):
+    """HOME, with the ball after AWAY's basket, calls a timeout it does not have: a
+    technical the feed records as ``technical_team``'s (0 for none) and a turnover
+    it records with neither a team nor a person; AWAY shoots the technical free
+    throw unless ``free_throw`` is False, and scores."""
+    events = [
+        e("make", 600, AWAY, 11),
+        e("foul", 590, technical_team, technical_team, subtype="Excess Timeout Technical"),
+        e("turnover", 590, 0, 0, subtype="Excess Timeout Turnover"),
+    ]
+    if free_throw:
+        events.append(
+            e("ft", 590, AWAY, 11, category="Technical", attempt=1, total=1, made=True)
+        )
+    rows = encode_v3(wrap(events + [e("make", 570, AWAY, 12)]))
+    number = lambda kind: next(r["actionNumber"] for r in rows if r["actionType"] == kind)
+    return rows, number("Foul"), number("Turnover")
+
+
+@pytest.mark.parametrize("technical_team", [HOME, 0], ids=["technical_names_team", "both_teamless"])
+def test_teamless_excess_timeout_is_charged_to_the_team_that_did_not_shoot(technical_team):
+    rows, technical, turnover = excess_timeout(technical_team)
+    loaded = load(rows)
+    for event in (technical, turnover):
+        decoded = next(x for x in loaded.events if x.event_num == event)
+        assert (decoded.team_id, decoded.player1_id) == (HOME, 0)
+    assert next(x for x in loaded.events if x.event_num == turnover).is_possession_ending_event
+    assert [p.offense_team_id for p in loaded.items] == [AWAY, HOME, AWAY, HOME]
+    rules = [d for d in loaded.diagnostics if d["code"] == TEAMLESS_EXCESS_TIMEOUT_VERSION]
+    assert dict(
+        code=TEAMLESS_EXCESS_TIMEOUT_VERSION, event_num=turnover, team_id=HOME,
+        basis="opponent_of_technical_free_throw_shooter",
+        recorded_team_events=[technical] if technical_team else [],
+    ) in rules
+    assert len(rules) == (1 if technical_team else 2)
+    assert TEAMLESS_EXCESS_TIMEOUT_VERSION in loaded.capabilities["extensions"]
+    assert TEAMLESS_TECHNICAL_VERSION not in loaded.capabilities["extensions"]
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("change, message", [
+    (dict(technical_team=AWAY), "contradicts its recorded technical or turnover"),
+    (dict(free_throw=False), "one recorded technical free-throw team"),
+], ids=["technical_names_the_shooting_team", "no_free_throw"])
+def test_teamless_excess_timeout_without_one_decisive_team_rejects(change, message):
+    rows, _, _ = excess_timeout(**change)
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows)
+
+
+def test_teamless_excess_timeout_rule_is_nba_only():
+    rows, _, _ = excess_timeout()
+    with pytest.raises(V3DecodeError, match="requires a known team"):
+        load(rows, game="1022500001")
 
 
 @pytest.mark.parametrize("game, technicals", [
