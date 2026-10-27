@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "scope": "Decoder codes for V3 labels no V2 export row records, inferred from the codes the V2 exports do use; never recorded evidence",
+  "inferred": [
+    {
+      "label": [
+        "Ejection",
+        "Second Flagrant Type 1"
+      ],
+      "code": [
+        11,
+        2
+      ],
+      "basis": "V2 names each ejection's label in its text and codes 0 No Ejection, 1 Second Technical, 3 First Flagrant Type 2 and 4 Other in every export below; none records a Second Flagrant Type 1, and 2 is the one code left",
+      "v3": {
+        "game_id": "0022600105",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0022600105.json",
+        "boxscore_path": "tests/parity/data/recorded_evidence/stats_v3_boxscore_0022600105.json",
+        "sha256": "dd9d945abcf430edff2ccfac0c03a0fe2cc353888cb508f177e1a115246fb486",
+        "source_index": 462
+      },
+      "v2_exports": [
+        {
+          "season": "2014-15",
+          "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2014.tar.xz",
+          "bytes": 8024656,
+          "sha256": "f6a48f32ed7887d6e1885354a9e46b8852040a9f9ce344eaa18e634803cd2eaf",
+          "git_blob_sha1": "bba34cbbe7aefc7b09d5ba39f17c665731d88e2e",
+          "member": "nbastats_2014.csv",
+          "member_sha256": "223594456bd80372d0982d870ce5fb6c80edcce35e5337892f97a2c409ed1e4a",
+          "retrieved_utc": "2026-10-27",
+          "ejection_codes": [
+            {
+              "code": 0,
+              "label": "No Ejection",
+              "rows": 1
+            },
+            {
+              "code": 1,
+              "label": "Second Technical",
+              "rows": 24
+            },
+            {
+              "code": 3,
+              "label": "First Flagrant Type 2",
+              "rows": 14
+            },
+            {
+              "code": 4,
+              "label": "Other",
+              "rows": 14
+            }
+          ]
+        },
+        {
+          "season": "2015-16",
+          "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2015.tar.xz",
+          "bytes": 8307212,
+          "sha256": "217087b27259e34ec9c82a596335a36ce6580e5f9129e186e6a1b4f0dc592ebf",
+          "git_blob_sha1": "3999459f889654db35c7cd0341bcfc336c79955c",
+          "member": "nbastats_2015.csv",
+          "member_sha256": "e1354d12dbb4fea9f8ad515be03bcd6a9428e188a34a72ec7ddfac51167c4ea8",
+          "retrieved_utc": "2026-10-17",
+          "ejection_codes": [
+            {
+              "code": 1,
+              "label": "Second Technical",
+              "rows": 36
+            },
+            {
+              "code": 3,
+              "label": "First Flagrant Type 2",
+              "rows": 13
+            },
+            {
+              "code": 4,
+              "label": "Other",
+              "rows": 6
+            }
+          ]
+        },
+        {
+          "season": "2016-17",
+          "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2016.tar.xz",
+          "bytes": 8341720,
+          "sha256": "fab9222699fd126e24a3aa01805013ad73a84aafd06f01b8b69f3f9f9b130d0f",
+          "git_blob_sha1": "b97cfc3565be7b76ad06d381b71492fd6db24c47",
+          "member": "nbastats_2016.csv",
+          "member_sha256": "e706929cc33e0c266438c62e36b35b72bde510be22facb1f74322cdce2e7063f",
+          "retrieved_utc": "2026-10-17",
+          "ejection_codes": [
+            {
+              "code": 0,
+              "label": "No Ejection",
+              "rows": 2
+            },
+            {
+              "code": 1,
+              "label": "Second Technical",
+              "rows": 35
+            },
+            {
+              "code": 3,
+              "label": "First Flagrant Type 2",
+              "rows": 15
+            },
+            {
+              "code": 4,
+              "label": "Other",
+              "rows": 26
+            }
+          ]
+        },
+        {
+          "season": "2024-25",
+          "path": "tests/parity/data/nba_data/nbastats_2024.tar.xz",
+          "sha256": "8f370da00ad0a6d4157921bd161d56ea32647a165d906516f2b36384a6a4989a",
+          "ejection_codes": [
+            {
+              "code": 4,
+              "label": "Other",
+              "rows": 90
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

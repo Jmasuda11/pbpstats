@@ -1,6 +1,7 @@
 """Pinned 2024-25 V2/V3 export pairing: factual evidence, never adapter acceptance."""
 
 import json
+from collections import Counter
 from types import SimpleNamespace
 
 import pytest
@@ -30,6 +31,9 @@ OTHER_SEASONS = json.loads((ROOT / "tests/parity/decoder-code-evidence.json").re
 OTHER_SEASON_CODES = {
     tuple(o["label"]): tuple(o["code"]) for o in OTHER_SEASONS["observations"]
 }
+# Decoder labels no V2 export row records, coded with the one code the V2
+# exports leave unused; never recorded evidence.
+INFERRED = json.loads((ROOT / "tests/parity/decoder-inferred-codes.json").read_text())
 
 
 @pytest.fixture(scope="module")
@@ -162,6 +166,43 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
     loader = web.load_game(v3["game_id"], pbp, box, "recorded", fetch_boxscore=fetch)
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
     assert (event.event_type, event.event_action_type) == tuple(observation["code"])
+
+
+@pytest.mark.parametrize("inferred", INFERRED["inferred"], ids=lambda i: i["label"][1])
+def test_inferred_codes_are_the_ones_no_v2_export_uses(inferred):
+    # 0022600105 Q4 6:54: Sharpe's ejection for his second flagrant 1, a label
+    # no V2 export from 2014-15 to 2016-17 or in 2024-25 records.
+    (kind, subtype), (event_type, code) = inferred["label"], inferred["code"]
+    assert (kind, event_type) == ("Ejection", 11)
+    assert decoder.INFERRED_EJECTIONS == {subtype: code}
+    assert subtype not in decoder.EJECTIONS and (kind, subtype) not in OTHER_SEASON_CODES
+    named = {"Second Technical": 1, "First Flagrant Type 2": 3, "Other": 4}
+    assert {label: decoder.EJECTIONS[label] for label in named} == named
+    for export in inferred["v2_exports"]:
+        codes = {row["code"]: row["label"] for row in export["ejection_codes"]}
+        assert code not in codes and subtype not in codes.values()
+        assert all(named.get(label, 0) == used for used, label in codes.items())
+        if "path" in export:
+            assert digest((ROOT / export["path"]).read_bytes()) == export["sha256"]
+        else:
+            assert "/datasets/" + export["member"].replace(".csv", ".tar.xz") in export["raw_url"]
+    v2, _, _ = season()
+    rows = Counter(int(r["EVENTMSGACTIONTYPE"]) for game in v2.values() for r in game
+                   if r["EVENTMSGTYPE"] == "11")
+    paired = next(e for e in inferred["v2_exports"] if e["season"] == "2024-25")
+    assert rows == {row["code"]: row["rows"] for row in paired["ejection_codes"]}
+    v3 = inferred["v3"]
+    pbp = (ROOT / v3["path"]).read_bytes()
+    assert digest(pbp) == v3["sha256"]
+    action = json.loads(pbp)["game"]["actions"][v3["source_index"]]
+    assert [action["actionType"], action["subType"]] == inferred["label"]
+    loader = web.load_game(v3["game_id"], pbp, (ROOT / v3["boxscore_path"]).read_bytes(), "recorded")
+    event = next(x for x in loader.events if x.event_num == action["actionNumber"])
+    assert (event.event_type, event.event_action_type) == (event_type, code)
+    assert [d for d in loader.diagnostics if d["code"] == decoder.INFERRED_CODE] == [dict(
+        code=decoder.INFERRED_CODE, event_num=action["actionNumber"], recorded=subtype,
+        v2_code=[event_type, code], basis="the one ejection code no V2 export uses",
+    )]
 
 
 def test_fouls_without_a_fouled_player_are_exactly_those_v2_never_names_one_for():

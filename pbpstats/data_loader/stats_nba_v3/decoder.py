@@ -277,6 +277,14 @@ REPLAYS = {
 # second-technical ejection is likewise "Second Technical" in those seasons,
 # which V2 codes 1.
 EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3, "Second Technical": 1}
+# 2026-27 V3 also labels an ejection for a second flagrant 1 "Second Flagrant
+# Type 1" (0022600105). No V2 export row records one: from 2014-15 to 2016-17
+# and in 2024-25 V2 codes its ejections 0 ("No Ejection"), 1, 3 and 4, each
+# named in its text, so this label takes the one code left, 2, inferred rather
+# than read from V2 (tests/parity/decoder-inferred-codes.json). The original
+# never reads an ejection's code. Each use is a diagnostic.
+INFERRED_EJECTIONS = {"Second Flagrant Type 1": 2}
+INFERRED_CODE = "inferred_v2_code"
 # Technicals and ejections can name people outside the player roster: coaches
 # (no team in either feed) and inactive players (with their team). V3 records
 # the same personId/teamId pair as V2 for every paired event. The original never
@@ -449,6 +457,7 @@ class DecodedV3:
         }
         self.team_technicals = []
         self.label_rules = []
+        self.inferred_codes = []
         # Events a reviewed removal drops are not part of the recorded
         # starter/substitution stream.
         self.reviewed_removed = set(removed)
@@ -972,6 +981,13 @@ class DecodedV3:
             event.update(EVENTMSGTYPE=18, EVENTMSGACTIONTYPE=REPLAYS[subtype])
         elif kind == "Ejection" and subtype in EJECTIONS:
             event.update(EVENTMSGTYPE=11, EVENTMSGACTIONTYPE=EJECTIONS[subtype])
+        elif kind == "Ejection" and subtype in INFERRED_EJECTIONS:
+            event.update(EVENTMSGTYPE=11, EVENTMSGACTIONTYPE=INFERRED_EJECTIONS[subtype])
+            self.inferred_codes.append(dict(
+                code=INFERRED_CODE, event_num=row["actionNumber"], recorded=subtype,
+                v2_code=[11, INFERRED_EJECTIONS[subtype]],
+                basis="the one ejection code no V2 export uses",
+            ))
         else:
             raise V3DecodeError(
                 "Unsupported event type/subtype {!r}/{!r}".format(kind, subtype)

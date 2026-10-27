@@ -732,6 +732,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             + deepcopy(list(decoded.team_heaves.values()))
             + deepcopy(decoded.team_technicals)
             + deepcopy(decoded.label_rules)
+            + deepcopy(decoded.inferred_codes)
             + deepcopy(decoded.non_roster_actors)
             + deepcopy(decoded.reviewed_inputs)
             + ([dict(decoded.live_input)] if decoded.live_input else [])
