@@ -1462,6 +1462,64 @@
       }
     }
   },
+  "0022600111": {
+    "pbp_sha256": "53e780b5fba87df26c20fef21aeb56e555dc2628351fac66aa207b5a5c957de4",
+    "source": "Reviewed 2026-10-27: V3 records the end of the 4th quarter twice, 750 and 753, with the same clock, text and wall-clock time; 753 is dropped as a copy of 750.",
+    "files": {
+      "event_duplicates.json": {
+        "753": 750
+      }
+    }
+  },
+  "0022600114": {
+    "pbp_sha256": "cd94fe48c39f72307a49941fb37ce8cb6bd90924a56be945476738187a298046",
+    "source": "Reviewed 2026-10-27: at Q3 0:25 the live play-by-play inserts Wiseman's missed tip and the Magic's defensive team rebound (578, 579) after the game, so Orlando had the ball when Wiseman's loose ball foul was called at 0:24.8; the offensive foul turnover entered with the foul (502), still in V3 and the live play-by-play, is left behind, and the box score counts it (Wiseman 1 TOV), so it stays credited but does not end a possession.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        502
+      ]
+    }
+  },
+  "0022600117": {
+    "pbp_sha256": "601067a8962a785b1531970b06b6b3775aa798e57ea65f01eaac05790176a9b1",
+    "source": "Reviewed 2026-10-27: V3 lists the Replay Center review (637) before the start of the 4th quarter (580), as in 0022200996, so the original takes the quarter's first possession from the 3rd quarter's last. The start moves before the replay.",
+    "files": {
+      "event_order.json": [
+        [
+          580,
+          637
+        ]
+      ]
+    }
+  },
+  "0022600118": {
+    "pbp_sha256": "907351e2fc6cec66c96c4299298dd89694886d23251093ab8d095fb9060a750f",
+    "source": "Reviewed 2026-10-27: at Q3 3:46 Hunter and Coward were given a double personal foul, recorded as two Double Personal fouls (478 for Hunter, 480 for Coward) whose text names nobody, where every one of the 57 double personals from 2023-24 to 2025-26 is one foul naming both players. Each names the other, and 480 is removed as part of 478.",
+    "files": {
+      "event_foul_opponents.json": {
+        "478": 1642907,
+        "480": 1629631
+      },
+      "event_removals.json": {
+        "480": 478
+      }
+    }
+  },
+  "0022600120": {
+    "pbp_sha256": "3e0b62fdbbb8de03ff0717aa303fdddfc4d06b451d43e16e352f2fd1a003f589",
+    "source": "Reviewed 2026-10-27: at Q2 7:23 Watson's second free throw ended in his own lane violation, which gave Minnesota the ball, and V3 labels the Timberwolves team rebound (251) a placeholder (Normal Rebound), as in 0022300470. The live play-by-play has since deleted two coach challenge jump balls V3 still records: at Q2 6:11 (256), which only stops ending a possession, and at OT 1:59 (766), whose Cleveland possession follows Mobley's basket at 2:00; it moves back after Kuminga's foul at 2:09 (763), its place in the live numbering, where the possessions are as without it.",
+    "files": {
+      "event_subtypes.json": {
+        "251": "Unknown"
+      },
+      "non_possession_changing_event_overrides.json": [
+        256
+      ],
+      "event_moves.json": {
+        "766": 763
+      }
+    }
+  },
   "1042600201": {
     "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
     "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",

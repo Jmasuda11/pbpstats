@@ -28,6 +28,8 @@ from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 
 DATA = ROOT / "tests/parity/data/recorded_evidence"
 POR, PHX, SAC, NOP, UTA = 1610612757, 1610612756, 1610612758, 1610612740, 1610612762
+WAS, CHI, TOR, MIN, OKC = 1610612764, 1610612741, 1610612761, 1610612750, 1610612760
+GSW, DEN = 1610612744, 1610612743
 WNBA = "1022600001"
 RULES = (
     AND_ONE_CLOCK_VERSION, BLANK_FLAGRANT_FREE_THROW_VERSION, TEAMLESS_EXCESS_TIMEOUT_VERSION,
@@ -55,10 +57,11 @@ def number(rows, kind):
     return next(r["actionNumber"] for r in rows if r["actionType"] == kind)
 
 
-def technical_foul(subtype="Defense 3 Second", and_one=False):
+def technical_foul(subtype="Defense 3 Second", and_one=False, team_recorded=False):
     """AWAY's technical-type foul while HOME has the ball; HOME's one free throw
     is recorded as "Free Throw 1 of 1", and HOME keeps the ball and scores.
-    ``and_one`` adds a HOME basket and an AWAY shooting foul at the same clock."""
+    ``and_one`` adds a HOME basket and an AWAY shooting foul at the same clock.
+    ``team_recorded`` records the foul with AWAY as its person and no team."""
     events = [e("make", 600, AWAY, 11)]
     if and_one:
         events += [e("make", 590, HOME, 2), e("foul", 590, AWAY, 13, subtype="Shooting")]
@@ -69,14 +72,22 @@ def technical_foul(subtype="Defense 3 Second", and_one=False):
         e("make", 550, AWAY, 11),
     ]
     rows = encode_v3(wrap(events))
-    return rows, number(rows, "Free Throw"), next(
-        r["actionNumber"] for r in rows if r["subType"] == subtype
-    )
+    foul = next(r for r in rows if r["subType"] == subtype)
+    if team_recorded:
+        foul.update(personId=AWAY, teamId=0, teamTricode="", description="AWAY Delay")
+    return rows, number(rows, "Free Throw"), foul["actionNumber"]
 
 
-@pytest.mark.parametrize("subtype", ["Defense 3 Second", "Hanging Technical", "Technical"])
-def test_technical_foul_one_of_one_is_its_technical_free_throw(subtype):
-    rows, ft, foul = technical_foul(subtype)
+@pytest.mark.parametrize("subtype, team_recorded", [
+    ("Defense 3 Second", False),
+    ("Hanging Technical", False),
+    ("Technical", False),
+    ("Flopping", False),
+    # 0022600124 Q4 9:44: "THUNDER Delay", which version 2 did not see.
+    ("Delay Technical", True),
+])
+def test_technical_foul_one_of_one_is_its_technical_free_throw(subtype, team_recorded):
+    rows, ft, foul = technical_foul(subtype, team_recorded=team_recorded)
     loaded = load(rows)
     free_throw = next(x for x in loaded.events if x.event_num == ft)
     assert free_throw.event_action_type == 16 and free_throw.is_technical_ft
@@ -182,8 +193,23 @@ def test_recorded_2026_27_labels_decode_without_review():
     # for a defensive three seconds.
     ("0022600103", [(TECHNICAL_FREE_THROW_VERSION, 594)], [(354, "event_action_type", 2)],
      {POR: 105, SAC: 104}),
+    # 0022600108 Q2 5:25: a free throw for a defensive three seconds; Q4 3:32 and
+    # 1:19: Powell's and Young's free throws for Young's and Buzelis' flopping.
+    ("0022600108", [(TECHNICAL_FREE_THROW_VERSION, n) for n in (290, 693, 732)],
+     [(693, "is_technical_ft", True), (732, "is_technical_ft", True)], {WAS: 104, CHI: 105}),
+    # 0022600115 Q3 1:21: Quickley's free throw for Shannon Jr's flopping.
+    ("0022600115", [(TECHNICAL_FREE_THROW_VERSION, 522)], [(522, "is_technical_ft", True)],
+     {TOR: 97, MIN: 98}),
+    # 0022600124 Q4 9:44: Booker's free throw for "THUNDER Delay", recorded with
+    # the team as its person.
+    ("0022600124", [(TECHNICAL_FREE_THROW_VERSION, 571)], [(571, "is_technical_ft", True)],
+     {PHX: 97, OKC: 97}),
+    # 0022600127 Q4 8:34: Gordon's "Second Technical" ejection, V2's 11/1; and Q3
+    # 1:13 a free throw for a defensive three seconds.
+    ("0022600127", [(TECHNICAL_FREE_THROW_VERSION, 518)], [(625, "event_action_type", 1)],
+     {GSW: 95, DEN: 95}),
 ])
-def test_recorded_2026_27_technical_free_throws_and_short_timeout(game, rules, checks, counts):
+def test_recorded_2026_27_technical_free_throws_and_pre_2017_labels(game, rules, checks, counts):
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     assert game not in web.REVIEWED_CORRECTIONS

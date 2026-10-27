@@ -137,6 +137,8 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
     # checked with the table, and 2026-27 game 0022600091 loads with it.
     # 0021500002 Q4 0:10: Cleveland's short timeout, one of 2,848 in the 2015-16
     # V2 export, all 9/2, as 2026-27 game 0022600103's loads.
+    # 0021500095 Q3 7:11: Fisher's second-technical ejection, as coach, one of
+    # 36 in the 2015-16 V2 export, all 11/1, as 2026-27 game 0022600127's loads.
     v2, v3 = observation["v2"], observation["v3"]
     assert "/datasets/" + v2["member"].replace(".csv", ".tar.xz") in v2["raw_url"]
     row = v2["row"]

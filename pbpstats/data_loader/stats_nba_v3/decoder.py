@@ -61,13 +61,16 @@ V2_TEAM_TYPES, V2_PLAYER_TYPES = (2, 3), (4, 5)
 # so; 2018-19 and 2021-22 to 2025-26 always record the team.
 TEAMLESS_TECHNICAL_VERSION = "nba_teamless_team_technical_v1"
 TEAMLESS_TECHNICALS = ("Technical", "Delay Technical")
-# NBA 2026-27 V3 records the free throw for a defensive three seconds or a
-# hanging technical as "Free Throw 1 of 1", though still "Free Throw Technical"
-# for a technical. From 2017-18 to 2025-26, 6,881 of the 6,887 lone free throws
-# for the team's only technical-type foul at its clock record "Free Throw
-# Technical", V2's 16; five in 2017-18 record 1 of 1, and one a numbered
-# technical. Version 1 decoded only a defensive three seconds' free throw.
-TECHNICAL_FREE_THROW_VERSION = "nba_technical_free_throw_v2"
+# NBA 2026-27 V3 records the free throw for a defensive three seconds, a
+# hanging or delay technical or a flopping foul as "Free Throw 1 of 1", though
+# still "Free Throw Technical" for a technical. From 2017-18 to 2025-26, 7,165
+# of the 7,172 lone free throws for the team's only technical-type foul at its
+# clock record "Free Throw Technical", V2's 16; six in 2017-18 record 1 of 1,
+# and one a numbered technical. All 103 for a flopping foul, recorded from
+# 2023-24, do too. Version 1 decoded only a defensive three seconds' free
+# throw; version 2 missed fouls recorded with the team as the person, and
+# flopping fouls.
+TECHNICAL_FREE_THROW_VERSION = "nba_technical_free_throw_v3"
 # NBA 2026-27 V3 records a transition take foul as a "Personal Take" foul, with
 # its one free throw. From 2022-23 to 2025-26, 575 transition take fouls with one
 # free throw and no other foul by the team at its clock record "Transition
@@ -270,8 +273,10 @@ REPLAYS = {
     "Replay Center": 7,
 }
 # V3 labels a flagrant 2 ejection "Other" from 2017-18 to 2025-26, but "First
-# Flagrant Type 2" in 2015-16, 2016-17 and again in 2026-27; V2 codes it 3.
-EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3}
+# Flagrant Type 2" in 2015-16, 2016-17 and again in 2026-27; V2 codes it 3. A
+# second-technical ejection is likewise "Second Technical" in those seasons,
+# which V2 codes 1.
+EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3, "Second Technical": 1}
 # Technicals and ejections can name people outside the player roster: coaches
 # (no team in either feed) and inactive players (with their team). V3 records
 # the same personId/teamId pair as V2 for every paired event. The original never
@@ -283,10 +288,10 @@ ORIGINAL_TECHNICAL_FOUL_CODES = {11, 12, 13, 16, 18, 19, 25, 30}
 NON_ROSTER_ACTOR_FOULS = tuple(
     label for label, code in FOULS.items() if code in ORIGINAL_TECHNICAL_FOUL_CODES
 )
-# Fouls that award one technical free throw: a defensive three seconds and
-# those the original classes as technical, but a double technical, which
-# awards none.
-TECHNICAL_FREE_THROW_FOULS = ("Defense 3 Second",) + tuple(
+# Fouls that award one technical free throw: a defensive three seconds, a
+# flopping foul, and those the original classes as technical, but a double
+# technical, which awards none.
+TECHNICAL_FREE_THROW_FOULS = ("Defense 3 Second", "Flopping") + tuple(
     label for label in NON_ROSTER_ACTOR_FOULS if label != "Double Technical"
 )
 # V2 never records a fouled player for these subtypes (paired 2024-25 season),
@@ -1173,13 +1178,15 @@ class DecodedV3:
         return team
 
     def _same_clock(self, row, kind, team):
+        # A team foul or turnover can name the team as its person, with teamId 0.
         return [
             source for source in self.raw_rows
             if source is not row
             and (source["period"], source["clock"]) == (row["period"], row["clock"])
             and source["actionType"] == kind
             and (
-                self.context.roster.get(source["personId"], {}).get("team_id")
+                source["personId"] if source["personId"] in self.context.team_ids
+                else self.context.roster.get(source["personId"], {}).get("team_id")
                 or source["teamId"]
             ) == team
         ]

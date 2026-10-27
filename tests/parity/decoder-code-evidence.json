@@ -131,6 +131,36 @@
         "source_index": 504,
         "unloadable": "2015-16 labels the decoder does not read, first a Turnover 'Poss Lost Ball Turnover' at source rows 77 and 78; 2026-27 game 0022600103 loads with this code"
       }
+    },
+    {
+      "label": ["Ejection", "Second Technical"],
+      "code": [11, 1],
+      "label_rows_in_season": 36,
+      "v2": {
+        "raw_url": "https://raw.githubusercontent.com/shufinskiy/nba_data/e829d4678be1e075f99e5d41a1c5f97089be446b/datasets/nbastats_2015.tar.xz",
+        "bytes": 8307212,
+        "sha256": "217087b27259e34ec9c82a596335a36ce6580e5f9129e186e6a1b4f0dc592ebf",
+        "git_blob_sha1": "3999459f889654db35c7cd0341bcfc336c79955c",
+        "member": "nbastats_2015.csv",
+        "member_sha256": "e1354d12dbb4fea9f8ad515be03bcd6a9428e188a34a72ec7ddfac51167c4ea8",
+        "retrieved_utc": "2026-10-17",
+        "row": {
+          "GAME_ID": "21500095",
+          "EVENTNUM": "313",
+          "EVENTMSGTYPE": "11",
+          "EVENTMSGACTIONTYPE": "1",
+          "PERIOD": "3",
+          "PCTIMESTRING": "7:11",
+          "PLAYER1_ID": "204006"
+        }
+      },
+      "v3": {
+        "game_id": "0021500095",
+        "path": "tests/parity/data/recorded_evidence/stats_v3_0021500095.json",
+        "sha256": "f9c0adccef1458f45958fe80730e3c5cc2b603e10ece762b9f828500c9fb3d83",
+        "source_index": 287,
+        "unloadable": "2015-16 labels the decoder does not read, first a Timeout 'Official' at source row 151; 2026-27 game 0022600127 loads with this code"
+      }
     }
   ]
 }

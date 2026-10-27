@@ -1222,6 +1222,18 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
      {1610612759: 98, 1610612745: 99}, [(147, "clock", "2:15"), (153, "clock", "2:15")]),
     ("0022600102", V3DecodeError, [54, 55, 365, 57, 65], 1610612747,
      {1610612747: 102, 1610612746: 103}, [(65, "player1_id", 1627739)]),
+    ("0022600114", TeamHasBackToBackPossessionsException, [499, 502, 501, 506, 507, 508, 510, 511],
+     1610612753, {1610612753: 100, 1610612752: 100},
+     [(502, "is_possession_ending_event", False), (579, "is_real_rebound", True)]),
+    ("0022600117", TeamHasBackToBackPossessionsException, [580, 637, 581, 585, 587, 588],
+     1610612755, {1610612755: 95, 1610612765: 95}, []),
+    ("0022600118", V3DecodeError,
+     [478, 488, 489, 490, 491, 493, 494, 495, 496, 497, 498, 499], 1610612758,
+     {1610612758: 99, 1610612763: 100}, [(478, "player3_id", 1642907)]),
+    ("0022600120", TeamHasBackToBackPossessionsException, [234, 236, 250, 237, 251], 1610612739,
+     {1610612739: 112, 1610612750: 111},
+     [(251, "is_real_rebound", True), (256, "is_possession_ending_event", False),
+      (766, "clock", "2:09")]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
     # 0022600003 Q3 10:00: an offensive foul turnover left behind when
@@ -1230,13 +1242,39 @@ def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense,
     # seconds early, which nba_and_one_clock_v1 now decodes. 0022600009 Q1 2:15:
     # Eason's and-one, its foul and free throw recorded nine seconds after the
     # layup. 0022600102 Q1 7:21: two copies of a coach challenge's jump ball, and
-    # Q1 7:03 Dunn's rebound recorded again before the miss.
+    # Q1 7:03 Dunn's rebound recorded again before the miss. 0022600114 Q3 0:24.8:
+    # Wiseman's offensive foul turnover, left behind when the Magic's rebound of
+    # his tip was added. 0022600117 Q4 12:00: a replay listed before the start.
+    # 0022600118 Q3 3:46: Hunter's and Coward's double personal, recorded as two
+    # fouls naming nobody. 0022600120 Q2 7:23: Watson's lane violation and the
+    # Timberwolves' team rebound; Q2 6:11 and OT 1:59: coach challenge jump balls
+    # the live play-by-play has deleted.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
     files = web.REVIEWED_CORRECTIONS[game]["files"]
     dropped = {**files.get(EVENT_REMOVALS, {}), **files.get(EVENT_DUPLICATES, {})}
     assert not {int(n) for n in dropped} & {x.event_num for x in loader.events}
+    numbers = [x.event_num for x in loader.events]
+    for moved, after in files.get(EVENT_MOVES, {}).items():
+        assert numbers.index(int(moved)) == numbers.index(after) + 1
+
+
+def test_recorded_duplicate_period_end_from_2026_27_review():
+    # 0022600111: the end of the 4th quarter recorded twice, which the original
+    # parses, keeping both in the game's last possession.
+    game = "0022600111"
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    recorded = web.load_game(game, pbp, box, "recorded")
+    assert [x.event_num for x in recorded.items[-1].events] == [750, 753]
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    assert [x.event_num for x in loader.items[-1].events] == [750]
+    assert loader.counts_by_team == recorded.counts_by_team == {
+        1610612756: 101, 1610612744: 99,
+    }
+    rows = json.loads(pbp)["game"]["actions"]
+    assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))
 
 
 def check_recorded_correction(game, recorded, trip, offense, counts):
