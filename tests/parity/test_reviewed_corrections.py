@@ -1688,3 +1688,59 @@ def test_recorded_corrections_from_2019_20_review(game, trip, offense, counts, c
     loader = check_recorded_correction(game, V3JumpBallEvidenceRequired, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
+
+
+@pytest.mark.parametrize("game, recorded, trip, offense, counts, checks", [
+    ("0021900041", TeamHasBackToBackPossessionsException, [193, 195], 1610612754, {1610612765: 95, 1610612754: 95},
+     [(195, "is_no_turnover", False), (629, "is_away_from_play_foul", True)]),
+    ("0021900058", TeamHasBackToBackPossessionsException, [196, 197, 198, 204, 208], 1610612738, {1610612749: 99, 1610612738: 100},
+     [(208, "is_no_turnover", False)]),
+    ("0021900074", TeamHasBackToBackPossessionsException, [185, 187], 1610612747, {1610612747: 110, 1610612742: 110},
+     [(187, "is_no_turnover", False)]),
+    ("0021900103", TeamHasBackToBackPossessionsException, [27, 29], 1610612765, {1610612765: 96, 1610612752: 97},
+     [(29, "is_no_turnover", False)]),
+    ("0021900115", TeamHasBackToBackPossessionsException, [350, 351, 354, 424], 1610612757, {1610612757: 103, 1610612746: 102},
+     [(424, "is_no_turnover", False)]),
+    ("0021900138", TeamHasBackToBackPossessionsException, [61, 62, 64, 66], 1610612737, {1610612757: 111, 1610612737: 111},
+     [(66, "is_no_turnover", False)]),
+    ("0021900148", TeamHasBackToBackPossessionsException, [503, 505, 507, 509], 1610612748, {1610612765: 97, 1610612748: 98},
+     [(509, "is_no_turnover", False)]),
+    ("0021900156", TeamHasBackToBackPossessionsException, [556, 558], 1610612764, {1610612738: 107, 1610612764: 106},
+     [(558, "is_no_turnover", False)]),
+    ("0021900206", TeamHasBackToBackPossessionsException, [120, 121, 122, 124], 1610612748, {1610612739: 102, 1610612748: 102},
+     [(124, "is_no_turnover", False)]),
+    ("0021900243", TeamHasBackToBackPossessionsException, [140, 142], 1610612737, {1610612737: 105, 1610612750: 105},
+     [(142, "is_no_turnover", False)]),
+    ("0021900289", TeamHasBackToBackPossessionsException, [194, 198, 204], 1610612740, {1610612760: 96, 1610612740: 96},
+     [(204, "is_no_turnover", False)]),
+    ("0021900252", TeamHasBackToBackPossessionsException, [305, 307, 308], 1610612764, {1610612764: 109, 1610612743: 108},
+     [(307, "is_possession_ending_event", False)]),
+    ("0021901309", TeamHasBackToBackPossessionsException, [434, 453, 671, 503, 504, 439], 1610612751,
+     {1610612757: 103, 1610612751: 103}, [(671, "is_possession_ending_event", False)]),
+    ("0021900348", TeamHasBackToBackPossessionsException, [501, 503, 523, 510, 512, 513, 514], 1610612765,
+     {1610612765: 101, 1610612740: 100}, [(514, "is_real_rebound", True)]),
+    ("0021900669", TeamHasBackToBackPossessionsException, [495, 497, 498, 499, 501], 1610612749, {1610612766: 101, 1610612749: 103},
+     [(501, "is_possession_ending_event", True)]),
+    ("0021900678", TeamHasBackToBackPossessionsException, [663, 664, 665, 666, 670, 672, 673, 674], 1610612759,
+     {1610612759: 95, 1610612756: 95}, [(670, "is_away_from_play_foul", True)]),
+    ("0021900801", TeamHasBackToBackPossessionsException, [403, 405, 490], 1610612747, {1610612747: 100, 1610612756: 98},
+     [(405, "num_ft_for_trip", 2)]),
+    ("0021900533", TeamHasBackToBackPossessionsException, [521, 522, 524, 525, 529, 530], 1610612740,
+     {1610612740: 105, 1610612758: 105}, [(530, "player1_id", 201950)]),
+])
+def test_back_to_back_corrections_from_2019_20_review(game, recorded, trip, offense, counts, checks):
+    # 0021900041 to 0021900289 (11 games): the ball-handling team's loose ball or
+    # personal foul charged as a turnover V3 and V2 leave without a subtype,
+    # recorded as an offensive foul turnover, as in 0022000059; 0021900041 Q4 0:02
+    # and 0021900678 Q4 0:19.1: a last-two-minutes foul away from the play typed a
+    # personal take foul. 0021900252 Q2 2:15: a rebound that ended in a held ball
+    # before a jump ball violation. 0021901309 Q3 4:53: a lane violation voided
+    # only the first free throw. 0021900348 Q3 2:23: the only placeholder team
+    # rebound after a missed last free throw in 2019-20. 0021900669 Q3 4:27:
+    # away-from-play free throws before the last two minutes end the possession.
+    # 0021900801 Q3 4:34: a made free throw logged 1 of 1 after a penalty foul,
+    # before offensive goaltending voided the second. 0021900533 Q3 0:14.8: a
+    # successful challenge's offensive foul turnover, which V3 does not record.
+    loader = check_recorded_correction(game, recorded, trip, offense, counts)
+    for event, attribute, value in checks:
+        assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

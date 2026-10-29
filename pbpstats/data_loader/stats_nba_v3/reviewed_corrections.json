@@ -1,4 +1,113 @@
 {
+  "0021900041": {
+    "pbp_sha256": "d5ee7c50edb2dbb94d5bb22c3432c9077097734c06394aa370086296e32012b9",
+    "source": "Reviewed 2026-10-28: at Q2 8:19, with Indiana in possession after Sabonis' defensive rebound, Sabonis' loose ball foul (193) was charged as a turnover (195). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Sabonis 1 TOV). The turnover is recorded as an offensive foul turnover. At Q4 0:02.0, with Detroit in possession after its timeout, Holiday's foul (629) gave Kennard one free throw and Detroit kept the ball, the last-two-minutes penalty for a foul away from the play; V3 types it a personal take foul, which ends Detroit's possession after the free throw, and it is recorded as away from play.",
+    "files": {
+      "event_subtypes.json": {
+        "195": "Offensive Foul Turnover",
+        "629": "Away From Play"
+      }
+    }
+  },
+  "0021900058": {
+    "pbp_sha256": "782670833af392ac2e24597ac219fcbfa7e85d70f3b1cd45250c683d218cfb7d",
+    "source": "Reviewed 2026-10-28: at Q2 9:22, with Boston in possession after Bledsoe's turnover, Tatum's loose ball foul (204) was charged as a turnover (208). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Tatum 1 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "208": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900074": {
+    "pbp_sha256": "4901f0a13c549a5809f95afe8c9cc624ad48e330e1beca5339d6debb64824ded",
+    "source": "Reviewed 2026-10-28: at Q1 0:01.1, with the Lakers in possession after their team rebound, Howard's loose ball foul (185) was charged as a turnover (187), and Brunson shot two free throws. V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Howard 1 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "187": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900103": {
+    "pbp_sha256": "3d11ec6b9269214f17945078c00b5ebe8fe569e36e04b0ec467af042ed5a39a3",
+    "source": "Reviewed 2026-10-28: at Q1 9:19, with Detroit in possession after Morris' defensive rebound, Morris' loose ball foul (27) was charged as a turnover (29). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Morris 3 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "29": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900115": {
+    "pbp_sha256": "eff49fe7a58a9a945d51e30b454e73339c718500d22011282b0c0361b4c409e4",
+    "source": "Reviewed 2026-10-28: at Q3 11:29, with Portland in possession after Whiteside's offensive rebound, Hood's personal foul (354) was charged as a turnover (424). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Hood 1 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "424": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900138": {
+    "pbp_sha256": "3e75a67271480d386a33a901748a1229ab7977e47fb9a3e697611075ac822c86",
+    "source": "Reviewed 2026-10-28: at Q1 7:11, with Atlanta in possession after Young's offensive rebound, Parker's loose ball foul (64) was charged as a turnover (66). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Parker 1 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "66": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900148": {
+    "pbp_sha256": "13755cb9556973ee97367bdd6f755b2e321ebce2981202eb3f74de3a39b01929",
+    "source": "Reviewed 2026-10-28: at Q3 1:17, with Miami in possession after its team rebound, Silva's personal foul (507) was charged as a turnover (509), and Wood shot two free throws. V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Silva 3 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "509": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900156": {
+    "pbp_sha256": "a065e16f3f8f44841e6264e802bb4c662b29f193c471eb8bea8c507964d10102",
+    "source": "Reviewed 2026-10-28: at Q4 8:29, with Washington in possession after Wanamaker's jumper, Wagner's loose ball foul (556) was charged as a turnover (558). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Wagner 3 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "558": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900206": {
+    "pbp_sha256": "f61e4efecf2a440b5b2b24e383cd30211e12bdfdd925b54607972280fec98685",
+    "source": "Reviewed 2026-10-28: at Q1 2:25, with Miami in possession after its team rebound, Silva's loose ball foul (122) was charged as a turnover (124). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Silva 3 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "124": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900243": {
+    "pbp_sha256": "0acb1dad0438fd01bb706182da78b105375854f3c95a0c3550fe32e808a38f8d",
+    "source": "Reviewed 2026-10-28: at Q1 1:48, with Atlanta in possession after Bembry's defensive rebound, Bembry's loose ball foul (140) was charged as a turnover (142). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Bembry 1 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "142": "Offensive Foul Turnover"
+      }
+    }
+  },
+  "0021900252": {
+    "pbp_sha256": "b134a85f0cb3bca06dbbf28de046278602807370e4082a87dbd3b747298000d2",
+    "source": "Reviewed 2026-10-28: at Q2 2:15 Murray's rebound (307) of Thomas' blocked layup ended in a held ball, and Brown Jr.'s jump ball violation (308) gave Denver the ball. V3 and V2 record no jump ball, so the rebound ends Washington's possession and Washington's turnover follows in Denver's. The rebound no longer ends the possession, so the turnover does.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        307
+      ]
+    }
+  },
+  "0021900289": {
+    "pbp_sha256": "ae395ec0937447773d59198b82194d51035a33604a9a7aebac1c478650970dbe",
+    "source": "Reviewed 2026-10-28: at Q2 7:28, with New Orleans in possession after Nader's traveling turnover, Moore's personal foul (198) was charged as a turnover (204). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Moore 2 TOV). The turnover is recorded as an offensive foul turnover.",
+    "files": {
+      "event_subtypes.json": {
+        "204": "Offensive Foul Turnover"
+      }
+    }
+  },
   "0021900319": {
     "pbp_sha256": "1a370089a0956d88c2404c4e43da4d997b16e4703edffaa8f5dfbb122cb03742",
     "source": "Reviewed 2026-10-17: at Q4 2:07 Holiday and Booker jumped and Phoenix recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 686. The entry is that V2 row.",
@@ -47,6 +156,37 @@
       }
     }
   },
+  "0021900348": {
+    "pbp_sha256": "57c92c8d03796b71f32992d1dde0a6725be62352f1df4ed2738cadca9152230f",
+    "source": "Reviewed 2026-10-28: at Q3 2:23 Wood missed the second of two free throws (513) and New Orleans rebounded (514) before Ingram's three. V3 types the team rebound a normal rebound, the placeholder the original does not count as a rebound, so Detroit's possession does not end; of 276 team rebounds after a missed last free throw in 2019-20 it is the only one so typed. The rebound is recorded with the subtype the others have, Unknown.",
+    "files": {
+      "event_subtypes.json": {
+        "514": "Unknown"
+      }
+    }
+  },
+  "0021900533": {
+    "pbp_sha256": "28ce5ca1dedec43941373a4c87cb0d7b41a7847c4bd3e6757b965d3a1240cf94",
+    "source": "Reviewed 2026-10-28: at Q3 0:14.8 Sacramento's coach challenge (531) turned the call into Holiday's offensive charge foul (529), a turnover that gave Sacramento the ball; Giles' offensive foul turnover at 0:04.9 followed. V3, V2 and the box score record the foul but no turnover (Holiday 3 TOV). It is added as 530, the number V3 leaves free after the foul, as in 0022300910.",
+    "files": {
+      "event_turnovers.json": {
+        "530": {
+          "before": 531,
+          "player": 201950,
+          "subtype": "Offensive Foul Turnover"
+        }
+      }
+    }
+  },
+  "0021900669": {
+    "pbp_sha256": "980e7955fa041daaf86743577addb8febb3dc01ec7232af6d56ee2143acc488d",
+    "source": "Reviewed 2026-10-28: at Q3 4:27, after Graham's three, Biyombo's away-from-play foul in the penalty (495) gave Antetokounmpo two free throws, and Charlotte had the ball after the second was made (501). The original keeps the ball with the shooting team after away-from-play free throws, the last-two-minutes rule, but this was in the third quarter. The made free throw is listed in the original's possession-change file.",
+    "files": {
+      "possession_change_event_overrides.json": [
+        501
+      ]
+    }
+  },
   "0021900676": {
     "pbp_sha256": "a85738fb656d6d0cc9fb991fe08d7483ba3e3f13ddd29e97cd92a462583e07ca",
     "source": "Reviewed 2026-10-17: at Q1 12:00 Favors and Grant jumped and New Orleans recovered the ball; V3 leaves the jump ball's description blank. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 4. The entry is that V2 row.",
@@ -68,6 +208,15 @@
           "PERSON3TYPE": "2",
           "PLAYER3_ID": "1610612740"
         }
+      }
+    }
+  },
+  "0021900678": {
+    "pbp_sha256": "9adb04d5c3bfc7b51ef2aa27915b3a410021c538755aabec4474ff7f312b6a7e",
+    "source": "Reviewed 2026-10-28: at Q4 0:19.1, after San Antonio's timeout, Rubio's foul (670) gave Mills one free throw and San Antonio kept the ball, the last-two-minutes penalty for a foul away from the play; Mills then missed a three at 0:10.7. V3 types the foul a personal take foul, which ends San Antonio's possession after the free throw. The foul is recorded as away from play, as in 0021900041.",
+    "files": {
+      "event_subtypes.json": {
+        "670": "Away From Play"
       }
     }
   },
@@ -327,6 +476,15 @@
       }
     }
   },
+  "0021900801": {
+    "pbp_sha256": "b5af8f0d49ca8b9c395f8dfc63e979c2709d6d288d19d87057885a559a2d15c8",
+    "source": "Reviewed 2026-10-28: at Q3 4:34 Oubre's foul in the penalty (403) gave Davis two free throws; Davis made the first (405), and Kuzma's offensive goaltending on the second (490) gave Phoenix the ball. V3 records the made free throw as 1 of 1, so the trip ends with it and the goaltending turnover follows in Phoenix's possession; the voided second free throw rule covers only a shooting foul's trip. The free throw is recorded as 1 of 2.",
+    "files": {
+      "event_subtypes.json": {
+        "405": "Free Throw 1 of 2"
+      }
+    }
+  },
   "0021900818": {
     "pbp_sha256": "6cf92f52b151467759f3affe4663ac4bc81902c3d59a82d3f894e87c395fe2d0",
     "source": "Reviewed 2026-10-17: at OT 5:00 Theis and Harrell jumped and Williams secured it; V3 names the tip recipient only as \"Williams\", which matches more than one player. The live play-by-play does not record this game (the S3 origin answers 403), so the jump ball is decided by the 2019-20 V2 export (shufinskiy/nba_data e829d4678be1e075f99e5d41a1c5f97089be446b, datasets/nbastats_2019.tar.xz), which records both jumpers and the recovery as event 700. The entry is that V2 row.",
@@ -565,6 +723,15 @@
           "PLAYER3_ID": "1610612746"
         }
       }
+    }
+  },
+  "0021901309": {
+    "pbp_sha256": "e30eda1d40126a0520d73e78275cebf5cbe88d1c2fdb64bedc00680a1b2cfe00",
+    "source": "Reviewed 2026-10-28: at Q3 4:53 Kurucs' lane violation (671, added after the game) voided Allen's first free throw after Whiteside's shooting foul, and Allen missed the second (503), which Kurucs rebounded. The box score gives Allen 9 free throw attempts, matching the recorded rows, so the first was not attempted. The turnover V3 records for the violation stays credited, as in the box score, but no longer ends the possession, as in 0022300173.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        671
+      ]
     }
   },
   "0022000056": {
