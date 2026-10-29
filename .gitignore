@@ -13,3 +13,7 @@ debug.py
 *.ipynb
 docs/_build
 poetry.lock
+
+# Local planning notes, kept out of the repository
+README-PARITY.md
+docs/v3-parity-plan.md
