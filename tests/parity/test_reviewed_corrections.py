@@ -41,6 +41,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_MOVES,
     EVENT_ORDER,
     EVENT_REMOVALS,
+    EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
@@ -689,6 +690,52 @@ def test_removal_edits_are_validated(values, message):
         load(rows, files=edits(EVENT_REMOVALS, values))
 
 
+def substitution_from_a_stale_lineup():
+    """HOME's Player2 leaves for Player8 at 9:50; at 9:30 Player7 replaces Player8,
+    but the row names Player2, already off, as a scorer does from a lineup that
+    lacks the first substitution."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("sub", 590, HOME, 2, incoming=8),
+        e("make", 580, HOME, 1),
+        e("make", 570, AWAY, 12),
+        e("sub", 570, HOME, 2, incoming=7),
+        e("make", 560, HOME, 7),
+    ]))
+    first, stale = (r["actionNumber"] for r in rows if r["actionType"] == "Substitution")
+    return rows, dict(first=first, stale=stale, make=numbered(rows, "Made Shot"))
+
+
+def test_substitution_outgoing_edit_names_the_player_who_left():
+    rows, n = substitution_from_a_stale_lineup()
+    with pytest.raises(V3DecodeError, match="Substitution contradicts"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_SUBSTITUTION_OUTGOING, {str(n["stale"]): 8}))
+    stale = next(x for x in loaded.events if x.event_num == n["stale"])
+    assert (stale.player1_id, stale.player2_id) == (8, 7)
+    assert sorted(loaded.events[-2].current_players[HOME]) == [1, 3, 4, 5, 7]
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME, AWAY]
+    assert dict(code="reviewed_substitution_outgoing", event_num=n["stale"],
+                recorded_player_id=2, player_id=8) in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"stale": 2}, "substitution-outgoing override does not fit"),
+    ({"stale": 7}, "substitution-outgoing override does not fit"),
+    ({"stale": 12}, "substitution-outgoing override does not fit"),
+    ({"stale": 99}, "substitution-outgoing override does not fit"),
+    ({"stale": 8, "make": 8}, "substitution-outgoing override does not fit"),
+    ({"stale": 0}, "Invalid event substitution-outgoing override"),
+], ids=["recorded_player", "incoming_player", "other_team", "not_on_roster",
+        "not_a_substitution", "no_person"])
+def test_substitution_outgoing_edits_are_validated(values, message):
+    rows, n = substitution_from_a_stale_lineup()
+    values = {str(n.get(key, key)): value for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_SUBSTITUTION_OUTGOING, values))
+
+
 def double_technical_named_nobody():
     """HOME's Player2 and AWAY's Player12 get a double technical whose text names
     nobody, and Player12's half of it is recorded again as a technical of his own."""
@@ -1234,6 +1281,14 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
      {1610612739: 112, 1610612750: 111},
      [(251, "is_real_rebound", True), (256, "is_possession_ending_event", False),
       (766, "clock", "2:09")]),
+    ("0022600134", TeamHasBackToBackPossessionsException, [432, 435, 463, 464], 1610612766,
+     {1610612765: 94, 1610612766: 93},
+     [(463, "is_possession_ending_event", False), (464, "is_possession_ending_event", True)]),
+    ("0022600138", TeamHasBackToBackPossessionsException, [2, 4, 7, 8, 9], 1610612745,
+     {1610612745: 101, 1610612749: 102},
+     [(8, "is_real_rebound", True), (8, "is_possession_ending_event", False)]),
+    ("0022600142", V3DecodeError, [512, 514, 518, 519, 515], 1610612742,
+     {1610612760: 98, 1610612742: 97}, [(519, "player1_id", 1631204), (519, "player2_id", 1628997)]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
     # 0022600003 Q3 10:00: an offensive foul turnover left behind when
@@ -1248,7 +1303,12 @@ def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense,
     # 0022600118 Q3 3:46: Hunter's and Coward's double personal, recorded as two
     # fouls naming nobody. 0022600120 Q2 7:23: Watson's lane violation and the
     # Timberwolves' team rebound; Q2 6:11 and OT 1:59: coach challenge jump balls
-    # the live play-by-play has deleted.
+    # the live play-by-play has deleted. 0022600134 Q3 9:24: Diabate's one loss of
+    # the ball at a held ball, recorded as a jump-ball violation and a lost ball.
+    # 0022600138 Q1 11:35: VanVleet's airball out of bounds at the shot clock,
+    # recorded as Milwaukee's team rebound and Houston's shot-clock turnover.
+    # 0022600142 Q3 2:02: Martin replaced Sasser, recorded for Washington, whom a
+    # substitution added at the end of the quarter took off at 3:44.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

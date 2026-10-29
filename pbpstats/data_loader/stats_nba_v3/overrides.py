@@ -47,6 +47,9 @@ STARTERS = "missing_period_starters.json"
 # jump ball V3 leaves undecided in a game the live play-by-play does not record.
 # A free-throw-subtype entry, {event: V3 label}, gives the subtype of a free
 # throw V3 records with neither category nor numbering, in its subtype or text.
+# A substitution-outgoing entry, {event: person}, names the teammate a
+# substitution took off the floor when V3 names a player already off it, as a
+# scorer does from a lineup that lacks an earlier substitution.
 EVENT_V2_JUMP_BALLS = "event_v2_jump_balls.json"
 EVENT_FREE_THROW_SUBTYPES = "event_free_throw_subtypes.json"
 V2_TEXT_FIELDS = (
@@ -67,6 +70,7 @@ EVENT_MOVES = "event_moves.json"
 EVENT_TEAMS = "event_teams.json"
 EVENT_FOUL_OPPONENTS = "event_foul_opponents.json"
 EVENT_BLOCK_REMOVALS = "event_block_removals.json"
+EVENT_SUBSTITUTION_OUTGOING = "event_substitution_outgoing.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
@@ -82,6 +86,7 @@ SUPPORTED = {
     EVENT_MOVES,
     EVENT_ORDER,
     EVENT_REMOVALS,
+    EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
@@ -91,7 +96,8 @@ SUPPORTED = {
     STARTERS,
 }
 # Entries that map an event to a number: a kept event, a blocker, a live action,
-# a tip recipient, an event to follow, a team or a foul opponent.
+# a tip recipient, an event to follow, a team, a foul opponent or a substitution's
+# outgoing player.
 NUMBERED = {
     EVENT_BLOCKS: "block",
     EVENT_DUPLICATES: "duplicate",
@@ -99,6 +105,7 @@ NUMBERED = {
     EVENT_LIVE_NUMBERS: "live-number",
     EVENT_MOVES: "move",
     EVENT_REMOVALS: "removal",
+    EVENT_SUBSTITUTION_OUTGOING: "substitution-outgoing",
     EVENT_TEAMS: "team",
     EVENT_TIP_RECIPIENTS: "tip-recipient",
 }

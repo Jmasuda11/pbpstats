@@ -1720,6 +1720,33 @@
       }
     }
   },
+  "0022600134": {
+    "pbp_sha256": "f306e7a8a779ae43d29af85a4c01f5163f1ce41152158dce426cfd0105905430",
+    "source": "Reviewed 2026-10-29: at Q3 9:24 Reed tied up Diabate, and Diabate committed a violation on the jump ball, so Detroit took the ball. V3 records that one loss of the ball twice: the jump-ball violation turnover (463) and, entered 20 ms later, a lost ball turnover with Reed's steal at 9:23 (464). The box score counts both (Diabate 5 turnovers, Reed 3 steals). The entry keeps the violation turnover from ending Charlotte's possession, which ends with the lost ball; both turnovers and the steal keep their credit. As in 0022400758.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        463
+      ]
+    }
+  },
+  "0022600138": {
+    "pbp_sha256": "1e5ae18f15615d62356c95d0394bd9f0156ea1304ae0999c9f953799faa73527",
+    "source": "Reviewed 2026-10-29: at Q1 11:35 VanVleet's step-back jumper was an airball that went out of bounds as the shot clock expired. V3 records a Milwaukee defensive team rebound for it (8) and Houston's shot-clock team turnover at 11:34 (9), entered 5.7 seconds after the rebound in the live play-by-play, which marks Herro's next shot as from a turnover; the league otherwise records such a rebound for the shooting team. The entry keeps the rebound from ending Houston's possession, which ends with the turnover; both keep their credit.",
+    "files": {
+      "non_possession_changing_event_overrides.json": [
+        8
+      ]
+    }
+  },
+  "0022600142": {
+    "pbp_sha256": "952aeb75311fcb3f1f9525b7bda889c1ea85a8c838f42e42ccd932ed1555fc23",
+    "source": "Reviewed 2026-10-29: at Q3 2:02 Martin replaced Sasser, who had entered for Washington at 3:44 in a substitution the scorer added at the end of the quarter (543). The substitution entered live at 2:02 (519) names Washington, already off the floor, from the scorer's lineup before that entry was added; Martin's 1:00 jumper places him on the floor. The entry names Sasser as the player 519 took off. The box score reads the substitutions in action-number order, so its minutes give Washington 2:02 less and Sasser 2:02 more than these lineups.",
+    "files": {
+      "event_substitution_outgoing.json": {
+        "519": 1631204
+      }
+    }
+  },
   "1042600201": {
     "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
     "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",

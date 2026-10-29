@@ -419,7 +419,7 @@ class DecodedV3:
     def __init__(
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
-        v2_jump_balls=None, free_throw_subtypes=None,
+        v2_jump_balls=None, free_throw_subtypes=None, substitution_outgoing=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -436,8 +436,9 @@ class DecodedV3:
         # an event recorded with neither team nor person, the other party of
         # a double foul whose text names nobody, a missed shot's recorded
         # block that did not happen, the V2 export row of a jump ball V3
-        # leaves undecided when no live play-by-play records the game, and the
-        # subtype of a free throw V3 records with none. The recorded rows stay
+        # leaves undecided when no live play-by-play records the game, the
+        # subtype of a free throw V3 records with none, and the player a
+        # substitution took off when V3 names one already off. The recorded rows stay
         # unchanged; each fact must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
@@ -446,6 +447,7 @@ class DecodedV3:
         self.reviewed_block_removals = set(block_removals)
         self.reviewed_v2_jump_balls = dict(v2_jump_balls or {})
         self.reviewed_free_throw_subtypes = dict(free_throw_subtypes or {})
+        self.reviewed_substitution_outgoing = dict(substitution_outgoing or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
@@ -454,6 +456,7 @@ class DecodedV3:
             "block-removal": set(self.reviewed_block_removals),
             "v2-jump-ball": set(self.reviewed_v2_jump_balls),
             "free-throw-subtype": set(self.reviewed_free_throw_subtypes),
+            "substitution-outgoing": set(self.reviewed_substitution_outgoing),
         }
         self.team_technicals = []
         self.label_rules = []
@@ -925,7 +928,24 @@ class DecodedV3:
                 raise V3DecodeError(
                     "Substitution description contradicts outgoing player"
                 )
-            event.update(EVENTMSGTYPE=8, PLAYER2_ID=self._resolve(match[1], team))
+            incoming = self._resolve(match[1], team)
+            if row["actionNumber"] in self.reviewed_substitution_outgoing:
+                # V3 names a player already off the floor: the reviewed teammate
+                # who left, as V2 records the outgoing player.
+                reviewed = self.reviewed_substitution_outgoing[row["actionNumber"]]
+                if reviewed in (player, incoming) or self.context.roster.get(
+                    reviewed, {}
+                ).get("team_id") != team:
+                    raise V3DecodeError(
+                        "Event substitution-outgoing override does not fit the recorded event"
+                    )
+                self._unused_reviewed["substitution-outgoing"].discard(row["actionNumber"])
+                self.reviewed_inputs.append(dict(
+                    code="reviewed_substitution_outgoing", event_num=row["actionNumber"],
+                    recorded_player_id=player, player_id=reviewed,
+                ))
+                event["PLAYER1_ID"] = reviewed
+            event.update(EVENTMSGTYPE=8, PLAYER2_ID=incoming)
         elif kind == "Jump Ball":
             # Coach-challenge descriptions carry a "(CC) " marker, others never do.
             marker = r"\(CC\) " if subtype == "Coach Challenge" else ""

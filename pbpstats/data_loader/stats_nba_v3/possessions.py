@@ -45,6 +45,7 @@ from .overrides import (
     EVENT_MOVES,
     EVENT_ORDER,
     EVENT_REMOVALS,
+    EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
     EVENT_TIP_RECIPIENTS,
@@ -706,6 +707,9 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             ),
             free_throw_subtypes=reviewed_entries(
                 self.overrides, EVENT_FREE_THROW_SUBTYPES, context.game_id, {}
+            ),
+            substitution_outgoing=reviewed_entries(
+                self.overrides, EVENT_SUBSTITUTION_OUTGOING, context.game_id, {}
             ),
         )
         self.decoded = decoded
