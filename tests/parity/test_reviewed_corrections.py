@@ -1727,6 +1727,12 @@ def test_recorded_corrections_from_2019_20_review(game, trip, offense, counts, c
      [(405, "num_ft_for_trip", 2)]),
     ("0021900533", TeamHasBackToBackPossessionsException, [521, 522, 524, 525, 529, 530], 1610612740,
      {1610612740: 105, 1610612758: 105}, [(530, "player1_id", 201950)]),
+    ("0021900029", TeamHasBackToBackPossessionsException, [513, 514, 777, 779, 517, 518], 1610612752,
+     {1610612738: 101, 1610612752: 100}, [(518, "player1_id", 1629628)]),
+    ("0021900910", TeamHasBackToBackPossessionsException, [790, 793, 794], 1610612738, {1610612751: 111, 1610612738: 110},
+     [(790, "is_loose_ball_foul", True)]),
+    ("0021900800", TeamHasBackToBackPossessionsException, [585, 586, 587, 589, 598, 600, 601], 1610612748,
+     {1610612744: 98, 1610612748: 99}, [(589, "clock", "6:37"), (600, "clock", "6:37")]),
 ])
 def test_back_to_back_corrections_from_2019_20_review(game, recorded, trip, offense, counts, checks):
     # 0021900041 to 0021900289 (11 games): the ball-handling team's loose ball or
@@ -1741,6 +1747,11 @@ def test_back_to_back_corrections_from_2019_20_review(game, recorded, trip, offe
     # 0021900801 Q3 4:34: a made free throw logged 1 of 1 after a penalty foul,
     # before offensive goaltending voided the second. 0021900533 Q3 0:14.8: a
     # successful challenge's offensive foul turnover, which V3 does not record.
+    # Video review: 0021900029 Q3 4:42, a kicked ball after a Knicks team rebound,
+    # recorded as a violation without its turnover, which is added; 0021900910 OT
+    # 1:34, a loose ball foul after a Celtics rebound recorded as an offensive foul;
+    # 0021900800 Q4 6:37, a foul away from the play while a three was in the air,
+    # its foul and free throw recorded a second after the basket.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

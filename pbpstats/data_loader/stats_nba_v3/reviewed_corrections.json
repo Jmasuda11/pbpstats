@@ -1,4 +1,17 @@
 {
+  "0021900029": {
+    "pbp_sha256": "89a81c829eb0d5ee46a9fbccb63bf22302c52b9d1e3d06fc6ef2ac427423ade2",
+    "source": "Video review 2026-10-29: at Q3 4:42, after Williams blocked Barrett's putback (777) and V3 and V2 record a Knicks team rebound (779), the ball was close to neutral when Barrett kicked it (517), and Boston had the ball next. V3, V2 and the box score record the kicked ball violation but no turnover (Barrett 4 TOV); after the recorded Knicks rebound it is New York's turnover. It is added as 518, the number V3 leaves free after the violation, as in 0022300910.",
+    "files": {
+      "event_turnovers.json": {
+        "518": {
+          "before": 519,
+          "player": 1629628,
+          "subtype": "Kicked Ball Violation"
+        }
+      }
+    }
+  },
   "0021900041": {
     "pbp_sha256": "d5ee7c50edb2dbb94d5bb22c3432c9077097734c06394aa370086296e32012b9",
     "source": "Reviewed 2026-10-28: at Q2 8:19, with Indiana in possession after Sabonis' defensive rebound, Sabonis' loose ball foul (193) was charged as a turnover (195). V3 and V2 leave the turnover's subtype blank, which the original reads as no turnover; the box score counts it (Sabonis 1 TOV). The turnover is recorded as an offensive foul turnover. At Q4 0:02.0, with Detroit in possession after its timeout, Holiday's foul (629) gave Kennard one free throw and Detroit kept the ball, the last-two-minutes penalty for a foul away from the play; V3 types it a personal take foul, which ends Detroit's possession after the free throw, and it is recorded as away from play.",
@@ -476,6 +489,17 @@
       }
     }
   },
+  "0021900800": {
+    "pbp_sha256": "946ff9717bf84d44309a2e143fc654aabb5948f5ecc1eb1bd4f073d99fd6d9b5",
+    "source": "Video review 2026-10-29: at Q4 6:37 Looney fouled Dragic away from the play (589) while Olynyk's three (587) was in the air, and Dragic missed the one free throw (600). V3 and V2 record the foul, Butler's substitution (598) and the free throw at 6:36, a second after the basket, so the basket ends Miami's possession and the free throw starts another. The three are moved to the basket's clock, 6:37, so the free throw belongs to Miami's possession.",
+    "files": {
+      "event_clocks.json": {
+        "589": "PT06M37.00S",
+        "598": "PT06M37.00S",
+        "600": "PT06M37.00S"
+      }
+    }
+  },
   "0021900801": {
     "pbp_sha256": "b5af8f0d49ca8b9c395f8dfc63e979c2709d6d288d19d87057885a559a2d15c8",
     "source": "Reviewed 2026-10-28: at Q3 4:34 Oubre's foul in the penalty (403) gave Davis two free throws; Davis made the first (405), and Kuzma's offensive goaltending on the second (490) gave Phoenix the ball. V3 records the made free throw as 1 of 1, so the trip ends with it and the goaltending turnover follows in Phoenix's possession; the voided second free throw rule covers only a shooting foul's trip. The free throw is recorded as 1 of 2.",
@@ -602,6 +626,15 @@
           "PERSON3TYPE": "3",
           "PLAYER3_ID": "1610612753"
         }
+      }
+    }
+  },
+  "0021900910": {
+    "pbp_sha256": "00005fde079a7cc4d41c3b99b2e31100e4dd0062fad9788e90862e5d7006951d",
+    "source": "Video review 2026-10-29: in overtime at 1:34, after Kurucs' missed three and the Celtics' team rebound (788), Jordan's foul (790) was a loose ball foul, and Boston kept the ball. V3 and V2 record it as an offensive foul with no turnover, which gives Brooklyn the ball after Boston's rebound. The foul is recorded as a loose ball foul.",
+    "files": {
+      "event_subtypes.json": {
+        "790": "Loose Ball"
       }
     }
   },
