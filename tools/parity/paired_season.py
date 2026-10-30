@@ -368,7 +368,11 @@ def pair(v2, v3):
 
 
 def decoder_comparison(v3, facts):
-    """Decode one real sample per V3 label with the candidate's own decoder."""
+    """Decode one real sample per V3 label with the candidate's own decoder.
+
+    The decoded label's code is the V2 code pinned for it in v2_codes, which
+    the native event classes are checked against.
+    """
     import pbpstats
     from pbpstats.data_loader.stats_nba_v3.decoder import (
         DecodedV3,
@@ -377,6 +381,7 @@ def decoder_comparison(v3, facts):
     )
     from tools.parity.participant_names import roster_from_actors
     from tools.parity.recorded import require
+    from tools.parity.v2_codes import CODES
 
     if Path(pbpstats.__file__).resolve() != ROOT / "pbpstats/__init__.py":
         raise ValueError("Wrong pbpstats package imported")
@@ -416,11 +421,10 @@ def decoder_comparison(v3, facts):
                     status="rejected", reason=str(error).split(": ", 1)[-1]
                 )
                 continue
-            outcome = dict(
-                status="decoded",
-                event_type=projected["EVENTMSGTYPE"],
-                action_type=projected["EVENTMSGACTIONTYPE"],
+            event_type, action_type = CODES.get(
+                (projected["V3_ACTION_TYPE"], projected["V3_SUB_TYPE"]), (None, None)
             )
+            outcome = dict(status="decoded", event_type=event_type, action_type=action_type)
             break
         recorded = [(e["event_type"], e["action_type"]) for e in expected]
         if outcome["status"] == "rejected":

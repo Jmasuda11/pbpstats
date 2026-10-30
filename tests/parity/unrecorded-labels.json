@@ -1,17 +1,13 @@
 {
   "schema_version": 1,
-  "scope": "Decoder codes for V3 labels no V2 export row records, inferred from the codes the V2 exports do use; never recorded evidence",
-  "inferred": [
+  "scope": "V3 labels no V2 export row records, with the V2 exports' own codes; the parser accepts each with no V2 code",
+  "unrecorded": [
     {
       "label": [
         "Ejection",
         "Second Flagrant Type 1"
       ],
-      "code": [
-        11,
-        2
-      ],
-      "basis": "V2 names each ejection's label in its text and codes 0 No Ejection, 1 Second Technical, 3 First Flagrant Type 2 and 4 Other in every export below; none records a Second Flagrant Type 1, and 2 is the one code left",
+      "basis": "V2 names each ejection's label in its text and codes 0 No Ejection, 1 Second Technical, 3 First Flagrant Type 2 and 4 Other in every export below; none records a Second Flagrant Type 1. The original never reads an ejection's code",
       "v3": {
         "game_id": "0022600105",
         "path": "tests/parity/data/recorded_evidence/stats_v3_0022600105.json",

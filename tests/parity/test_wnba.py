@@ -24,6 +24,7 @@ from tools.parity.paired_season import (
     pair,
     season,
 )
+from tools.parity import v2_codes
 from tools.parity.participant_names import roster_from_actors
 from tools.parity.recorded import require
 from tools.parity.reference import ROOT, digest
@@ -125,10 +126,10 @@ def test_wnba_only_codes_are_recorded_for_wnba_and_never_for_nba(facts):
         (c["actionType"], c["subType"])
         for c in json.loads((ROOT / SEASONS["nba-2024"][1]).read_bytes())["codes"]
     }
-    labels = [("Timeout", subtype, (9, code)) for subtype, code in decoder.WNBA_TIMEOUTS.items()]
+    labels = [("Timeout", subtype, (9, code)) for subtype, code in v2_codes.WNBA_TIMEOUTS.items()]
     labels += [
         ("Free Throw", "Free Throw Clear Path {} of {}".format(*numbers), (3, code))
-        for numbers, code in decoder.WNBA_CLEAR_PATH_FREE_THROWS.items()
+        for numbers, code in v2_codes.WNBA_CLEAR_PATH_FREE_THROWS.items()
     ]
     for kind, subtype, code in labels:
         assert wnba[kind, subtype] == [code]
@@ -145,7 +146,8 @@ def test_wnba_only_codes_are_recorded_for_wnba_and_never_for_nba(facts):
 )
 def test_wnba_only_codes_decode_for_wnba_games_alone(label, code):
     event = decoded_sample(label).projected[0]
-    assert (event["EVENTMSGTYPE"], event["EVENTMSGACTIONTYPE"]) == code
+    assert (event["V3_ACTION_TYPE"], event["V3_SUB_TYPE"]) == label
+    assert v2_codes.CODES[label] == code
     with pytest.raises(V3DecodeError):
         decoded_sample(label, game_id="0022500001")
 

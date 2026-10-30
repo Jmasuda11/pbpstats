@@ -362,15 +362,21 @@ def property_events(case, provider):
 
     if provider == "v3":
         from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
+        from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
+            StatsNbaV3EnhancedPbpFactory,
+        )
 
         rows = DecodedV3(*v3_inputs(case)).projected
+        event_class = StatsNbaV3EnhancedPbpFactory().get_event_class
     else:
         rows = encode_v2(case["events"])
+        factory = StatsNbaEnhancedPbpFactory()
+
+        def event_class(row):
+            return factory.get_event_class(row["EVENTMSGTYPE"])
+
     loader = Seeded()
-    factory = StatsNbaEnhancedPbpFactory()
-    loader.items = [
-        factory.get_event_class(r["EVENTMSGTYPE"])(r, i) for i, r in enumerate(rows)
-    ]
+    loader.items = [event_class(r)(r, i) for i, r in enumerate(rows)]
     loader._add_extra_attrs_to_all_events()
     return loader.items
 

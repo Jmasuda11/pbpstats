@@ -16,6 +16,7 @@ from tools.parity.paired_season import (
     pair,
     season,
 )
+from tools.parity import v2_codes
 from tools.parity.reference import ROOT, digest
 
 # Decoder labels that neither paired season contains. They keep the original's
@@ -31,9 +32,8 @@ OTHER_SEASONS = json.loads((ROOT / "tests/parity/decoder-code-evidence.json").re
 OTHER_SEASON_CODES = {
     tuple(o["label"]): tuple(o["code"]) for o in OTHER_SEASONS["observations"]
 }
-# Decoder labels no V2 export row records, coded with the one code the V2
-# exports leave unused; never recorded evidence.
-INFERRED = json.loads((ROOT / "tests/parity/decoder-inferred-codes.json").read_text())
+# Decoder labels no V2 export row records, which load with no V2 code.
+UNRECORDED = json.loads((ROOT / "tests/parity/unrecorded-labels.json").read_text())
 
 
 @pytest.fixture(scope="module")
@@ -108,16 +108,16 @@ def test_every_decoder_table_entry_is_recorded_or_declared_unobserved(facts):
         for c in facts["codes"]
     }
     tables = (
-        ("Made Shot", 1, decoder.SHOT_CODES),
-        ("Missed Shot", 2, decoder.SHOT_CODES),
-        ("Foul", 6, decoder.FOULS),
-        ("Turnover", 5, decoder.TURNOVERS),
-        ("Violation", 7, decoder.VIOLATIONS),
-        ("Rebound", 4, decoder.REBOUNDS),
-        ("Timeout", 9, decoder.TIMEOUTS),
-        ("Jump Ball", 10, decoder.JUMP_BALLS),
-        ("Instant Replay", 18, decoder.REPLAYS),
-        ("Ejection", 11, decoder.EJECTIONS),
+        ("Made Shot", 1, v2_codes.SHOT_CODES),
+        ("Missed Shot", 2, v2_codes.SHOT_CODES),
+        ("Foul", 6, v2_codes.FOULS),
+        ("Turnover", 5, v2_codes.TURNOVERS),
+        ("Violation", 7, v2_codes.VIOLATIONS),
+        ("Rebound", 4, v2_codes.REBOUNDS),
+        ("Timeout", 9, v2_codes.TIMEOUTS),
+        ("Jump Ball", 10, v2_codes.JUMP_BALLS),
+        ("Instant Replay", 18, v2_codes.REPLAYS),
+        ("Ejection", 11, v2_codes.EJECTIONS),
     )
     for kind, event_type, table in tables:
         for subtype, code in table.items():
@@ -128,6 +128,31 @@ def test_every_decoder_table_entry_is_recorded_or_declared_unobserved(facts):
                 assert OTHER_SEASON_CODES[kind, subtype] == (event_type, code), (kind, subtype)
             else:
                 assert recorded[kind, subtype] == [(event_type, code)], (kind, subtype)
+
+
+def test_the_decoder_accepts_exactly_the_labels_with_a_v2_code():
+    # Each label the native classes decide from has the V2 code they are
+    # checked against, but the one ejection label no V2 export records.
+    for labels, codes in (
+        (decoder.SHOTS, v2_codes.SHOT_CODES),
+        (decoder.FOULS, v2_codes.FOULS),
+        (decoder.TURNOVERS, v2_codes.TURNOVERS),
+        (decoder.VIOLATIONS, v2_codes.VIOLATIONS),
+        (decoder.REBOUNDS, v2_codes.REBOUNDS),
+        (decoder.TIMEOUTS, v2_codes.TIMEOUTS),
+        (decoder.WNBA_TIMEOUTS, v2_codes.WNBA_TIMEOUTS),
+        (decoder.JUMP_BALLS, v2_codes.JUMP_BALLS),
+        (decoder.REPLAYS, v2_codes.REPLAYS),
+        (decoder.FREE_THROWS, v2_codes.FREE_THROWS),
+        (decoder.FREE_THROWS, v2_codes.FLAGRANT_FREE_THROWS),
+        (decoder.CLEAR_PATH_FREE_THROWS, v2_codes.CLEAR_PATH_FREE_THROWS),
+        (decoder.TECHNICAL_FREE_THROWS, v2_codes.TECHNICAL_FREE_THROWS),
+        (decoder.WNBA_CLEAR_PATH_FREE_THROWS, v2_codes.WNBA_CLEAR_PATH_FREE_THROWS),
+    ):
+        assert set(labels) == set(codes)
+    unrecorded = {tuple(u["label"]) for u in UNRECORDED["unrecorded"]}
+    assert unrecorded == {("Ejection", "Second Flagrant Type 1")}
+    assert set(decoder.EJECTIONS) == set(v2_codes.EJECTIONS) | {"Second Flagrant Type 1"}
 
 
 @pytest.mark.parametrize("observation", OTHER_SEASONS["observations"], ids=lambda o: o["label"][1])
@@ -172,19 +197,18 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
         assert (event.event_type, event.event_action_type) == tuple(observation["code"])
 
 
-@pytest.mark.parametrize("inferred", INFERRED["inferred"], ids=lambda i: i["label"][1])
-def test_inferred_codes_are_the_ones_no_v2_export_uses(inferred):
+@pytest.mark.parametrize("unrecorded", UNRECORDED["unrecorded"], ids=lambda u: u["label"][1])
+def test_a_label_no_v2_export_records_loads_with_no_code(unrecorded):
     # 0022600105 Q4 6:54: Sharpe's ejection for his second flagrant 1, a label
-    # no V2 export from 2014-15 to 2016-17 or in 2024-25 records.
-    (kind, subtype), (event_type, code) = inferred["label"], inferred["code"]
-    assert (kind, event_type) == ("Ejection", 11)
-    assert decoder.INFERRED_EJECTIONS == {subtype: code}
-    assert subtype not in decoder.EJECTIONS and (kind, subtype) not in OTHER_SEASON_CODES
+    # no V2 export from 2014-15 to 2016-17 or in 2024-25 records. The original
+    # never reads an ejection's kind, so the native ejection needs no code.
+    kind, subtype = unrecorded["label"]
+    assert kind == "Ejection" and subtype in decoder.EJECTIONS
+    assert subtype not in v2_codes.EJECTIONS and (kind, subtype) not in OTHER_SEASON_CODES
     named = {"Second Technical": 1, "First Flagrant Type 2": 3, "Other": 4}
-    assert {label: decoder.EJECTIONS[label] for label in named} == named
-    for export in inferred["v2_exports"]:
+    for export in unrecorded["v2_exports"]:
         codes = {row["code"]: row["label"] for row in export["ejection_codes"]}
-        assert code not in codes and subtype not in codes.values()
+        assert subtype not in codes.values()
         assert all(named.get(label, 0) == used for used, label in codes.items())
         if "path" in export:
             assert digest((ROOT / export["path"]).read_bytes()) == export["sha256"]
@@ -193,21 +217,18 @@ def test_inferred_codes_are_the_ones_no_v2_export_uses(inferred):
     v2, _, _ = season()
     rows = Counter(int(r["EVENTMSGACTIONTYPE"]) for game in v2.values() for r in game
                    if r["EVENTMSGTYPE"] == "11")
-    paired = next(e for e in inferred["v2_exports"] if e["season"] == "2024-25")
+    paired = next(e for e in unrecorded["v2_exports"] if e["season"] == "2024-25")
     assert rows == {row["code"]: row["rows"] for row in paired["ejection_codes"]}
-    v3 = inferred["v3"]
+    v3 = unrecorded["v3"]
     pbp = (ROOT / v3["path"]).read_bytes()
     assert digest(pbp) == v3["sha256"]
     action = json.loads(pbp)["game"]["actions"][v3["source_index"]]
-    assert [action["actionType"], action["subType"]] == inferred["label"]
+    assert [action["actionType"], action["subType"]] == unrecorded["label"]
     loader = web.load_game(v3["game_id"], pbp, (ROOT / v3["boxscore_path"]).read_bytes(), "recorded")
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
-    # The native ejection decides from its label; the inferred code stays a diagnostic.
-    assert (event.event_type, event.sub_type) == (event_type, subtype)
-    assert [d for d in loader.diagnostics if d["code"] == decoder.INFERRED_CODE] == [dict(
-        code=decoder.INFERRED_CODE, event_num=action["actionNumber"], recorded=subtype,
-        v2_code=[event_type, code], basis="the one ejection code no V2 export uses",
-    )]
+    assert (event.action_type, event.sub_type) == (kind, subtype)
+    assert not hasattr(event, "event_action_type")
+    assert not any(d["code"] == "inferred_v2_code" for d in loader.diagnostics)
 
 
 def test_fouls_without_a_fouled_player_are_exactly_those_v2_never_names_one_for():

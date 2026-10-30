@@ -33,6 +33,7 @@ from .decoder import (
     TECHNICAL_FREE_THROW_VERSION,
     TRANSITION_TAKE_FOUL_VERSION,
     VOIDED_SECOND_FREE_THROW_VERSION,
+    TECHNICAL_FOULS,
     TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
@@ -85,9 +86,11 @@ class V3HeldBallJumpBall(HeldBallJumpBall, StatsNbaV3JumpBall):
 # decides an and-one from the events at the basket's clock alone, so a basket
 # recorded early ends the possession before its free throw.
 AND_ONE_CLOCK_VERSION = "nba_and_one_clock_v1"
-AND_ONE_FOULS = {FOULS[label] for label in ("Shooting", "Shooting Block", "Loose Ball")}
+AND_ONE_FOULS = ("Shooting", "Shooting Block", "Loose Ball")
 # Rows a basket's foul can follow: substitutions, timeouts and replays.
-DEAD_BALL_TYPES = (8, 9, 18)
+DEAD_BALL_ACTIONS = ("Substitution", "Timeout", "Instant Replay")
+# The missed shots the original's order repairs look for, its V2 event type 2.
+MISSED_SHOTS = ("Missed Shot", "Heave")
 
 
 def clock_seconds(text):
@@ -96,15 +99,14 @@ def clock_seconds(text):
     return Decimal(minutes) * 60 + Decimal(rest)
 
 
-# V3 subtype labels a reviewed correction may give each kind of event, with the
-# V2 codes the decoder records for them (EVENTMSGTYPE: label -> action type).
-# Free throws are the numbered regular ones only.
-SUBTYPE_CODES = {
-    3: {"Free Throw {} of {}".format(*key): code for key, code in FREE_THROWS.items()},
-    4: dict(REBOUNDS),
-    5: dict(TURNOVERS),
-    6: dict(FOULS),
-    7: dict(VIOLATIONS),
+# The subtype labels a reviewed correction may give each kind of event. Free
+# throws are the numbered regular ones only.
+SUBTYPE_LABELS = {
+    "Free Throw": {"Free Throw {} of {}".format(*numbers) for numbers in FREE_THROWS},
+    "Rebound": set(REBOUNDS),
+    "Turnover": set(TURNOVERS),
+    "Foul": set(FOULS),
+    "Violation": set(VIOLATIONS),
 }
 
 
@@ -193,7 +195,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
         else:
             self.factory = StatsNbaV3EnhancedPbpFactory()
             self.items = [
-                self.factory.get_event_class(row["EVENTMSGTYPE"])(row, index)
+                self.factory.get_event_class(row)(row, index)
                 for index, row in enumerate(self.data)
             ]
             self._add_extra_attrs_to_all_events()
@@ -235,7 +237,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
         self._fix_order_when_technical_foul_before_period_start()
         self.factory = StatsNbaV3EnhancedPbpFactory()
         self.items = [
-            self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+            self.factory.get_event_class(item)(item, i)
             for i, item in enumerate(self.data)
         ]
         self._add_extra_attrs_to_all_events()
@@ -255,7 +257,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             except EventOrderError as e:
                 self._fix_common_event_order_error(e)
                 self.items = [
-                    self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+                    self.factory.get_event_class(item)(item, i)
                     for i, item in enumerate(self.data)
                 ]
                 self._add_extra_attrs_to_all_events()
@@ -267,7 +269,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
         except EventOrderError:
             self._use_data_nba_event_order()
             self.items = [
-                self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+                self.factory.get_event_class(item)(item, i)
                 for i, item in enumerate(self.data)
             ]
             self._add_extra_attrs_to_all_events()
@@ -275,14 +277,16 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
     def _fix_order_when_technical_foul_before_period_start(self):
         # The original's: a technical foul recorded before its period's start
         # puts each period's start first, for periods 1 to 10.
-        technical_foul_codes = [11, 12, 13, 16, 18, 19, 25, 30]
+        def is_start(row):
+            return (row["V3_ACTION_TYPE"], row["V3_SUB_TYPE"]) == ("period", "start")
+
         starts_found, reorder = [], False
         for row in self.data:
-            if row["EVENTMSGTYPE"] == 12:
+            if is_start(row):
                 starts_found.append(row["PERIOD"])
             if (
-                row["EVENTMSGTYPE"] == 6
-                and row["EVENTMSGACTIONTYPE"] in technical_foul_codes
+                row["V3_ACTION_TYPE"] == "Foul"
+                and row["V3_SUB_TYPE"] in TECHNICAL_FOULS
                 and row["PERIOD"] not in starts_found
             ):
                 reorder = True
@@ -290,7 +294,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             return
         starts, others = {}, {}
         for row in self.data:
-            if row["EVENTMSGTYPE"] == 12:
+            if is_start(row):
                 starts[row["PERIOD"]] = row
             else:
                 others.setdefault(row["PERIOD"], []).append(row)
@@ -315,10 +319,10 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             if row["EVENTNUM"] == event_num:
                 issue_event_index = i
 
-        if rows[issue_event_index]["EVENTMSGTYPE"] in [8, 9]:
+        if rows[issue_event_index]["V3_ACTION_TYPE"] in ["Substitution", "Timeout"]:
             # move all sub/timeout events between ft and rebound to before ft
             row_index = issue_event_index
-            while rows[row_index]["EVENTMSGTYPE"] in [8, 9]:
+            while rows[row_index]["V3_ACTION_TYPE"] in ["Substitution", "Timeout"]:
                 row_index -= 1
             new_rows = []
             row_to_move_event_num = rows[row_index]["EVENTNUM"]
@@ -332,8 +336,8 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                     new_rows.append(row)
             self.data = new_rows
         elif (
-            rows[issue_event_index]["EVENTMSGTYPE"] == 18
-            and rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            rows[issue_event_index]["V3_ACTION_TYPE"] == "Instant Replay"
+            and rows[issue_event_index + 1]["V3_ACTION_TYPE"] == "Rebound"
         ):
             # move replay event after rebound
             rows[issue_event_index], rows[issue_event_index + 1] = (
@@ -341,7 +345,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 rows[issue_event_index],
             )
         elif (
-            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            rows[issue_event_index + 1]["V3_ACTION_TYPE"] == "Rebound"
             and rows[issue_event_index + 1]["EVENTNUM"] == event_num - 1
         ):
             # rebound and shot need to be flipped
@@ -350,9 +354,9 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 rows[issue_event_index],
             )
         elif (
-            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            rows[issue_event_index + 1]["V3_ACTION_TYPE"] == "Rebound"
             and rows[issue_event_index + 1]["EVENTNUM"] == event_num + 2
-            and rows[issue_event_index - 1]["EVENTMSGTYPE"] == 2
+            and rows[issue_event_index - 1]["V3_ACTION_TYPE"] in MISSED_SHOTS
             and rows[issue_event_index - 1]["EVENTNUM"] == event_num + 1
         ):
             # shot, rebound, rebound - first rebound need to me moved to before shot
@@ -361,9 +365,9 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 rows[issue_event_index - 1],
             )
         elif (
-            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            rows[issue_event_index + 1]["V3_ACTION_TYPE"] == "Rebound"
             and rows[issue_event_index + 1]["EVENTNUM"] == event_num - 2
-            and rows[issue_event_index - 1]["EVENTMSGTYPE"] == 2
+            and rows[issue_event_index - 1]["V3_ACTION_TYPE"] in MISSED_SHOTS
             and rows[issue_event_index - 1]["EVENTNUM"] == event_num - 1
         ):
             # shot, rebound, rebound - second rebound needs to be moved ahead of shot and first rebound
@@ -410,8 +414,8 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 or keeper is None
                 or kept in removals
                 or kept in duplicates
-                or (row["PERIOD"], row["EVENTMSGTYPE"])
-                != (keeper["PERIOD"], keeper["EVENTMSGTYPE"])
+                or (row["PERIOD"], row["V3_ACTION_TYPE"])
+                != (keeper["PERIOD"], keeper["V3_ACTION_TYPE"])
                 or not row["PLAYER1_ID"]
                 or row["PLAYER1_ID"] not in (keeper["PLAYER1_ID"], keeper["PLAYER2_ID"])
             ):
@@ -429,7 +433,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             row = by_number.get(event)
             if (
                 row is None
-                or row["EVENTMSGTYPE"] != 2
+                or row["V3_ACTION_TYPE"] not in MISSED_SHOTS
                 or row["PLAYER3_ID"] is not None
                 or player not in roster
                 or roster[player]["team_id"] == row["PLAYER1_TEAM_ID"]
@@ -452,7 +456,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             row = by_number.get(event)
             if (
                 row is None
-                or row["EVENTMSGTYPE"] != 10
+                or row["V3_ACTION_TYPE"] != "Jump Ball"
                 or player not in roster and player not in teams
                 or row["PLAYER3_ID"] == player
             ):
@@ -472,14 +476,11 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
         by_number = {row["EVENTNUM"]: row for row in self.data}
         for event, label in sorted(labels.items()):
             row = by_number.get(event)
-            table = SUBTYPE_CODES.get(row["EVENTMSGTYPE"]) if row is not None else None
-            names = {value: name for name, value in (table or {}).items()}
-            if table is None or label not in table or row["EVENTMSGACTIONTYPE"] not in names:
+            table = SUBTYPE_LABELS.get(row["V3_ACTION_TYPE"]) if row is not None else None
+            if table is None or label not in table or row["V3_SUB_TYPE"] not in table:
                 raise V3DecodeError("Event subtype override does not fit the recorded event")
-            recorded = names[row["EVENTMSGACTIONTYPE"]]
-            row["EVENTMSGACTIONTYPE"] = table[label]
-            row["V3_SUB_TYPE"] = label
-            if row["EVENTMSGTYPE"] == 3:
+            recorded, row["V3_SUB_TYPE"] = row["V3_SUB_TYPE"], label
+            if row["V3_ACTION_TYPE"] == "Free Throw":
                 row["NEUTRALDESCRIPTION"] = row["NEUTRALDESCRIPTION"].replace(recorded, label)
             self.repairs.append(dict(
                 code="reviewed_event_subtype", event_num=event, recorded=recorded, reviewed=label
@@ -542,13 +543,13 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             return
         rows = self.data
         for i, shot in enumerate(rows):
-            if shot["EVENTMSGTYPE"] != 1:
+            if shot["V3_ACTION_TYPE"] != "Made Shot":
                 continue
             j = next(
                 (
                     j
                     for j in range(i + 1, len(rows))
-                    if rows[j]["EVENTMSGTYPE"] not in DEAD_BALL_TYPES
+                    if rows[j]["V3_ACTION_TYPE"] not in DEAD_BALL_ACTIONS
                 ),
                 None,
             )
@@ -557,8 +558,8 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
             foul = rows[j]
             period, clock, team = foul["PERIOD"], foul["PCTIMESTRING"], foul["PLAYER1_TEAM_ID"]
             if (
-                foul["EVENTMSGTYPE"] != 6
-                or foul["EVENTMSGACTIONTYPE"] not in AND_ONE_FOULS
+                foul["V3_ACTION_TYPE"] != "Foul"
+                or foul["V3_SUB_TYPE"] not in AND_ONE_FOULS
                 or period != shot["PERIOD"]
                 or team in (None, shot["PLAYER1_TEAM_ID"])
                 or not 0 < clock_seconds(shot["PCTIMESTRING"]) - clock_seconds(clock) <= 2
@@ -567,18 +568,21 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 continue
             at_foul = [r for r in rows if (r["PERIOD"], r["PCTIMESTRING"]) == (period, clock)]
             fouls = [
-                r for r in at_foul if r["EVENTMSGTYPE"] == 6 and r["PLAYER1_TEAM_ID"] == team
+                r
+                for r in at_foul
+                if r["V3_ACTION_TYPE"] == "Foul" and r["PLAYER1_TEAM_ID"] == team
             ]
             free_throws = [
                 r
                 for r in at_foul
-                if r["EVENTMSGTYPE"] == 3 and r["PLAYER1_TEAM_ID"] == shot["PLAYER1_TEAM_ID"]
+                if r["V3_ACTION_TYPE"] == "Free Throw"
+                and r["PLAYER1_TEAM_ID"] == shot["PLAYER1_TEAM_ID"]
             ]
             if (
                 len(fouls) != 1
                 or len(free_throws) != 1
-                or free_throws[0]["EVENTMSGACTIONTYPE"] != FREE_THROWS[1, 1]
-                or foul["EVENTMSGACTIONTYPE"] != FOULS["Loose Ball"]
+                or free_throws[0]["V3_SUB_TYPE"] != "Free Throw 1 of 1"
+                or foul["V3_SUB_TYPE"] != "Loose Ball"
                 and free_throws[0]["PLAYER1_ID"] != shot["PLAYER1_ID"]
             ):
                 continue
@@ -611,7 +615,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 or before not in index
                 or not (player in roster or by_team and label in TEAM_TURNOVERS)
                 or label not in TURNOVERS
-                or TURNOVERS[label] == 0
+                or label == ""
             ):
                 raise V3DecodeError("Event turnover override does not fit the recorded events")
             anchor = rows[index[before]]
@@ -631,7 +635,7 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 GAME_ID=anchor["GAME_ID"], EVENTNUM=event, PERIOD=anchor["PERIOD"],
                 PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=person,
                 PLAYER1_TEAM_ID=team, NEUTRALDESCRIPTION=description,
-                EVENTMSGTYPE=5, EVENTMSGACTIONTYPE=TURNOVERS[label],
+                EVENTMSGTYPE=5,
                 V3_ACTION_TYPE="Turnover", V3_SUB_TYPE=label,
             )
             rows.insert(index[before], row)
@@ -869,7 +873,6 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             + deepcopy(list(decoded.team_heaves.values()))
             + deepcopy(decoded.team_technicals)
             + deepcopy(decoded.label_rules)
-            + deepcopy(decoded.inferred_codes)
             + deepcopy(decoded.non_roster_actors)
             + deepcopy(decoded.reviewed_inputs)
             + ([dict(decoded.live_input)] if decoded.live_input else [])

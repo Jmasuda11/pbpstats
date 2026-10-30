@@ -1,5 +1,5 @@
 """
-``StatsNbaV3EnhancedPbpFactory`` gives the class for each event type.
+``StatsNbaV3EnhancedPbpFactory`` gives the class for each decoded event.
 """
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.ejection import StatsNbaV3Ejection
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.end_of_period import (
@@ -21,25 +21,31 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3.timeout import StatsNbaV3Timeo
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.turnover import StatsNbaV3Turnover
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.violation import StatsNbaV3Violation
 
-# Keyed by V2 event type, which the original's order repairs still read.
 EVENT_CLASSES = {
-    1: StatsNbaV3FieldGoal,
-    2: StatsNbaV3FieldGoal,
-    3: StatsNbaV3FreeThrow,
-    4: StatsNbaV3Rebound,
-    5: StatsNbaV3Turnover,
-    6: StatsNbaV3Foul,
-    7: StatsNbaV3Violation,
-    8: StatsNbaV3Substitution,
-    9: StatsNbaV3Timeout,
-    10: StatsNbaV3JumpBall,
-    11: StatsNbaV3Ejection,
-    12: StatsNbaV3StartOfPeriod,
-    13: StatsNbaV3EndOfPeriod,
-    18: StatsNbaV3Replay,
+    "Made Shot": StatsNbaV3FieldGoal,
+    "Missed Shot": StatsNbaV3FieldGoal,
+    "Heave": StatsNbaV3FieldGoal,
+    "Free Throw": StatsNbaV3FreeThrow,
+    "Rebound": StatsNbaV3Rebound,
+    "Turnover": StatsNbaV3Turnover,
+    "Foul": StatsNbaV3Foul,
+    "Violation": StatsNbaV3Violation,
+    "Substitution": StatsNbaV3Substitution,
+    "Timeout": StatsNbaV3Timeout,
+    "Jump Ball": StatsNbaV3JumpBall,
+    "Ejection": StatsNbaV3Ejection,
+    "Instant Replay": StatsNbaV3Replay,
 }
+# V3 records a period's start and its end as one action type, "period".
+PERIOD_CLASSES = {"start": StatsNbaV3StartOfPeriod, "end": StatsNbaV3EndOfPeriod}
 
 
 class StatsNbaV3EnhancedPbpFactory:
-    def get_event_class(self, event_type):
-        return EVENT_CLASSES[event_type]
+    def get_event_class(self, event):
+        """
+        returns the class for a decoded event, by its V3 action type, and a
+        period's by its subtype
+        """
+        if event["V3_ACTION_TYPE"] == "period":
+            return PERIOD_CLASSES[event["V3_SUB_TYPE"]]
+        return EVENT_CLASSES[event["V3_ACTION_TYPE"]]

@@ -174,70 +174,70 @@ class V3Context:
                     raise V3DecodeError("Starter not in the recorded team roster")
 
 
-# Non-shot codes are the V2 codes recorded for the same events in the paired
-# 2024-25 exports (tests/parity/paired-season-2024.json). Inbound, Personal
-# Block and Shooting Block are unobserved there; they keep the original's own
-# named codes. A blank subtype is V2 code 0, e.g. the original's no-turnover.
-FOULS = {
-    "": 0,
-    "Personal": 1,
-    "Shooting": 2,
-    "Loose Ball": 3,
-    "Offensive": 4,
-    "Inbound": 5,
-    "Away From Play": 6,
-    "Punching": 8,
-    "Clear Path": 9,
-    "Double Personal": 10,
-    "Technical": 11,
-    "Non-Unsportsmanlike Technical": 12,
-    "Hanging Technical": 13,
-    "Flagrant Type 1": 14,
-    "Flagrant Type 2": 15,
-    "Double Technical": 16,
-    "Defense 3 Second": 17,
-    "Delay Technical": 18,
-    "Excess Timeout Technical": 25,
-    "Offensive Charge": 26,
-    "Personal Block": 27,
-    "Personal Take": 28,
-    "Shooting Block": 29,
-    "Too Many Players Technical": 30,
-    "Transition Take": 31,
-    "Flopping": 32,
-    "Bench": 33,
-}
-TURNOVERS = {
-    "": 0,
-    "Bad Pass": 1,
-    "Lost Ball": 2,
-    "Traveling": 4,
-    "Double Dribble": 6,
-    "Discontinue Dribble": 7,
-    "3 Second Violation": 8,
-    "5 Second Violation": 9,
-    "8 Second Violation": 10,
-    "Shot Clock Turnover": 11,
-    "Inbound Turnover": 12,
-    "Backcourt Turnover": 13,
-    "Offensive Goaltending": 15,
-    "Lane Violation": 17,
-    "Jump Ball Violation": 18,
-    "Kicked Ball Violation": 19,
-    "Illegal Assist Turnover": 20,
-    "Palming Turnover": 21,
-    "10 Second Violaton": 24,
-    "Punched Ball Turnover": 33,
-    "Swinging Elbows Turnover": 34,
-    "Basket from Below Turnover": 35,
-    "Illegal Screen Turnover": 36,
-    "Offensive Foul Turnover": 37,
-    "Step Out of Bounds Turnover": 39,
-    "Out of Bounds Lost Ball Turnover": 40,
-    "Excess Timeout Turnover": 42,
-    "Too Many Players Turnover": 44,
-    "Out of Bounds - Bad Pass Turnover": 45,
-}
+# The labels the decoder accepts for each kind of event. The native event
+# classes decide from them; tools/parity/v2_codes.py pins the V2 code each one
+# is checked against. A blank subtype is a label too, e.g. the original's
+# no-turnover.
+FOULS = (
+    "",
+    "Personal",
+    "Shooting",
+    "Loose Ball",
+    "Offensive",
+    "Inbound",
+    "Away From Play",
+    "Punching",
+    "Clear Path",
+    "Double Personal",
+    "Technical",
+    "Non-Unsportsmanlike Technical",
+    "Hanging Technical",
+    "Flagrant Type 1",
+    "Flagrant Type 2",
+    "Double Technical",
+    "Defense 3 Second",
+    "Delay Technical",
+    "Excess Timeout Technical",
+    "Offensive Charge",
+    "Personal Block",
+    "Personal Take",
+    "Shooting Block",
+    "Too Many Players Technical",
+    "Transition Take",
+    "Flopping",
+    "Bench",
+)
+TURNOVERS = (
+    "",
+    "Bad Pass",
+    "Lost Ball",
+    "Traveling",
+    "Double Dribble",
+    "Discontinue Dribble",
+    "3 Second Violation",
+    "5 Second Violation",
+    "8 Second Violation",
+    "Shot Clock Turnover",
+    "Inbound Turnover",
+    "Backcourt Turnover",
+    "Offensive Goaltending",
+    "Lane Violation",
+    "Jump Ball Violation",
+    "Kicked Ball Violation",
+    "Illegal Assist Turnover",
+    "Palming Turnover",
+    "10 Second Violaton",
+    "Punched Ball Turnover",
+    "Swinging Elbows Turnover",
+    "Basket from Below Turnover",
+    "Illegal Screen Turnover",
+    "Offensive Foul Turnover",
+    "Step Out of Bounds Turnover",
+    "Out of Bounds Lost Ball Turnover",
+    "Excess Timeout Turnover",
+    "Too Many Players Turnover",
+    "Out of Bounds - Bad Pass Turnover",
+)
 # Turnovers V3 records as a team's, with the team as the person: every team
 # turnover from 2021-22 to 2025-26 is one of these (Shot Clock 8,301, 5 Second
 # 276, 8 Second 234, Too Many Players 3), as is the excess timeout turnover
@@ -249,58 +249,56 @@ TEAM_TURNOVERS = {
     "Excess Timeout Turnover",
     "Too Many Players Turnover",
 }
-VIOLATIONS = {
-    "Delay Of Game": 1,
-    "Defensive Goaltending": 2,
-    "Lane": 3,
-    "Jump Ball": 4,
-    "Kicked Ball": 5,
-    "Double Lane": 6,
-}
-REBOUNDS = {"Unknown": 0, "Normal Rebound": 1}
-# V3 records a short timeout in 2015-16, 2016-17 and again in 2026-27; V2 codes
-# it 2.
-TIMEOUTS = {"Regular": 1, "Short": 2, "Coach Challenge": 7}
-JUMP_BALLS = {"": 0, "Coach Challenge": 1}
-REPLAYS = {
-    "Support Ruling": 0,
-    "Overturn Ruling": 1,
-    "Altercation Ruling": 2,
-    "Ruling Stands": 3,
-    "Coach Challenge Support Ruling": 4,
-    "Coach Challenge Overturn Ruling": 5,
-    "Coach Challenge Ruling Stands": 6,
-    "Replay Center": 7,
-}
+VIOLATIONS = (
+    "Delay Of Game",
+    "Defensive Goaltending",
+    "Lane",
+    "Jump Ball",
+    "Kicked Ball",
+    "Double Lane",
+)
+REBOUNDS = ("Unknown", "Normal Rebound")
+# V3 records a short timeout in 2015-16, 2016-17 and again in 2026-27.
+TIMEOUTS = ("Regular", "Short", "Coach Challenge")
+JUMP_BALLS = ("", "Coach Challenge")
+REPLAYS = (
+    "Support Ruling",
+    "Overturn Ruling",
+    "Altercation Ruling",
+    "Ruling Stands",
+    "Coach Challenge Support Ruling",
+    "Coach Challenge Overturn Ruling",
+    "Coach Challenge Ruling Stands",
+    "Replay Center",
+)
 # V3 labels a flagrant 2 ejection "Other" from 2017-18 to 2025-26, but "First
-# Flagrant Type 2" in 2015-16, 2016-17 and again in 2026-27; V2 codes it 3. A
-# second-technical ejection is likewise "Second Technical" in those seasons,
-# which V2 codes 1.
-EJECTIONS = {"Other": 4, "First Flagrant Type 2": 3, "Second Technical": 1}
-# 2026-27 V3 also labels an ejection for a second flagrant 1 "Second Flagrant
-# Type 1" (0022600105). No V2 export row records one: from 2014-15 to 2016-17
-# and in 2024-25 V2 codes its ejections 0 ("No Ejection"), 1, 3 and 4, each
-# named in its text, so this label takes the one code left, 2, inferred rather
-# than read from V2 (tests/parity/decoder-inferred-codes.json). The original
-# never reads an ejection's code. Each use is a diagnostic.
-INFERRED_EJECTIONS = {"Second Flagrant Type 1": 2}
-INFERRED_CODE = "inferred_v2_code"
-# Technicals and ejections can name people outside the player roster: coaches
-# (no team in either feed) and inactive players (with their team). V3 records
-# the same personId/teamId pair as V2 for every paired event. The original never
-# checks a roster, and its starter inference skips the actor of every foul it
-# classes as technical or double technical, "because a player could get a
-# technical foul when they aren't in the game": V2 codes 11, 12, 13, 18, 19, 25
-# and 30, and 16.
-ORIGINAL_TECHNICAL_FOUL_CODES = {11, 12, 13, 16, 18, 19, 25, 30}
-NON_ROSTER_ACTOR_FOULS = tuple(
-    label for label, code in FOULS.items() if code in ORIGINAL_TECHNICAL_FOUL_CODES
+# Flagrant Type 2" in 2015-16, 2016-17 and again in 2026-27. A second-technical
+# ejection is likewise "Second Technical" in those seasons. 2026-27 V3 also
+# labels an ejection for a second flagrant 1 "Second Flagrant Type 1"
+# (0022600105), which no V2 export records; the original never reads an
+# ejection's kind.
+EJECTIONS = ("Other", "First Flagrant Type 2", "Second Technical", "Second Flagrant Type 1")
+# The fouls the original classes as technical or double technical, its V2 codes
+# 11, 12, 13, 16, 18, 19, 25 and 30 (no V3 label records 19). Their actors can
+# be outside the player roster: coaches (no team in either feed) and inactive
+# players (with their team). V3 records the same personId/teamId pair as V2 for
+# every paired event. The original never checks a roster, and its starter
+# inference skips the actor of each of these fouls, "because a player could
+# get a technical foul when they aren't in the game".
+TECHNICAL_FOULS = (
+    "Technical",
+    "Non-Unsportsmanlike Technical",
+    "Hanging Technical",
+    "Double Technical",
+    "Delay Technical",
+    "Excess Timeout Technical",
+    "Too Many Players Technical",
 )
 # Fouls that award one technical free throw: a defensive three seconds, a
 # flopping foul, and those the original classes as technical, but a double
 # technical, which awards none.
 TECHNICAL_FREE_THROW_FOULS = ("Defense 3 Second", "Flopping") + tuple(
-    label for label in NON_ROSTER_ACTOR_FOULS if label != "Double Technical"
+    label for label in TECHNICAL_FOULS if label != "Double Technical"
 )
 # V2 never records a fouled player for these subtypes (paired 2024-25 season),
 # so their missing fouled player is not a V3 attribution gap.
@@ -324,72 +322,67 @@ DOUBLE_FOULS = {
     ),
     "Double Technical": re.compile(r"Double Technical - (.+?), (.+?)(?: \([^()]*\))?"),
 }
-FREE_THROWS = {(1, 1): 10, (1, 2): 11, (2, 2): 12, (1, 3): 13, (2, 3): 14, (3, 3): 15}
-# Recorded V2 codes and native V3 labels are pinned independently in
-# tests/parity/free-throw-vocabulary.json; original FT behavior is retained.
-FLAGRANT_FREE_THROWS = {
-    (1, 1): 20, (1, 2): 18, (2, 2): 19,
-    (1, 3): 27, (2, 3): 28, (3, 3): 29,
-}
-CLEAR_PATH_FREE_THROWS = {(1, 2): 25, (2, 2): 26}
-TECHNICAL_FREE_THROWS = {(1, 2): 21, (2, 2): 22}
+# Free throw numbering, (attempt, total): any for a regular or flagrant free
+# throw, only these for a clear path or technical one.
+FREE_THROWS = {(1, 1), (1, 2), (2, 2), (1, 3), (2, 3), (3, 3)}
+CLEAR_PATH_FREE_THROWS = {(1, 2), (2, 2)}
+TECHNICAL_FREE_THROWS = {(1, 2), (2, 2)}
 # Recorded only in the paired WNBA 2025 exports (tests/parity/paired-season-wnba-2025.json),
 # so they decode for WNBA games alone; NBA games still reject them.
-WNBA_TIMEOUTS = {"Official": 4, "Reset": 6}
-WNBA_CLEAR_PATH_FREE_THROWS = {(1, 1): 40}
-# Every supported subtype has recorded evidence in shot-vocabulary.json, and
-# the paired 2024-25 exports record exactly these codes. Other codes once used
-# for the same labels are historical (unresolved_aliases). No generic fallback.
-SHOT_CODES = {
-    "Alley Oop Dunk Shot": 52,
-    "Alley Oop Layup shot": 43,
-    "Cutting Dunk Shot": 108,
-    "Cutting Finger Roll Layup Shot": 99,
-    "Cutting Layup Shot": 98,
-    "Driving Dunk Shot": 9,
-    "Driving Bank Hook Shot": 93,
-    "Driving Reverse Dunk Shot": 109,
-    "Driving Finger Roll Layup Shot": 75,
-    "Driving Floating Bank Jump Shot": 102,
-    "Driving Floating Jump Shot": 101,
-    "Driving Hook Shot": 57,
-    "Driving Layup Shot": 6,
-    "Driving Reverse Layup Shot": 73,
-    "Dunk Shot": 7,
-    "Fadeaway Jump Shot": 63,
-    "Fadeaway Bank shot": 83,
-    "Finger Roll Layup Shot": 71,
-    "Floating Jump shot": 78,
-    "Hook Shot": 3,
-    "Hook Bank Shot": 67,
-    "Jump Bank Shot": 66,
-    "Jump Shot": 1,
-    "Layup Shot": 5,
-    "Pullup Jump shot": 79,
-    "Putback Layup Shot": 72,
-    "Putback Dunk Shot": 87,
-    "Reverse Layup Shot": 44,
-    "Reverse Dunk Shot": 51,
-    "Running Alley Oop Layup Shot": 100,
-    "Running Alley Oop Dunk Shot": 106,
-    "Running Dunk Shot": 50,
-    "Running Finger Roll Layup Shot": 76,
-    "Running Jump Shot": 2,
-    "Running Layup Shot": 41,
-    "Running Reverse Layup Shot": 74,
-    "Running Reverse Dunk Shot": 110,
-    "Running Pull-Up Jump Shot": 103,
-    "Step Back Jump shot": 80,
-    "Step Back Bank Jump Shot": 104,
-    "Tip Dunk Shot": 107,
-    "Tip Layup Shot": 97,
-    "Turnaround Bank Hook Shot": 96,
-    "Turnaround Bank shot": 85,
-    "Turnaround Fadeaway Bank Jump Shot": 105,
-    "Turnaround Fadeaway shot": 86,
-    "Turnaround Hook Shot": 58,
-    "Turnaround Jump Shot": 47,
-}
+WNBA_TIMEOUTS = ("Official", "Reset")
+WNBA_CLEAR_PATH_FREE_THROWS = {(1, 1)}
+# Every supported subtype has recorded evidence in shot-vocabulary.json. No
+# generic fallback.
+SHOTS = (
+    "Alley Oop Dunk Shot",
+    "Alley Oop Layup shot",
+    "Cutting Dunk Shot",
+    "Cutting Finger Roll Layup Shot",
+    "Cutting Layup Shot",
+    "Driving Dunk Shot",
+    "Driving Bank Hook Shot",
+    "Driving Reverse Dunk Shot",
+    "Driving Finger Roll Layup Shot",
+    "Driving Floating Bank Jump Shot",
+    "Driving Floating Jump Shot",
+    "Driving Hook Shot",
+    "Driving Layup Shot",
+    "Driving Reverse Layup Shot",
+    "Dunk Shot",
+    "Fadeaway Jump Shot",
+    "Fadeaway Bank shot",
+    "Finger Roll Layup Shot",
+    "Floating Jump shot",
+    "Hook Shot",
+    "Hook Bank Shot",
+    "Jump Bank Shot",
+    "Jump Shot",
+    "Layup Shot",
+    "Pullup Jump shot",
+    "Putback Layup Shot",
+    "Putback Dunk Shot",
+    "Reverse Layup Shot",
+    "Reverse Dunk Shot",
+    "Running Alley Oop Layup Shot",
+    "Running Alley Oop Dunk Shot",
+    "Running Dunk Shot",
+    "Running Finger Roll Layup Shot",
+    "Running Jump Shot",
+    "Running Layup Shot",
+    "Running Reverse Layup Shot",
+    "Running Reverse Dunk Shot",
+    "Running Pull-Up Jump Shot",
+    "Step Back Jump shot",
+    "Step Back Bank Jump Shot",
+    "Tip Dunk Shot",
+    "Tip Layup Shot",
+    "Turnaround Bank Hook Shot",
+    "Turnaround Bank shot",
+    "Turnaround Fadeaway Bank Jump Shot",
+    "Turnaround Fadeaway shot",
+    "Turnaround Hook Shot",
+    "Turnaround Jump Shot",
+)
 CLOCK = re.compile(r"PT(\d+)M(\d+(?:\.\d+)?)S")
 
 
@@ -460,14 +453,13 @@ class DecodedV3:
         }
         self.team_technicals = []
         self.label_rules = []
-        self.inferred_codes = []
         # Events a reviewed removal drops are not part of the recorded
         # starter/substitution stream.
         self.reviewed_removed = set(removed)
         wnba = context.game_id.startswith("10")
-        self.timeouts = {**TIMEOUTS, **WNBA_TIMEOUTS} if wnba else TIMEOUTS
+        self.timeouts = TIMEOUTS + WNBA_TIMEOUTS if wnba else TIMEOUTS
         self.clear_path_free_throws = (
-            {**CLEAR_PATH_FREE_THROWS, **WNBA_CLEAR_PATH_FREE_THROWS}
+            CLEAR_PATH_FREE_THROWS | WNBA_CLEAR_PATH_FREE_THROWS
             if wnba
             else CLEAR_PATH_FREE_THROWS
         )
@@ -544,7 +536,7 @@ class DecodedV3:
                     )
                 projected = self._decode(row, group, active_players)
                 if (
-                    projected["EVENTMSGTYPE"] == 8
+                    projected["V3_ACTION_TYPE"] == "Substitution"
                     and active_players is not None
                     and row["actionNumber"] not in self.reviewed_removed
                 ):
@@ -645,7 +637,7 @@ class DecodedV3:
             and (
                 kind == "Ejection"
                 or kind == "Foul"
-                and subtype in NON_ROSTER_ACTOR_FOULS
+                and subtype in TECHNICAL_FOULS
             )
         )
         if non_roster:
@@ -699,7 +691,6 @@ class DecodedV3:
             PLAYER3_ID=None,
             PLAYER3_TEAM_ID=None,
             NEUTRALDESCRIPTION=row["description"],
-            EVENTMSGACTIONTYPE=0,
             # The labels native event classes decide from, as a rule or a
             # reviewed correction leaves them.
             V3_ACTION_TYPE=kind,
@@ -776,11 +767,9 @@ class DecodedV3:
                 and "3PT" in row["description"]
             ):
                 raise V3DecodeError("Description contradicts field goal facts")
-            if subtype not in SHOT_CODES:
+            if subtype not in SHOTS:
                 raise V3DecodeError("Unsupported shot subtype {!r}".format(subtype))
-            event.update(
-                EVENTMSGTYPE=1 if made else 2, EVENTMSGACTIONTYPE=SHOT_CODES[subtype]
-            )
+            event["EVENTMSGTYPE"] = 1 if made else 2
             # Shared shot value reads the description; retain explicit V3 value in
             # the derived constructor description while leaving raw text intact.
             if row["shotValue"] == 3 and "3PT" not in event["NEUTRALDESCRIPTION"]:
@@ -794,7 +783,7 @@ class DecodedV3:
         elif kind == "Heave":
             # Missed-field-goal category for the original rebound/order methods;
             # a dedicated extension class supplies semantics, with no V2 subtype.
-            event.update(EVENTMSGTYPE=2, EVENTMSGACTIONTYPE=None)
+            event["EVENTMSGTYPE"] = 2
             event["PLAYER3_ID"] = roles.get("blocker")
         elif kind == "Free Throw":
             description = row["description"]
@@ -826,39 +815,23 @@ class DecodedV3:
                 r"Free Throw(?: (Technical|Clear Path|Flagrant))? ([1-3]) of ([1-3])",
                 subtype,
             )
-            if subtype == "Free Throw Technical":
-                code = 16
-            elif subtype == "Free Throw 1 of 1" and self._technical_free_throw(row, team):
+            if subtype == "Free Throw 1 of 1" and self._technical_free_throw(row, team):
                 # The original reads a technical free throw from its text.
-                code = 16
                 description = description.replace(subtype, "Free Throw Technical")
                 subtype = "Free Throw Technical"
-            elif match:
+            elif subtype != "Free Throw Technical":
+                if not match:
+                    raise V3DecodeError("Unsupported free throw subtype")
                 category, attempt, total = match[1], int(match[2]), int(match[3])
                 if attempt > total or (
                     category == "Clear Path"
                     and (attempt, total) not in self.clear_path_free_throws
                 ):
                     raise V3DecodeError("Invalid free throw numbering")
-                if category == "Technical":
-                    if (attempt, total) not in TECHNICAL_FREE_THROWS:
-                        raise V3DecodeError("Unsupported technical attempt pattern")
-                    code = TECHNICAL_FREE_THROWS[attempt, total]
-                elif category == "Clear Path":
-                    code = self.clear_path_free_throws[attempt, total]
-                elif (
-                    category == "Flagrant" and (attempt, total) in FLAGRANT_FREE_THROWS
-                ):
-                    code = FLAGRANT_FREE_THROWS[attempt, total]
-                elif category is None:
-                    code = FREE_THROWS[attempt, total]
-                else:
-                    raise V3DecodeError("Unsupported flagrant attempt pattern")
-            else:
-                raise V3DecodeError("Unsupported free throw subtype")
+                if category == "Technical" and (attempt, total) not in TECHNICAL_FREE_THROWS:
+                    raise V3DecodeError("Unsupported technical attempt pattern")
             event.update(
-                EVENTMSGTYPE=3, EVENTMSGACTIONTYPE=code, NEUTRALDESCRIPTION=description,
-                V3_SUB_TYPE=subtype,
+                EVENTMSGTYPE=3, NEUTRALDESCRIPTION=description, V3_SUB_TYPE=subtype
             )
             # Outcome is described by MISS; category/numbering must be explicit.
             if subtype not in description:
@@ -869,16 +842,11 @@ class DecodedV3:
             ]
             if subtype not in table:
                 raise V3DecodeError("Unsupported {} subtype {!r}".format(kind, subtype))
-            code = table[subtype]
             if kind == "Foul" and subtype == "Personal Take" and self._transition_take_foul(
                 row, team
             ):
-                code = FOULS["Transition Take"]
                 event["V3_SUB_TYPE"] = "Transition Take"
-            event.update(
-                EVENTMSGTYPE={"Foul": 6, "Turnover": 5, "Violation": 7}[kind],
-                EVENTMSGACTIONTYPE=code,
-            )
+            event["EVENTMSGTYPE"] = {"Foul": 6, "Turnover": 5, "Violation": 7}[kind]
             if kind == "Turnover":
                 event["PLAYER2_ID"] = roles.get("stealer")
             elif kind == "Foul" and subtype in DOUBLE_FOULS and not non_roster:
@@ -927,9 +895,7 @@ class DecodedV3:
         elif kind == "Rebound":
             if subtype not in REBOUNDS:
                 raise V3DecodeError("Unsupported rebound subtype")
-            # Code 1 is V2's placeholder rebound; the original's is_placeholder
-            # reads it, so it is a decision input rather than a label.
-            event.update(EVENTMSGTYPE=4, EVENTMSGACTIONTYPE=REBOUNDS[subtype])
+            event["EVENTMSGTYPE"] = 4
         elif kind == "Substitution":
             match = re.fullmatch(r"SUB: (.+) FOR (.+)", row["description"])
             if subtype or not match or self._resolve(match[2], team) != player:
@@ -996,7 +962,6 @@ class DecodedV3:
                     )
             event.update(
                 EVENTMSGTYPE=10,
-                EVENTMSGACTIONTYPE=JUMP_BALLS[subtype],
                 PLAYER2_ID=jumper,
                 PLAYER3_ID=recipient,
                 PLAYER3_TEAM_ID=recipient_team,
@@ -1004,18 +969,11 @@ class DecodedV3:
         elif kind == "period" and subtype in ("start", "end"):
             event["EVENTMSGTYPE"] = 12 if subtype == "start" else 13
         elif kind == "Timeout" and subtype in self.timeouts:
-            event.update(EVENTMSGTYPE=9, EVENTMSGACTIONTYPE=self.timeouts[subtype])
+            event["EVENTMSGTYPE"] = 9
         elif kind == "Instant Replay" and subtype in REPLAYS:
-            event.update(EVENTMSGTYPE=18, EVENTMSGACTIONTYPE=REPLAYS[subtype])
+            event["EVENTMSGTYPE"] = 18
         elif kind == "Ejection" and subtype in EJECTIONS:
-            event.update(EVENTMSGTYPE=11, EVENTMSGACTIONTYPE=EJECTIONS[subtype])
-        elif kind == "Ejection" and subtype in INFERRED_EJECTIONS:
-            event.update(EVENTMSGTYPE=11, EVENTMSGACTIONTYPE=INFERRED_EJECTIONS[subtype])
-            self.inferred_codes.append(dict(
-                code=INFERRED_CODE, event_num=row["actionNumber"], recorded=subtype,
-                v2_code=[11, INFERRED_EJECTIONS[subtype]],
-                basis="the one ejection code no V2 export uses",
-            ))
+            event["EVENTMSGTYPE"] = 11
         else:
             raise V3DecodeError(
                 "Unsupported event type/subtype {!r}/{!r}".format(kind, subtype)
@@ -1300,7 +1258,7 @@ class DecodedV3:
                 or not re.fullmatch(blank, source["description"])
                 for source in trip
             )
-            or (attempt, total) not in FLAGRANT_FREE_THROWS
+            or (attempt, total) not in FREE_THROWS
         ):
             return False
         self.label_rules.append(dict(

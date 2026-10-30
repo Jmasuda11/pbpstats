@@ -14,8 +14,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
     web,
 )
 from pbpstats.data_loader.stats_nba_v3.decoder import (
-    FOULS,
-    NON_ROSTER_ACTOR_FOULS,
+    TECHNICAL_FOULS,
     DecodedV3,
 )
 from pbpstats.data_loader.stats_nba_v3.possessions import TEAM_IDS_GUARD, V3Possession
@@ -27,6 +26,7 @@ from pbpstats.resources.enhanced_pbp.stats_nba.foul import StatsFoul
 from tools.parity.reference import ROOT, prepare_reference
 from tools.parity.run import compare, worker
 from tools.parity.scenarios import HOME, AWAY, GAME, catalog, e, encode_v3, wrap
+from tools.parity.v2_codes import FOULS
 from tools.parity.v3_cases import load_paired, load_synthetic, load_synthetic_rows
 
 
@@ -79,7 +79,8 @@ def test_factory_event_classes_are_used_without_rule_overrides():
     loaded = load_synthetic(wrap([e("make"), e("turnover", 580, AWAY, 11)]))
     factory = StatsNbaV3EnhancedPbpFactory()
     for event in loaded.events:
-        assert type(event) is factory.get_event_class(event.event_type)
+        labels = dict(V3_ACTION_TYPE=event.action_type, V3_SUB_TYPE=event.sub_type)
+        assert type(event) is factory.get_event_class(labels)
     assert loaded.capabilities["full_game_validated"] is False
     with pytest.raises(V3DecodeError, match="attribution completeness"):
         loaded.event_stats
@@ -148,7 +149,7 @@ def test_off_roster_actors_are_allowed_for_every_foul_the_original_calls_technic
         event.event_action_type = code
         return event.is_technical or event.is_double_technical
 
-    assert set(NON_ROSTER_ACTOR_FOULS) == {
+    assert set(TECHNICAL_FOULS) == {
         label for label, code in FOULS.items() if technical(code)
     }
 

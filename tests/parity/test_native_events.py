@@ -2,20 +2,6 @@
 
 import pytest
 
-from pbpstats.data_loader.stats_nba_v3.decoder import (
-    CLEAR_PATH_FREE_THROWS,
-    FLAGRANT_FREE_THROWS,
-    FOULS,
-    FREE_THROWS,
-    JUMP_BALLS,
-    REBOUNDS,
-    REPLAYS,
-    SHOT_CODES,
-    TECHNICAL_FREE_THROWS,
-    TURNOVERS,
-    VIOLATIONS,
-    WNBA_CLEAR_PATH_FREE_THROWS,
-)
 from pbpstats.resources.enhanced_pbp.stats_nba import (
     StatsFieldGoal,
     StatsFoul,
@@ -38,19 +24,9 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3 import (
     StatsNbaV3Turnover,
     StatsNbaV3Violation,
 )
+from tools.parity.v2_codes import labels
 
 HOME, AWAY = 1610612737, 1610612738
-FREE_THROW_TABLES = {
-    "Free Throw": FREE_THROWS,
-    "Free Throw Flagrant": FLAGRANT_FREE_THROWS,
-    "Free Throw Clear Path": {**CLEAR_PATH_FREE_THROWS, **WNBA_CLEAR_PATH_FREE_THROWS},
-    "Free Throw Technical": TECHNICAL_FREE_THROWS,
-}
-FREE_THROW_LABELS = [("Free Throw Technical", 16)] + [
-    (f"{name} {attempt} of {total}", code)
-    for name, table in FREE_THROW_TABLES.items()
-    for (attempt, total), code in table.items()
-]
 
 
 def row(event_type, code, action_type, sub_type, **people):
@@ -77,7 +53,7 @@ def same(native, original, names):
         assert getattr(native, name) == getattr(original, name), name
 
 
-@pytest.mark.parametrize("label, code", sorted(REPLAYS.items()))
+@pytest.mark.parametrize("label, code", labels("Instant Replay"))
 def test_replay_rulings(label, code):
     event = row(18, code, "Instant Replay", label)
     same(
@@ -87,7 +63,7 @@ def test_replay_rulings(label, code):
     )
 
 
-@pytest.mark.parametrize("label, code", sorted(SHOT_CODES.items()))
+@pytest.mark.parametrize("label, code", labels("Made Shot"))
 @pytest.mark.parametrize("event_type, action_type", [(1, "Made Shot"), (2, "Missed Shot")])
 @pytest.mark.parametrize("value", ["", " 3PT "], ids=["2pt", "3pt"])
 def test_field_goals(label, code, event_type, action_type, value):
@@ -98,7 +74,7 @@ def test_field_goals(label, code, event_type, action_type, value):
     same(StatsNbaV3FieldGoal(event, 0), StatsFieldGoal(event, 0), ("is_made", "shot_value"))
 
 
-@pytest.mark.parametrize("label, code", FREE_THROW_LABELS)
+@pytest.mark.parametrize("label, code", labels("Free Throw"))
 @pytest.mark.parametrize("miss", ["", "MISS "], ids=["made", "missed"])
 def test_free_throws(label, code, miss):
     event = row(
@@ -125,7 +101,7 @@ def test_free_throws(label, code, miss):
     )
 
 
-@pytest.mark.parametrize("label, code", sorted(FOULS.items()))
+@pytest.mark.parametrize("label, code", labels("Foul"))
 def test_fouls(label, code):
     event = row(6, code, "Foul", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME)
     same(
@@ -159,7 +135,7 @@ def test_fouls(label, code):
     )
 
 
-@pytest.mark.parametrize("label, code", sorted(VIOLATIONS.items()))
+@pytest.mark.parametrize("label, code", labels("Violation"))
 def test_violations(label, code):
     event = row(7, code, "Violation", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME)
     same(
@@ -176,14 +152,14 @@ def test_violations(label, code):
     )
 
 
-@pytest.mark.parametrize("label, code", sorted(REBOUNDS.items()))
+@pytest.mark.parametrize("label, code", labels("Rebound"))
 @pytest.mark.parametrize("rebounder", [201, 0], ids=["player", "team"])
 def test_rebound_placeholders(label, code, rebounder):
     event = row(4, code, "Rebound", label, PLAYER1_ID=rebounder, PLAYER1_TEAM_ID=HOME)
     same(StatsNbaV3Rebound(event, 0), StatsRebound(event, 0), ("is_placeholder",))
 
 
-@pytest.mark.parametrize("label, code", sorted(TURNOVERS.items()))
+@pytest.mark.parametrize("label, code", labels("Turnover"))
 @pytest.mark.parametrize("stealer", [301, None], ids=["stolen", "not stolen"])
 def test_turnovers(label, code, stealer):
     event = row(
@@ -217,7 +193,7 @@ def test_substitution_players():
     assert (native.outgoing_player_id, native.incoming_player_id) == (201, 202)
 
 
-@pytest.mark.parametrize("label, code", sorted(JUMP_BALLS.items()))
+@pytest.mark.parametrize("label, code", labels("Jump Ball"))
 @pytest.mark.parametrize(
     "recipient, recipient_team",
     [(203, HOME), (AWAY, None)],

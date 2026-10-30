@@ -5,12 +5,12 @@ import json
 import pytest
 
 from pbpstats.data_loader.stats_nba_v3 import V3DecodeError
-from pbpstats.data_loader.stats_nba_v3.decoder import FLAGRANT_FREE_THROWS
 from tools.parity.free_throw_cases import catalog, v3_inputs
 from tools.parity.reference import ROOT, digest, prepare_reference
 from tools.parity.run import worker
 from tools.parity.shot_cases import vocabulary
 from tools.parity.snapshot import first_difference
+from tools.parity.v2_codes import FLAGRANT_FREE_THROWS
 from tools.parity.v3_cases import load_synthetic_rows
 from tools.parity.vocabulary_evidence import assert_observation, free_throw_vocabulary
 
