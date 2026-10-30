@@ -726,13 +726,58 @@ def test_substitution_outgoing_edit_names_the_player_who_left():
     ({"stale": 99}, "substitution-outgoing override does not fit"),
     ({"stale": 8, "make": 8}, "substitution-outgoing override does not fit"),
     ({"stale": 0}, "Invalid event substitution-outgoing override"),
+    # Player6, HOME's, is off the floor.
+    ({"stale": 6}, "Substitution contradicts recorded starter/substitution stream"),
 ], ids=["recorded_player", "incoming_player", "other_team", "not_on_roster",
-        "not_a_substitution", "no_person"])
+        "not_a_substitution", "no_person", "teammate_off_the_floor"])
 def test_substitution_outgoing_edits_are_validated(values, message):
     rows, n = substitution_from_a_stale_lineup()
     values = {str(n.get(key, key)): value for key, value in values.items()}
     with pytest.raises(V3DecodeError, match=message):
         load(rows, files=edits(EVENT_SUBSTITUTION_OUTGOING, values))
+
+
+def test_substitution_outgoing_edit_needs_the_recorded_player_off_the_floor():
+    # HOME's Player2 leaves for Player8; at 9:30 Player7 replaces Player3, who
+    # is on the floor, so the recorded row is right and an entry naming
+    # Player8 does not fit it.
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("sub", 590, HOME, 2, incoming=8),
+        e("make", 580, HOME, 1),
+        e("make", 570, AWAY, 12),
+        e("sub", 570, HOME, 3, incoming=7),
+        e("make", 560, HOME, 7),
+    ]))
+    second = [r["actionNumber"] for r in rows if r["actionType"] == "Substitution"][1]
+    assert sorted(load(rows).events[-2].current_players[HOME]) == [1, 4, 5, 7, 8]
+    with pytest.raises(V3DecodeError, match="substitution-outgoing override does not fit"):
+        load(rows, files=edits(EVENT_SUBSTITUTION_OUTGOING, {str(second): 8}))
+
+
+@pytest.mark.parametrize("name, accepted", [
+    (EVENT_BLOCKS, True),
+    (EVENT_FOUL_OPPONENTS, True),
+    (EVENT_SUBSTITUTION_OUTGOING, True),
+    (EVENT_TEAMS, True),
+    (EVENT_TIP_RECIPIENTS, True),
+    (EVENT_DUPLICATES, False),
+    (EVENT_LIVE_NUMBERS, False),
+    (EVENT_MOVES, False),
+    (EVENT_REMOVALS, False),
+])
+def test_only_an_action_number_cannot_be_the_events_own(name, accepted):
+    # A person's or a team's ID may equal the event's number; a kept event, a
+    # live action or an event to follow cannot be the event itself.
+    source = b"{}"
+    overrides = V3Overrides(
+        edits(name, {"7": 7}), "Controlled review", hashlib.sha256(source).hexdigest()
+    )
+    if accepted:
+        overrides.decode(source)
+    else:
+        with pytest.raises(V3DecodeError, match="Invalid event"):
+            overrides.decode(source)
 
 
 def double_technical_named_nobody():

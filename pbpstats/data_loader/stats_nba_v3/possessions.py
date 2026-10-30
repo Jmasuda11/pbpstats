@@ -934,6 +934,13 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
 
     def _validate_lineups(self):
         resolved = {r["event_num"]: r for r in self.decoded.participant_resolutions}
+        # A reviewed outgoing player replaces the one V3 records already off
+        # the floor, so the recorded player must be off it.
+        recorded_outgoing = {
+            d["event_num"]: d["recorded_player_id"]
+            for d in self.decoded.reviewed_inputs
+            if d["code"] == "reviewed_substitution_outgoing"
+        }
         for event in self.events:
             if event.event_num in resolved:
                 actual = sorted(
@@ -955,6 +962,13 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
                         "Substitution contradicts current lineup at event {}".format(
                             event.event_num
                         )
+                    )
+                if (
+                    event.event_num in recorded_outgoing
+                    and recorded_outgoing[event.event_num] in before[event.team_id]
+                ):
+                    raise V3DecodeError(
+                        "Event substitution-outgoing override does not fit the recorded event"
                     )
             for team, players in event.current_players.items():
                 if len(players) != 5 or len(set(players)) != 5:

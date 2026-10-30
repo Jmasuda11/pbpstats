@@ -109,6 +109,10 @@ NUMBERED = {
     EVENT_TEAMS: "team",
     EVENT_TIP_RECIPIENTS: "tip-recipient",
 }
+# The numbered entries whose number is an action's: a kept event, a live action
+# or an event to follow, never the event itself. The others name a person or a
+# team, whose ID may equal the event's number.
+ACTION_NUMBERED = {EVENT_DUPLICATES, EVENT_LIVE_NUMBERS, EVENT_MOVES, EVENT_REMOVALS}
 
 
 @dataclass(frozen=True)
@@ -239,7 +243,7 @@ class V3Overrides:
                         or event < 0
                         or type(value) is not int
                         or value <= 0
-                        or value == event
+                        or name in ACTION_NUMBERED and value == event
                         for event, value in entries.items()
                     ):
                         raise V3DecodeError("Invalid event {} override".format(NUMBERED[name]))
