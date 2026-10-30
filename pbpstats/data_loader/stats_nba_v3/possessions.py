@@ -11,6 +11,7 @@ from pbpstats.resources.enhanced_pbp import FieldGoal, Substitution
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
 )
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
 from pbpstats.resources.possessions.possession import Possession
 
 from .decoder import (
@@ -55,11 +56,17 @@ from .overrides import (
     STARTERS,
 )
 from .starters import StarterRecovery
-from .held_ball import HELD_BALL_VERSION, V3HeldBallJumpBall, is_candidate_at
+from .held_ball import HELD_BALL_VERSION, HeldBallJumpBall, is_candidate_at
 from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 
 
 TEAM_IDS_GUARD = "possession_team_ids_skip_teamless_events_v1"
+
+
+class V3HeldBallJumpBall(HeldBallJumpBall, StatsNbaV3JumpBall):
+    """A native jump ball under the held-ball rule."""
+
+
 # NBA V3 records an and-one's basket, foul and free throw at one clock: from
 # 2018-19 to 2025-26, 44,766 of the 44,772 baskets followed, past substitutions,
 # timeouts and replays, by the other team's shooting or shooting block foul and

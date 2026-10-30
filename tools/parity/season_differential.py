@@ -399,6 +399,7 @@ def install_held_ball():
     """
     import importlib.util
     from pbpstats.data_loader.nba_enhanced_pbp_loader import NbaEnhancedPbpLoader
+    from pbpstats.resources.enhanced_pbp.stats_nba.jump_ball import StatsJumpBall
 
     spec = importlib.util.spec_from_file_location(
         "held_ball_extension", ROOT / "pbpstats/data_loader/stats_nba_v3/held_ball.py"
@@ -407,10 +408,13 @@ def install_held_ball():
     spec.loader.exec_module(module)
     original = NbaEnhancedPbpLoader._add_extra_attrs_to_all_events
 
+    class V3HeldBallJumpBall(module.HeldBallJumpBall, StatsJumpBall):
+        pass
+
     def add_extra_attrs_to_all_events(self):
         rows = {row["EVENTNUM"]: row for row in self.data}
         self.items = [
-            module.V3HeldBallJumpBall(rows[event.event_num], index)
+            V3HeldBallJumpBall(rows[event.event_num], index)
             if module.is_candidate_at(self.items, index)
             else event
             for index, event in enumerate(self.items)

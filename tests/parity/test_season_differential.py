@@ -22,6 +22,21 @@ from tools.parity.season_differential import (
 )
 
 
+def test_held_ball_rule_installs_into_the_original():
+    # --held-ball loads this checkout's rule into the original on V2, so the
+    # rule may read only classes both parsers share.
+    code = (
+        "import sys; sys.path[:0] = sys.argv[1:]; "
+        "from tools.parity.season_differential import install_held_ball; "
+        "print(install_held_ball())"
+    )
+    result = subprocess.run(
+        [sys.executable, "-I", "-B", "-c", code, str(prepare_reference()), str(ROOT)],
+        capture_output=True, text=True, cwd=str(ROOT),
+    )
+    assert result.stdout.strip() == "held_ball_turnover_v2", result.stderr
+
+
 def test_v2_rule_round_trips_a_recorded_v2_response():
     raw = json.loads(
         (prepare_reference() / "tests/data/pbp/stats_0021900001.json").read_bytes()

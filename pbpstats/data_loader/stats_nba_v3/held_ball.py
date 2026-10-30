@@ -6,7 +6,6 @@ from pbpstats.resources.enhanced_pbp import (
     Substitution,
     Turnover,
 )
-from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
 
 
 HELD_BALL_VERSION = "held_ball_turnover_v2"
@@ -56,8 +55,12 @@ def is_candidate_at(items, index):
     )
 
 
-class V3HeldBallJumpBall(StatsNbaV3JumpBall):
+class HeldBallJumpBall:
     """A jump ball whose held-ball turnover is recorded after the tip.
+
+    The rule for a jump ball class, which it comes before: the native one here,
+    the original's when the season differential applies the rule to V2. It
+    reads only the shared abstract classes.
 
     The original does not change possession at a jump ball when the next event
     is a turnover at the same clock ("steal takes care of it"). The league
