@@ -1,13 +1,22 @@
-"""Offline construction of ORIGINAL enhanced classes and possession objects."""
+"""Offline construction of native V3 events and the original's possessions."""
 
 from collections import Counter
 from copy import deepcopy
 from decimal import Decimal
 import math
 
-from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
+from pbpstats import (
+    G_LEAGUE_GAME_ID_PREFIX,
+    G_LEAGUE_STRING,
+    NBA_GAME_ID_PREFIX,
+    NBA_STRING,
+    WNBA_GAME_ID_PREFIX,
+    WNBA_STRING,
+)
+from pbpstats.data_loader.nba_enhanced_pbp_loader import NbaEnhancedPbpLoader
 from pbpstats.data_loader.stats_nba.possessions.loader import StatsNbaPossessionLoader
 from pbpstats.resources.enhanced_pbp import FieldGoal, Substitution
+from pbpstats.resources.enhanced_pbp.rebound import EventOrderError
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
 )
@@ -145,8 +154,9 @@ class V3Possession(Possession):
         return team_ids
 
 
-class _PreparedEvents(StatsNbaEnhancedPbpLoader):
-    """Supply recorded context and redirect original loader I/O into memory."""
+class _PreparedEvents(NbaEnhancedPbpLoader):
+    """Events from the decoded rows: reviewed corrections, then the original's
+    order repairs, linking and enhancement."""
 
     def __init__(
         self,
@@ -163,19 +173,10 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         self.game_id = decoded.context.game_id
         self.file_directory = None
         self.repairs = []
-        headers = list(decoded.projected[0])
-        # Existing source-order repairs consume this internal projection. It is
-        # separate from decoded.payload, raw_rows and immutable source_bytes.
-        self.source_data = {
-            "resultSets": [
-                {
-                    "headers": headers,
-                    "rowSet": [
-                        [row.get(key) for key in headers] for row in decoded.projected
-                    ],
-                }
-            ]
-        }
+        # The rows corrections and order repairs edit, as the original edits
+        # its play-by-play file; decoded.projected stays as decoded.
+        fields = list(decoded.projected[0])
+        self.data = [{key: row.get(key) for key in fields} for row in decoded.projected]
         self._apply_reviewed_duplicates()
         self._apply_reviewed_removals()
         self._apply_reviewed_blocks()
@@ -221,9 +222,16 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
 
+    @property
+    def league(self):
+        # As the original's stats.nba.com loaders read it from the game ID.
+        return {
+            NBA_GAME_ID_PREFIX: NBA_STRING,
+            G_LEAGUE_GAME_ID_PREFIX: G_LEAGUE_STRING,
+            WNBA_GAME_ID_PREFIX: WNBA_STRING,
+        }.get(self.game_id[:2])
+
     def _make_pbp_items(self):
-        # The original's, with the V3 factory, which its order repairs also use
-        # when they rebuild the events.
         self._fix_order_when_technical_foul_before_period_start()
         self.factory = StatsNbaV3EnhancedPbpFactory()
         self.items = [
@@ -234,6 +242,140 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         self._check_rebound_event_order(6)
         self._add_shot_x_y_coords()
 
+    def _check_rebound_event_order(self, max_retries):
+        # The original's: while a rebound does not follow its missed shot, fix
+        # the common order errors, then fall back to the provider's order.
+        attempts = 0
+        while attempts <= max_retries:
+            try:
+                for event in self.items:
+                    if hasattr(event, "missed_shot"):
+                        event.missed_shot
+                break
+            except EventOrderError as e:
+                self._fix_common_event_order_error(e)
+                self.items = [
+                    self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+                    for i, item in enumerate(self.data)
+                ]
+                self._add_extra_attrs_to_all_events()
+                attempts += 1
+        try:
+            for event in self.items:
+                if hasattr(event, "missed_shot"):
+                    event.missed_shot
+        except EventOrderError:
+            self._use_data_nba_event_order()
+            self.items = [
+                self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+                for i, item in enumerate(self.data)
+            ]
+            self._add_extra_attrs_to_all_events()
+
+    def _fix_order_when_technical_foul_before_period_start(self):
+        # The original's: a technical foul recorded before its period's start
+        # puts each period's start first, for periods 1 to 10.
+        technical_foul_codes = [11, 12, 13, 16, 18, 19, 25, 30]
+        starts_found, reorder = [], False
+        for row in self.data:
+            if row["EVENTMSGTYPE"] == 12:
+                starts_found.append(row["PERIOD"])
+            if (
+                row["EVENTMSGTYPE"] == 6
+                and row["EVENTMSGACTIONTYPE"] in technical_foul_codes
+                and row["PERIOD"] not in starts_found
+            ):
+                reorder = True
+        if not reorder:
+            return
+        starts, others = {}, {}
+        for row in self.data:
+            if row["EVENTMSGTYPE"] == 12:
+                starts[row["PERIOD"]] = row
+            else:
+                others.setdefault(row["PERIOD"], []).append(row)
+        self.data = [
+            row
+            for period in range(1, 11)
+            for row in ([starts[period]] if period in starts else []) + others.get(period, [])
+        ]
+        self._save_data_to_file()
+
+    def _fix_common_event_order_error(self, exception):
+        # The original's fixes for a rebound that does not follow its missed
+        # shot, found from the event number in the error:
+        # - subs/timeouts between free throws being between missed second FT and rebound
+        # - end of period replay events being between missed shot and rebound
+        # - rebound and shot in reverse order
+        # - shot, rebound, rebound - first rebound needs to me moved to before shot
+        # - shot, rebound, rebound - second rebound needs to be moved ahead of shot and first rebound
+        event_num = int(str(exception).split("EventNum: ")[-1].split(">")[0])
+        rows = self.data
+        for i, row in enumerate(rows):
+            if row["EVENTNUM"] == event_num:
+                issue_event_index = i
+
+        if rows[issue_event_index]["EVENTMSGTYPE"] in [8, 9]:
+            # move all sub/timeout events between ft and rebound to before ft
+            row_index = issue_event_index
+            while rows[row_index]["EVENTMSGTYPE"] in [8, 9]:
+                row_index -= 1
+            new_rows = []
+            row_to_move_event_num = rows[row_index]["EVENTNUM"]
+            for row in rows:
+                if row["EVENTNUM"] == row_to_move_event_num:
+                    row_to_move = row
+                elif row["EVENTNUM"] == event_num:
+                    new_rows.append(row)
+                    new_rows.append(row_to_move)
+                else:
+                    new_rows.append(row)
+            self.data = new_rows
+        elif (
+            rows[issue_event_index]["EVENTMSGTYPE"] == 18
+            and rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+        ):
+            # move replay event after rebound
+            rows[issue_event_index], rows[issue_event_index + 1] = (
+                rows[issue_event_index + 1],
+                rows[issue_event_index],
+            )
+        elif (
+            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            and rows[issue_event_index + 1]["EVENTNUM"] == event_num - 1
+        ):
+            # rebound and shot need to be flipped
+            rows[issue_event_index], rows[issue_event_index + 1] = (
+                rows[issue_event_index + 1],
+                rows[issue_event_index],
+            )
+        elif (
+            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            and rows[issue_event_index + 1]["EVENTNUM"] == event_num + 2
+            and rows[issue_event_index - 1]["EVENTMSGTYPE"] == 2
+            and rows[issue_event_index - 1]["EVENTNUM"] == event_num + 1
+        ):
+            # shot, rebound, rebound - first rebound need to me moved to before shot
+            rows[issue_event_index - 1], rows[issue_event_index] = (
+                rows[issue_event_index],
+                rows[issue_event_index - 1],
+            )
+        elif (
+            rows[issue_event_index + 1]["EVENTMSGTYPE"] == 4
+            and rows[issue_event_index + 1]["EVENTNUM"] == event_num - 2
+            and rows[issue_event_index - 1]["EVENTMSGTYPE"] == 2
+            and rows[issue_event_index - 1]["EVENTNUM"] == event_num - 1
+        ):
+            # shot, rebound, rebound - second rebound needs to be moved ahead of shot and first rebound
+            first_rebound = rows[issue_event_index + 1]
+            second_rebound = rows[issue_event_index]
+            shot_event = rows[issue_event_index - 1]
+            rows[issue_event_index + 1] = second_rebound
+            rows[issue_event_index] = shot_event
+            rows[issue_event_index - 1] = first_rebound
+
+        self._save_data_to_file()
+
     def _reviewed_entries(self, name, empty):
         return reviewed_entries(self.overrides, name, self.game_id, empty)
 
@@ -241,19 +383,17 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # Drops an event recorded twice, as editing the play-by-play file would,
         # only when every projected fact but its number matches the copy kept.
         duplicates = self._reviewed_entries(EVENT_DUPLICATES, {})
-        result = self.source_data["resultSets"][0]
-        number = result["headers"].index("EVENTNUM")
-        by_number = {row[number]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
 
         def facts(row):
-            return [value for i, value in enumerate(row) if i != number]
+            return {key: value for key, value in row.items() if key != "EVENTNUM"}
 
         for event, kept in sorted(duplicates.items()):
             if event not in by_number or kept not in by_number or kept in duplicates:
                 raise V3DecodeError("Event duplicate override does not keep a recorded copy")
             if facts(by_number[event]) != facts(by_number[kept]):
                 raise V3DecodeError("Event duplicate override names events that differ")
-            result["rowSet"].remove(by_number[event])
+            self.data.remove(by_number[event])
             self.repairs.append(dict(code="reviewed_duplicate_event", event_num=event, kept=kept))
 
     def _apply_reviewed_removals(self):
@@ -262,13 +402,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # removed event's actor the kept event's actor or second party.
         removals = self._reviewed_entries(EVENT_REMOVALS, {})
         duplicates = self._reviewed_entries(EVENT_DUPLICATES, {})
-        result = self.source_data["resultSets"][0]
-        headers = result["headers"]
-        number, period, kind, actor, other = (
-            headers.index(key)
-            for key in ("EVENTNUM", "PERIOD", "EVENTMSGTYPE", "PLAYER1_ID", "PLAYER2_ID")
-        )
-        by_number = {row[number]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
         for event, kept in sorted(removals.items()):
             row, keeper = by_number.get(event), by_number.get(kept)
             if (
@@ -276,36 +410,32 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 or keeper is None
                 or kept in removals
                 or kept in duplicates
-                or (row[period], row[kind]) != (keeper[period], keeper[kind])
-                or not row[actor]
-                or row[actor] not in (keeper[actor], keeper[other])
+                or (row["PERIOD"], row["EVENTMSGTYPE"])
+                != (keeper["PERIOD"], keeper["EVENTMSGTYPE"])
+                or not row["PLAYER1_ID"]
+                or row["PLAYER1_ID"] not in (keeper["PLAYER1_ID"], keeper["PLAYER2_ID"])
             ):
                 raise V3DecodeError("Event removal override does not fit the recorded events")
-            result["rowSet"].remove(row)
+            self.data.remove(row)
             self.repairs.append(dict(code="reviewed_removed_event", event_num=event, kept=kept))
 
     def _apply_reviewed_blocks(self):
         # Records the blocker V3 omits as the decoder records a block row: as
         # PLAYER3 of a missed field goal, a player on the other team's roster.
         blocks = self._reviewed_entries(EVENT_BLOCKS, {})
-        result = self.source_data["resultSets"][0]
-        kind, number, team, blocker = (
-            result["headers"].index(key)
-            for key in ("EVENTMSGTYPE", "EVENTNUM", "PLAYER1_TEAM_ID", "PLAYER3_ID")
-        )
-        by_number = {row[number]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
         roster = self.decoded.context.roster
         for event, player in sorted(blocks.items()):
             row = by_number.get(event)
             if (
                 row is None
-                or row[kind] != 2
-                or row[blocker] is not None
+                or row["EVENTMSGTYPE"] != 2
+                or row["PLAYER3_ID"] is not None
                 or player not in roster
-                or roster[player]["team_id"] == row[team]
+                or roster[player]["team_id"] == row["PLAYER1_TEAM_ID"]
             ):
                 raise V3DecodeError("Event block override does not fit the recorded event")
-            row[blocker] = player
+            row["PLAYER3_ID"] = player
             self.repairs.append(dict(code="reviewed_event_block", event_num=event, blocker=player))
 
     def _apply_reviewed_tip_recipients(self):
@@ -315,52 +445,42 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # recovery: the team as PLAYER3, with no PLAYER3 team. The description
         # keeps V3's text.
         recipients = self._reviewed_entries(EVENT_TIP_RECIPIENTS, {})
-        result = self.source_data["resultSets"][0]
-        kind, number, recipient, team = (
-            result["headers"].index(key)
-            for key in ("EVENTMSGTYPE", "EVENTNUM", "PLAYER3_ID", "PLAYER3_TEAM_ID")
-        )
-        by_number = {row[number]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
         roster = self.decoded.context.roster
         teams = self.decoded.context.team_ids
         for event, player in sorted(recipients.items()):
             row = by_number.get(event)
             if (
                 row is None
-                or row[kind] != 10
+                or row["EVENTMSGTYPE"] != 10
                 or player not in roster and player not in teams
-                or row[recipient] == player
+                or row["PLAYER3_ID"] == player
             ):
                 raise V3DecodeError("Event tip-recipient override does not fit the recorded event")
-            recorded = row[recipient]
-            row[recipient] = player
-            row[team] = None if player in teams else roster[player]["team_id"]
+            recorded = row["PLAYER3_ID"]
+            row["PLAYER3_ID"] = player
+            row["PLAYER3_TEAM_ID"] = None if player in teams else roster[player]["team_id"]
             self.repairs.append(dict(
                 code="reviewed_tip_recipient", event_num=event, recorded=recorded, reviewed=player
             ))
 
     def _apply_reviewed_subtypes(self):
-        # Edits the projection's action type as the original's remedy of editing
-        # the play-by-play file would. A free throw's label in its description
+        # Edits the row's action type as the original's remedy of editing the
+        # play-by-play file would. A free throw's label in its description
         # follows; other descriptions keep the recorded text.
         labels = self._reviewed_entries(EVENT_SUBTYPES, {})
-        result = self.source_data["resultSets"][0]
-        headers = result["headers"]
-        kind, code = headers.index("EVENTMSGTYPE"), headers.index("EVENTMSGACTIONTYPE")
-        by_number = {row[headers.index("EVENTNUM")]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
         for event, label in sorted(labels.items()):
             row = by_number.get(event)
-            table = SUBTYPE_CODES.get(row[kind]) if row is not None else None
+            table = SUBTYPE_CODES.get(row["EVENTMSGTYPE"]) if row is not None else None
             names = {value: name for name, value in (table or {}).items()}
-            if table is None or label not in table or row[code] not in names:
+            if table is None or label not in table or row["EVENTMSGACTIONTYPE"] not in names:
                 raise V3DecodeError("Event subtype override does not fit the recorded event")
-            recorded = names[row[code]]
-            row[code] = table[label]
-            row[headers.index("V3_SUB_TYPE")] = label
-            if row[kind] == 3:
-                for key in ("HOMEDESCRIPTION", "VISITORDESCRIPTION", "NEUTRALDESCRIPTION"):
-                    if key in headers and isinstance(row[headers.index(key)], str):
-                        row[headers.index(key)] = row[headers.index(key)].replace(recorded, label)
+            recorded = names[row["EVENTMSGACTIONTYPE"]]
+            row["EVENTMSGACTIONTYPE"] = table[label]
+            row["V3_SUB_TYPE"] = label
+            if row["EVENTMSGTYPE"] == 3:
+                row["NEUTRALDESCRIPTION"] = row["NEUTRALDESCRIPTION"].replace(recorded, label)
             self.repairs.append(dict(
                 code="reviewed_event_subtype", event_num=event, recorded=recorded, reviewed=label
             ))
@@ -368,20 +488,15 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
     def _apply_reviewed_clocks(self):
         # At most two seconds from the recorded clock, keeping the recorded order.
         clocks = self._reviewed_entries(EVENT_CLOCKS, {})
-        result = self.source_data["resultSets"][0]
-        headers = result["headers"]
-        number, period, clock = (
-            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
-        )
-        rows = result["rowSet"]
-        index = {row[number]: i for i, row in enumerate(rows)}
+        rows = self.data
+        index = {row["EVENTNUM"]: i for i, row in enumerate(rows)}
         for event, value in sorted(clocks.items()):
             if event not in index:
                 raise V3DecodeError("Event clock override names an event not in the source")
             row, new = rows[index[event]], clock_text(value)
-            if abs(clock_seconds(new) - clock_seconds(row[clock])) > 2:
+            if abs(clock_seconds(new) - clock_seconds(row["PCTIMESTRING"])) > 2:
                 raise V3DecodeError("Event clock override moves an event more than two seconds")
-            recorded, row[clock] = row[clock], new
+            recorded, row["PCTIMESTRING"] = row["PCTIMESTRING"], new
             self.repairs.append(dict(
                 code="reviewed_event_clock", event_num=event, recorded=recorded, reviewed=new
             ))
@@ -390,7 +505,13 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         for event in clocks:
             i = index[event]
             for before, after in ((i - 1, i), (i, i + 1)):
-                if 0 <= before and after < len(rows) and rows[before][period] == rows[after][period]                         and clock_seconds(rows[before][clock]) < clock_seconds(rows[after][clock]):
+                if (
+                    0 <= before
+                    and after < len(rows)
+                    and rows[before]["PERIOD"] == rows[after]["PERIOD"]
+                    and clock_seconds(rows[before]["PCTIMESTRING"])
+                    < clock_seconds(rows[after]["PCTIMESTRING"])
+                ):
                     raise V3DecodeError("Event clock override breaks the recorded order")
 
     def _apply_reviewed_moves(self):
@@ -398,22 +519,18 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # event of its period, taking that event's clock, as editing the
         # play-by-play file would.
         moves = self._reviewed_entries(EVENT_MOVES, {})
-        result = self.source_data["resultSets"][0]
-        headers, rows = result["headers"], result["rowSet"]
-        number, period, clock = (
-            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
-        )
+        rows = self.data
         for event, after in sorted(moves.items()):
-            found = {row[number]: row for row in rows}
+            found = {row["EVENTNUM"]: row for row in rows}
             moved, anchor = found.get(event), found.get(after)
-            if moved is None or anchor is None or moved[period] != anchor[period]:
+            if moved is None or anchor is None or moved["PERIOD"] != anchor["PERIOD"]:
                 raise V3DecodeError("Event move override does not fit the recorded events")
             rows.remove(moved)
-            recorded, moved[clock] = moved[clock], anchor[clock]
+            recorded, moved["PCTIMESTRING"] = moved["PCTIMESTRING"], anchor["PCTIMESTRING"]
             rows.insert(rows.index(anchor) + 1, moved)
             self.repairs.append(dict(
                 code="reviewed_moved_event", event_num=event, after=after,
-                recorded=recorded, reviewed=moved[clock],
+                recorded=recorded, reviewed=moved["PCTIMESTRING"],
             ))
 
     def _apply_and_one_clocks(self):
@@ -423,64 +540,66 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # all at the foul's clock, may come between them.
         if not self.game_id.startswith("00"):
             return
-        result = self.source_data["resultSets"][0]
-        headers, rows = result["headers"], result["rowSet"]
-        kind, action, number, period, clock, player, team = (
-            headers.index(key)
-            for key in (
-                "EVENTMSGTYPE", "EVENTMSGACTIONTYPE", "EVENTNUM", "PERIOD",
-                "PCTIMESTRING", "PLAYER1_ID", "PLAYER1_TEAM_ID",
-            )
-        )
+        rows = self.data
         for i, shot in enumerate(rows):
-            if shot[kind] != 1:
+            if shot["EVENTMSGTYPE"] != 1:
                 continue
             j = next(
-                (j for j in range(i + 1, len(rows)) if rows[j][kind] not in DEAD_BALL_TYPES),
+                (
+                    j
+                    for j in range(i + 1, len(rows))
+                    if rows[j]["EVENTMSGTYPE"] not in DEAD_BALL_TYPES
+                ),
                 None,
             )
             if j is None:
                 continue
             foul = rows[j]
+            period, clock, team = foul["PERIOD"], foul["PCTIMESTRING"], foul["PLAYER1_TEAM_ID"]
             if (
-                foul[kind] != 6
-                or foul[action] not in AND_ONE_FOULS
-                or foul[period] != shot[period]
-                or foul[team] in (None, shot[team])
-                or not 0 < clock_seconds(shot[clock]) - clock_seconds(foul[clock]) <= 2
-                or any(row[clock] != foul[clock] for row in rows[i + 1:j])
+                foul["EVENTMSGTYPE"] != 6
+                or foul["EVENTMSGACTIONTYPE"] not in AND_ONE_FOULS
+                or period != shot["PERIOD"]
+                or team in (None, shot["PLAYER1_TEAM_ID"])
+                or not 0 < clock_seconds(shot["PCTIMESTRING"]) - clock_seconds(clock) <= 2
+                or any(row["PCTIMESTRING"] != clock for row in rows[i + 1:j])
             ):
                 continue
-            at_foul = [r for r in rows if (r[period], r[clock]) == (foul[period], foul[clock])]
-            fouls = [r for r in at_foul if r[kind] == 6 and r[team] == foul[team]]
-            free_throws = [r for r in at_foul if r[kind] == 3 and r[team] == shot[team]]
+            at_foul = [r for r in rows if (r["PERIOD"], r["PCTIMESTRING"]) == (period, clock)]
+            fouls = [
+                r for r in at_foul if r["EVENTMSGTYPE"] == 6 and r["PLAYER1_TEAM_ID"] == team
+            ]
+            free_throws = [
+                r
+                for r in at_foul
+                if r["EVENTMSGTYPE"] == 3 and r["PLAYER1_TEAM_ID"] == shot["PLAYER1_TEAM_ID"]
+            ]
             if (
                 len(fouls) != 1
                 or len(free_throws) != 1
-                or free_throws[0][action] != FREE_THROWS[1, 1]
-                or foul[action] != FOULS["Loose Ball"] and free_throws[0][player] != shot[player]
+                or free_throws[0]["EVENTMSGACTIONTYPE"] != FREE_THROWS[1, 1]
+                or foul["EVENTMSGACTIONTYPE"] != FOULS["Loose Ball"]
+                and free_throws[0]["PLAYER1_ID"] != shot["PLAYER1_ID"]
             ):
                 continue
-            recorded, shot[clock] = shot[clock], foul[clock]
+            recorded, shot["PCTIMESTRING"] = shot["PCTIMESTRING"], clock
             self.repairs.append(dict(
-                code=AND_ONE_CLOCK_VERSION, event_num=shot[number],
-                foul_event_num=foul[number], free_throw_event_num=free_throws[0][number],
-                recorded=recorded, decoded=foul[clock],
+                code=AND_ONE_CLOCK_VERSION, event_num=shot["EVENTNUM"],
+                foul_event_num=foul["EVENTNUM"], free_throw_event_num=free_throws[0]["EVENTNUM"],
+                recorded=recorded, decoded=clock,
             ))
 
     def _apply_reviewed_turnovers(self):
         # Adds a turnover V3 does not record, as the original's remedy of editing
-        # the play-by-play file would: a projected row like the decoder's own,
-        # just before another event and at its period and clock. The player may
-        # instead be one of the two teams, for a turnover of a kind V3 records as
-        # a team's (TEAM_TURNOVERS), shaped as the decoder shapes those: no
-        # person, the team as the event's team. Returns each added event's
-        # V3-shaped row, which no recorded row backs.
+        # the play-by-play file would: a row like the decoder's own, just before
+        # another event and at its period and clock. The player may instead be
+        # one of the two teams, for a turnover of a kind V3 records as a team's
+        # (TEAM_TURNOVERS), shaped as the decoder shapes those: no person, the
+        # team as the event's team. Returns each added event's V3-shaped row,
+        # which no recorded row backs.
         turnovers = self._reviewed_entries(EVENT_TURNOVERS, {})
-        result = self.source_data["resultSets"][0]
-        headers, rows = result["headers"], result["rowSet"]
-        number = headers.index("EVENTNUM")
-        index = {row[number]: i for i, row in enumerate(rows)}
+        rows = self.data
+        index = {row["EVENTNUM"]: i for i, row in enumerate(rows)}
         roster = self.decoded.context.roster
         added = {}
         for event, entry in sorted(turnovers.items()):
@@ -495,7 +614,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 or TURNOVERS[label] == 0
             ):
                 raise V3DecodeError("Event turnover override does not fit the recorded events")
-            anchor = dict(zip(headers, rows[index[before]]))
+            anchor = rows[index[before]]
             recorded = self.decoded.groups[before]["primary"]
             if by_team:
                 team, person, name, description = player, 0, "", label
@@ -507,7 +626,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                     roster[player]["names"][0],
                 )
                 description = f"{name} {label}"
-            row = dict.fromkeys(headers)
+            row = dict.fromkeys(anchor)
             row.update(
                 GAME_ID=anchor["GAME_ID"], EVENTNUM=event, PERIOD=anchor["PERIOD"],
                 PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=person,
@@ -515,8 +634,8 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 EVENTMSGTYPE=5, EVENTMSGACTIONTYPE=TURNOVERS[label],
                 V3_ACTION_TYPE="Turnover", V3_SUB_TYPE=label,
             )
-            rows.insert(index[before], [row[key] for key in headers])
-            index = {r[number]: i for i, r in enumerate(rows)}
+            rows.insert(index[before], row)
+            index = {r["EVENTNUM"]: i for i, r in enumerate(rows)}
             added[event] = dict(
                 actionNumber=event, clock=recorded["clock"], period=recorded["period"],
                 teamId=0 if by_team else team, personId=player, playerName=name,
@@ -534,15 +653,10 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         # clock, move to follow it in their recorded order. The clock must run
         # down on both sides of the reset. Returns each reset clock by event.
         resets = self._reviewed_entries(EVENT_CLOCK_RESETS, {})
-        result = self.source_data["resultSets"][0]
-        headers, rows = result["headers"], result["rowSet"]
-        number, period, clock = (
-            headers.index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
-        )
-
+        rows = self.data
         applied = {}
         for event, entry in sorted(resets.items()):
-            index = {row[number]: i for i, row in enumerate(rows)}
+            index = {row["EVENTNUM"]: i for i, row in enumerate(rows)}
             moved, reset = entry["events"], clock_text(entry["clock"])
             if (
                 event not in index
@@ -553,9 +667,9 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             anchor, block = rows[index[event]], [rows[index[n]] for n in moved]
             first = index[moved[0]]
             if (
-                any(row[period] != anchor[period] for row in block)
-                or clock_seconds(reset) <= clock_seconds(anchor[clock])
-                or clock_seconds(block[0][clock]) > clock_seconds(reset)
+                any(row["PERIOD"] != anchor["PERIOD"] for row in block)
+                or clock_seconds(reset) <= clock_seconds(anchor["PCTIMESTRING"])
+                or clock_seconds(block[0]["PCTIMESTRING"]) > clock_seconds(reset)
             ):
                 raise V3DecodeError("Event clock-reset override does not fit the recorded events")
             for row in block:
@@ -566,8 +680,9 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
             for before, after in zip(span, span[1:]):
                 if (
                     before is not anchor
-                    and before[period] == after[period]
-                    and clock_seconds(before[clock]) < clock_seconds(after[clock])
+                    and before["PERIOD"] == after["PERIOD"]
+                    and clock_seconds(before["PCTIMESTRING"])
+                    < clock_seconds(after["PCTIMESTRING"])
                 ):
                     raise V3DecodeError("Event clock-reset override breaks a running clock")
             applied[event] = reset
@@ -578,22 +693,20 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
 
     def _apply_reviewed_event_order(self):
         # The original's remedy for events recorded out of order is to edit the
-        # play-by-play file. Reviewed moves edit this projection the same way,
-        # once, before the original loads it.
+        # play-by-play file. Reviewed moves edit these rows the same way, once,
+        # before the events are made.
         moves = self._reviewed_entries(EVENT_ORDER, [])
         if not moves:
             return
-        result = self.source_data["resultSets"][0]
-        number, period, clock = (
-            result["headers"].index(key) for key in ("EVENTNUM", "PERIOD", "PCTIMESTRING")
-        )
-        rows = result["rowSet"]
+        rows = self.data
         for event, before in moves:
-            found = {row[number]: row for row in rows}
+            found = {row["EVENTNUM"]: row for row in rows}
             if event not in found or before not in found:
                 raise V3DecodeError("Event-order override names an event not in the source")
             moved, anchor = found[event], found[before]
-            if (moved[period], moved[clock]) != (anchor[period], anchor[clock]):
+            if (moved["PERIOD"], moved["PCTIMESTRING"]) != (
+                anchor["PERIOD"], anchor["PCTIMESTRING"]
+            ):
                 raise V3DecodeError("Event-order override moves an event to another clock")
             rows.remove(moved)
             rows.insert(rows.index(anchor), moved)
@@ -673,12 +786,10 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         if self.added_rows:
             raise V3DecodeError("Recorded provider order cannot place a reviewed added event")
         order, diagnostic = self.recorded_event_order
-        result = self.source_data["resultSets"][0]
-        number_index = result["headers"].index("EVENTNUM")
-        by_number = {row[number_index]: row for row in result["rowSet"]}
+        by_number = {row["EVENTNUM"]: row for row in self.data}
         # Same ordering as the original provider fallback. Evidence validation
         # additionally prevents its silent dropping/duplication of source rows.
-        result["rowSet"] = [by_number[number] for number in order]
+        self.data = [by_number[number] for number in order]
         self.repairs.append(deepcopy(diagnostic))
         self._save_data_to_file()
 
@@ -686,7 +797,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
 class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
     """Experimental NBA adapter; accepts source bytes and hash-bound context.
 
-    The original event classes, enhancement and possession decisions are reused.
+    Native V3 event classes; the original's enhancement and possession decisions.
     ``validate_possessions=False`` is for differential event-sequence fixtures;
     it is not a declaration of full-game validity. Detailed V3 stats are gated.
     """
