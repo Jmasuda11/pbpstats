@@ -12,9 +12,6 @@ from pbpstats.data_loader.stats_nba.possessions.loader import (
 from pbpstats.data_loader.stats_nba_v3 import StatsNbaV3PossessionLoader, V3Context, web
 from pbpstats.data_loader.stats_nba_v3.decoder import (
     BLANK_FLAGRANT_FREE_THROW_VERSION,
-    FLAGRANT_FREE_THROWS,
-    FOULS,
-    FREE_THROWS,
     TEAMLESS_EXCESS_TIMEOUT_VERSION,
     TEAMLESS_TECHNICAL_VERSION,
     TECHNICAL_FREE_THROW_VERSION,
@@ -90,7 +87,7 @@ def test_technical_foul_one_of_one_is_its_technical_free_throw(subtype, team_rec
     rows, ft, foul = technical_foul(subtype, team_recorded=team_recorded)
     loaded = load(rows)
     free_throw = next(x for x in loaded.events if x.event_num == ft)
-    assert free_throw.event_action_type == 16 and free_throw.is_technical_ft
+    assert free_throw.sub_type == "Free Throw Technical" and free_throw.is_technical_ft
     assert free_throw.description == "Player1 Free Throw Technical (1 PTS)"
     assert [p.offense_team_id for p in loaded.items] == [AWAY, HOME, AWAY, HOME]
     assert dict(
@@ -109,7 +106,7 @@ def test_technical_foul_one_of_one_is_its_technical_free_throw(subtype, team_rec
 def test_technical_free_throw_rule_leaves_other_one_of_ones(game, subtype, and_one):
     rows, ft, _ = technical_foul(subtype, and_one)
     loaded = load(rows, game, validate_possessions=False)
-    assert next(x for x in loaded.events if x.event_num == ft).event_action_type == 10
+    assert next(x for x in loaded.events if x.event_num == ft).sub_type == "Free Throw 1 of 1"
     assert not any(d["code"] == TECHNICAL_FREE_THROW_VERSION for d in loaded.diagnostics)
 
 
@@ -135,7 +132,7 @@ def test_personal_take_with_one_free_throw_is_a_transition_take_foul():
         load(rows, game="1022600001")
     loaded = load(rows)
     take = next(x for x in loaded.events if x.event_num == foul)
-    assert take.event_action_type == FOULS["Transition Take"] and take.is_transition_take_foul
+    assert take.sub_type == "Transition Take" and take.is_transition_take_foul
     assert next(x for x in loaded.events if x.event_num == ft).is_transition_take_foul_ft
     assert [p.offense_team_id for p in loaded.items] == [AWAY, HOME, AWAY, HOME]
     assert dict(
@@ -155,9 +152,7 @@ def test_personal_take_with_one_free_throw_is_a_transition_take_foul():
 def test_take_foul_rule_leaves_other_personal_take_fouls(text, attempts):
     rows, foul, _ = take_foul(text, attempts)
     loaded = load(rows, validate_possessions=False)
-    assert next(x for x in loaded.events if x.event_num == foul).event_action_type == (
-        FOULS["Personal Take"]
-    )
+    assert next(x for x in loaded.events if x.event_num == foul).sub_type == "Personal Take"
     assert not any(d["code"] == TRANSITION_TAKE_FOUL_VERSION for d in loaded.diagnostics)
 
 
@@ -191,7 +186,7 @@ def test_recorded_2026_27_labels_decode_without_review():
      {UTA: 102, NOP: 102}),
     # 0022600103 Q2 1:19: Sacramento's short timeout, V2's 9/2; and a free throw
     # for a defensive three seconds.
-    ("0022600103", [(TECHNICAL_FREE_THROW_VERSION, 594)], [(354, "event_action_type", 2)],
+    ("0022600103", [(TECHNICAL_FREE_THROW_VERSION, 594)], [(354, "sub_type", "Short")],
      {POR: 105, SAC: 104}),
     # 0022600108 Q2 5:25: a free throw for a defensive three seconds; Q4 3:32 and
     # 1:19: Powell's and Young's free throws for Young's and Buzelis' flopping.
@@ -206,7 +201,7 @@ def test_recorded_2026_27_labels_decode_without_review():
      {PHX: 97, OKC: 97}),
     # 0022600127 Q4 8:34: Gordon's "Second Technical" ejection, V2's 11/1; and Q3
     # 1:13 a free throw for a defensive three seconds.
-    ("0022600127", [(TECHNICAL_FREE_THROW_VERSION, 518)], [(625, "event_action_type", 1)],
+    ("0022600127", [(TECHNICAL_FREE_THROW_VERSION, 518)], [(625, "sub_type", "Second Technical")],
      {GSW: 95, DEN: 95}),
 ])
 def test_recorded_2026_27_technical_free_throws_and_pre_2017_labels(game, rules, checks, counts):
@@ -319,7 +314,7 @@ def test_blank_flagrant_free_throws_are_their_trips_attempts(attempts):
     for attempt, event in enumerate(throws, 1):
         label = "Free Throw Flagrant {} of {}".format(attempt, attempts)
         throw = next(x for x in loaded.events if x.event_num == event)
-        assert throw.event_action_type == FLAGRANT_FREE_THROWS[attempt, attempts]
+        assert throw.sub_type == label
         assert label in throw.description
         assert dict(
             code=BLANK_FLAGRANT_FREE_THROW_VERSION, event_num=event, foul_event_num=foul,
@@ -366,7 +361,7 @@ def test_made_one_of_one_before_a_voiding_violation_is_one_of_two(turnover):
         load(rows, game=WNBA)
     loaded = load(rows)
     throw = next(x for x in loaded.events if x.event_num == ft)
-    assert throw.event_action_type == FREE_THROWS[1, 2] and not throw.is_possession_ending_event
+    assert throw.sub_type == "Free Throw 1 of 2" and not throw.is_possession_ending_event
     assert "Free Throw 1 of 2" in throw.description
     trip = next(p for p in loaded.items if throw in p.events)
     assert trip.offense_team_id == HOME and trip.events[-1].event_num == voiding
@@ -391,7 +386,7 @@ def test_voided_free_throw_rule_leaves_other_one_of_ones(change):
     rows, ft, _, _ = voided_second(**change)
     loaded = load(rows, validate_possessions=False)
     throw = next(x for x in loaded.events if x.event_num == ft)
-    assert throw.event_action_type == FREE_THROWS[1, 1]
+    assert throw.sub_type == "Free Throw 1 of 1"
     assert not any(d["code"] == VOIDED_SECOND_FREE_THROW_VERSION for d in loaded.diagnostics)
 
 
@@ -402,7 +397,7 @@ def test_voided_free_throw_rule_needs_the_violation_after_the_free_throw():
     rows.insert(rows.index(next(r for r in rows if r["actionNumber"] == ft)), turnover)
     loaded = load(rows, validate_possessions=False)
     throw = next(x for x in loaded.events if x.event_num == ft)
-    assert throw.event_action_type == FREE_THROWS[1, 1]
+    assert throw.sub_type == "Free Throw 1 of 1"
 
 
 @pytest.mark.parametrize("game, rules, trip, offense, counts, checks", [
@@ -457,13 +452,13 @@ def test_voided_free_throw_rule_needs_the_violation_after_the_free_throw():
     ("0022600091", [(TRANSITION_TAKE_FOUL_VERSION, 413)] + [
         (BLANK_FLAGRANT_FREE_THROW_VERSION, n) for n in (566, 569, 570)],
      [562, 564, 567, 566, 568, 569, 570, 571], 1610612742, {1610612745: 98, 1610612742: 99},
-     [(130, "event_action_type", 3), (413, "is_transition_take_foul", True),
-      (566, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
-      (570, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
+     [(130, "sub_type", "First Flagrant Type 2"), (413, "is_transition_take_foul", True),
+      (566, "sub_type", "Free Throw Flagrant 1 of 3"),
+      (570, "sub_type", "Free Throw Flagrant 3 of 3")]),
     ("0022600099", [(BLANK_FLAGRANT_FREE_THROW_VERSION, n) for n in (235, 239, 240)],
      [233, 238, 235, 239, 240, 259, 241, 242], 1610612741, {1610612741: 110, 1610612749: 109},
-     [(235, "event_action_type", FLAGRANT_FREE_THROWS[1, 3]),
-      (240, "event_action_type", FLAGRANT_FREE_THROWS[3, 3])]),
+     [(235, "sub_type", "Free Throw Flagrant 1 of 3"),
+      (240, "sub_type", "Free Throw Flagrant 3 of 3")]),
 ])
 def test_recorded_games_decode_without_review(game, rules, trip, offense, counts, checks):
     """Games once corrected by reviewed entries, which versioned rules now decode."""

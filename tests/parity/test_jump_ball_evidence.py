@@ -13,7 +13,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
     web,
 )
 from pbpstats.data_loader.stats_nba_v3.decoder import DecodedV3
-from pbpstats.resources.enhanced_pbp.stats_nba.jump_ball import StatsJumpBall
+from pbpstats.resources.enhanced_pbp.stats_nba_v3 import StatsNbaV3JumpBall
 from tools.parity.reference import ROOT
 
 DATA = ROOT / "tests/parity/data/recorded_evidence"
@@ -60,7 +60,7 @@ def test_tip_to_a_shared_surname_needs_and_uses_the_live_recipient():
     )
     loader = web.load_game("0022500100", pbp, box, "recorded", fetch_live=saved(live))
     jump = next(e for e in loader.events if e.event_num == 4)
-    assert isinstance(jump, StatsJumpBall)
+    assert isinstance(jump, StatsNbaV3JumpBall)
     assert (jump.player1_id, jump.player3_id, jump.player2_id) == (CARTER, VUCEVIC, TYUS_JONES)
     assert jump.team_id == ORL
     assert loader.counts_by_team == {ORL: 108, CHI: 107}
@@ -86,7 +86,7 @@ def test_team_won_jump_ball_takes_the_opposing_jumper_and_team_from_live():
     row = next(r for r in result.projected if r["EVENTNUM"] == 424)
     assert (row["PLAYER1_ID"], row["PLAYER2_ID"]) == (1628392, 203500)
     assert (row["PLAYER3_ID"], row["PLAYER3_TEAM_ID"]) == (OKC, None)
-    jump = StatsJumpBall(row, 0)
+    jump = StatsNbaV3JumpBall(row, 0)
     assert jump.team_id == OKC and not hasattr(jump, "player2_id")
     assert [d["event_num"] for d in result.recorded_jump_balls] == [424]
     assert result.recorded_jump_balls[0]["team_recovery"] is True

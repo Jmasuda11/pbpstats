@@ -103,7 +103,6 @@ def free_throw_snapshot(loaded):
                 properties={
                     name: getattr(event, name)
                     for name in (
-                        "event_action_type",
                         "is_made",
                         "is_ft_1_of_1",
                         "is_ft_1_of_2",

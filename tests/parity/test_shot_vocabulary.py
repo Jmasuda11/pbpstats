@@ -70,7 +70,6 @@ def test_complete_shot_facts_match_original(results, index):
     assert first_difference(old["snapshot"], new["snapshot"]) is None
     assert '"unavailable"' not in json.dumps(new["snapshot"])
     shot = new["snapshot"]["shot_details"][0]
-    assert shot["event_action_type"] == CASES[index]["v2_action_type"]
     assert (shot["locX"], shot["locY"], shot["distance"], shot["shot_type"]) == (
         10,
         15,
@@ -94,16 +93,6 @@ def test_complete_shot_facts_match_original(results, index):
     else:
         assert shot["shot_data"]["Blocked"] is False
         assert stats[1, "MissedAtRim"] == 1
-
-
-def test_snapshot_detects_wrong_action_code_even_when_credits_agree(
-    results, monkeypatch
-):
-    old = results[0]["results"][0]
-    monkeypatch.setitem(SHOT_CODES, CASES[0]["subtype"], 1)
-    actual = shot_snapshot(load_synthetic_rows(v3_inputs(CASES[0])))
-    difference = first_difference(old["snapshot"], actual)
-    assert difference["path"] == "$.shot_details[0].event_action_type"
 
 
 @pytest.mark.parametrize("kind", ("location", "assist", "block"))

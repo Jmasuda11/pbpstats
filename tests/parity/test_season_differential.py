@@ -125,17 +125,17 @@ def test_observation_failures_are_never_counted_as_rejections():
 
 
 def test_fouled_player_mask_keeps_double_fouls_compared():
-    def foul(number, code, player3):
+    def foul(number, double, player3):
         return dict(
             event_id=number,
-            kind="StatsFoul",
-            codes=[6, code],
+            kind=["Foul"],
+            double_foul=double,
             participants=dict(player3_id=player3),
         )
 
-    old = dict(snapshot=dict(events=[foul(1, 1, 5), foul(2, 10, 7), foul(3, 16, 8)]))
+    old = dict(snapshot=dict(events=[foul(1, False, 5), foul(2, True, 7), foul(3, True, 8)]))
     new = dict(
-        snapshot=dict(events=[foul(1, 1, None), foul(2, 10, 7), foul(3, 16, None)])
+        snapshot=dict(events=[foul(1, False, None), foul(2, True, 7), foul(3, True, None)])
     )
     for events in masked_events(old, new):
         assert [e["participants"]["player3_id"] for e in events] == ["n/a", 7, "n/a"]

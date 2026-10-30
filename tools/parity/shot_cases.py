@@ -99,7 +99,6 @@ def shot_snapshot(loaded):
         scalar(
             {
                 "event_id": event.event_num,
-                "event_action_type": event.event_action_type,
                 "locX": event.locX,
                 "locY": event.locY,
                 "distance": event.distance,

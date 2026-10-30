@@ -165,7 +165,11 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
 
     loader = web.load_game(v3["game_id"], pbp, box, "recorded", fetch_boxscore=fetch)
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
-    assert (event.event_type, event.event_action_type) == tuple(observation["code"])
+    # A native event decides from the V3 label, an original one from the V2 code.
+    if hasattr(event, "sub_type"):
+        assert (event.event_type, event.sub_type) == (observation["code"][0], action["subType"])
+    else:
+        assert (event.event_type, event.event_action_type) == tuple(observation["code"])
 
 
 @pytest.mark.parametrize("inferred", INFERRED["inferred"], ids=lambda i: i["label"][1])
@@ -198,7 +202,8 @@ def test_inferred_codes_are_the_ones_no_v2_export_uses(inferred):
     assert [action["actionType"], action["subType"]] == inferred["label"]
     loader = web.load_game(v3["game_id"], pbp, (ROOT / v3["boxscore_path"]).read_bytes(), "recorded")
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
-    assert (event.event_type, event.event_action_type) == (event_type, code)
+    # The native ejection decides from its label; the inferred code stays a diagnostic.
+    assert (event.event_type, event.sub_type) == (event_type, subtype)
     assert [d for d in loader.diagnostics if d["code"] == decoder.INFERRED_CODE] == [dict(
         code=decoder.INFERRED_CODE, event_num=action["actionNumber"], recorded=subtype,
         v2_code=[event_type, code], basis="the one ejection code no V2 export uses",

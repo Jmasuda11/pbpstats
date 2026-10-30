@@ -5,10 +5,8 @@ import json
 import pytest
 
 from pbpstats.data_loader.stats_nba_v3 import V3DecodeError
-from pbpstats.data_loader.stats_nba_v3.decoder import (
-    FLAGRANT_FREE_THROWS, CLEAR_PATH_FREE_THROWS, TECHNICAL_FREE_THROWS,
-)
-from tools.parity.free_throw_cases import catalog, v3_inputs, free_throw_snapshot
+from pbpstats.data_loader.stats_nba_v3.decoder import FLAGRANT_FREE_THROWS
+from tools.parity.free_throw_cases import catalog, v3_inputs
 from tools.parity.reference import ROOT, digest, prepare_reference
 from tools.parity.run import worker
 from tools.parity.shot_cases import vocabulary
@@ -61,7 +59,6 @@ def test_free_throw_properties_and_statistics_match_original(results, index):
     assert '"unavailable"' not in json.dumps(new["snapshot"])
     details = new["snapshot"]["free_throw_details"]
     case = CASES[index]
-    assert [f["properties"]["event_action_type"] for f in details] == case["v2_action_types"]
     for attempt, ft in enumerate(details, 1):
         props = ft["properties"]
         if case["category"] == "Flagrant":
@@ -85,40 +82,6 @@ def test_free_throw_properties_and_statistics_match_original(results, index):
             }
             assert 2 in plusminus and 6 not in plusminus
             assert plusminus[2]["lineup_id"] == "1-2-3-4-5"
-
-
-def test_regression_detects_old_second_attempt_code_and_extra_trip_stat(
-    results, monkeypatch
-):
-    index = next(i for i, c in enumerate(CASES) if c["name"] == "flagrant_2_MM_sub1")
-    expected = results[0]["results"][index]["snapshot"]
-    monkeypatch.setitem(FLAGRANT_FREE_THROWS, (2, 2), 20)
-    changed = free_throw_snapshot(load_synthetic_rows(v3_inputs(CASES[index])))
-    assert first_difference(expected, changed) is not None
-    old_ft, changed_ft = (
-        expected["free_throw_details"][1],
-        changed["free_throw_details"][1],
-    )
-    assert not old_ft["properties"]["is_first_ft"]
-    assert changed_ft["properties"]["is_first_ft"]
-    assert not any("Free Throw Trips" in s["stat_key"] for s in old_ft["event_stats"])
-    assert any("Free Throw Trips" in s["stat_key"] for s in changed_ft["event_stats"])
-
-
-@pytest.mark.parametrize("name,table,attempt,wrong_code", [
-    ("clear_path_2_MM_sub1", CLEAR_PATH_FREE_THROWS, (1, 2), 17),
-    ("clear_path_2_MM_sub1", CLEAR_PATH_FREE_THROWS, (2, 2), 18),
-    ("technical_2_MM_sub1", TECHNICAL_FREE_THROWS, (1, 2), 16),
-    ("technical_2_MM_sub1", TECHNICAL_FREE_THROWS, (2, 2), 16),
-    ("flagrant_3_MMM_sub1", FLAGRANT_FREE_THROWS, (1, 3), 13),
-])
-def test_recorded_ft_comparison_detects_inherited_and_generic_code_drift(
-    results, monkeypatch, name, table, attempt, wrong_code
-):
-    index = next(i for i, case in enumerate(CASES) if case["name"] == name)
-    monkeypatch.setitem(table, attempt, wrong_code)
-    actual = free_throw_snapshot(load_synthetic_rows(v3_inputs(CASES[index])))
-    assert first_difference(results[0]["results"][index]["snapshot"], actual) is not None
 
 
 @pytest.mark.parametrize("subtype", ["Free Throw Flagrant 1 of 4", "Free Throw Clear Path 1 of 3", "Free Throw Technical 1 of 3", "Free Throw Technical 1 of 1"])

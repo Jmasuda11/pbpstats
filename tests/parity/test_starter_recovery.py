@@ -177,14 +177,12 @@ def test_partial_context_recovers_only_the_missing_period():
 
 
 def test_original_dispatcher_and_event_methods_are_not_replaced():
-    from pbpstats.resources.enhanced_pbp.stats_nba.start_of_period import (
-        StatsStartOfPeriod,
-    )
+    from pbpstats.resources.enhanced_pbp.stats_nba_v3 import StatsNbaV3StartOfPeriod
 
-    original_method = StatsStartOfPeriod.get_period_starters
+    dispatcher = StatsNbaV3StartOfPeriod.get_period_starters
     loaded = candidate(case_named("boxscore_recovers_without_override"))
-    assert type(loaded.events[0]) is StatsStartOfPeriod
-    assert loaded.events[0].get_period_starters.__func__ is original_method
+    assert type(loaded.events[0]) is StatsNbaV3StartOfPeriod
+    assert loaded.events[0].get_period_starters.__func__ is dispatcher
     assert "get_period_starters" not in loaded.events[0].__dict__
 
 

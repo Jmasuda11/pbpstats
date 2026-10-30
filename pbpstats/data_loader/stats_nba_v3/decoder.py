@@ -700,6 +700,10 @@ class DecodedV3:
             PLAYER3_TEAM_ID=None,
             NEUTRALDESCRIPTION=row["description"],
             EVENTMSGACTIONTYPE=0,
+            # The labels native event classes decide from, as a rule or a
+            # reviewed correction leaves them.
+            V3_ACTION_TYPE=kind,
+            V3_SUB_TYPE=subtype,
         )
         roles = {}
         for _, secondary in group:
@@ -852,7 +856,10 @@ class DecodedV3:
                     raise V3DecodeError("Unsupported flagrant attempt pattern")
             else:
                 raise V3DecodeError("Unsupported free throw subtype")
-            event.update(EVENTMSGTYPE=3, EVENTMSGACTIONTYPE=code, NEUTRALDESCRIPTION=description)
+            event.update(
+                EVENTMSGTYPE=3, EVENTMSGACTIONTYPE=code, NEUTRALDESCRIPTION=description,
+                V3_SUB_TYPE=subtype,
+            )
             # Outcome is described by MISS; category/numbering must be explicit.
             if subtype not in description:
                 raise V3DecodeError("Free throw description disagrees with subtype")
@@ -867,6 +874,7 @@ class DecodedV3:
                 row, team
             ):
                 code = FOULS["Transition Take"]
+                event["V3_SUB_TYPE"] = "Transition Take"
             event.update(
                 EVENTMSGTYPE={"Foul": 6, "Turnover": 5, "Violation": 7}[kind],
                 EVENTMSGACTIONTYPE=code,

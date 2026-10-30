@@ -54,6 +54,10 @@ V2_INTEGERS = {
 SHOT_HEADERS = ["GAME_ID", "GAME_EVENT_ID", "PLAYER_ID", "TEAM_ID", "LOC_X", "LOC_Y"]
 MODES = ("exact", "floor", "floor_v2_order")
 FOULS_DRAWN = "Fouls Drawn"
+FAMILIES = (
+    "FieldGoal", "FreeThrow", "Rebound", "Turnover", "Foul", "Violation", "Substitution",
+    "Timeout", "JumpBall", "Ejection", "Replay", "StartOfPeriod", "EndOfPeriod",
+)
 SUBSTITUTION = re.compile(r"SUB: (.+) FOR (.+)")
 
 
@@ -327,10 +331,18 @@ def observations(loaded):
     from tools.parity.snapshot import snapshot
     from tools.parity.worker import credit_snapshot
 
+    from pbpstats.resources import enhanced_pbp
+
     result = snapshot(loaded)
     for event, record in zip(loaded.events, result["events"]):
-        record["kind"] = type(event).__name__
-        record["codes"] = [event.event_type, getattr(event, "event_action_type", None)]
+        # Families and decisions, not representation: native V3 event classes
+        # have no V2 codes.
+        record["kind"] = [
+            name for name in FAMILIES if isinstance(event, getattr(enhanced_pbp, name))
+        ]
+        record["double_foul"] = isinstance(event, enhanced_pbp.Foul) and (
+            event.is_double_foul or event.is_double_technical
+        )
         # Keep each event's statistics comparable without storing every row.
         record["base_stats"] = digest(canonical(record["base_stats"]))
     return dict(
@@ -472,8 +484,8 @@ def masked_events(old, new):
     unknown = {
         e["event_id"]
         for e in new["snapshot"]["events"]
-        if "Foul" in e.get("kind", "")
-        and (e["codes"][1] not in (10, 16) or e["participants"]["player3_id"] is None)
+        if "Foul" in e.get("kind", [])
+        and (not e["double_foul"] or e["participants"]["player3_id"] is None)
     }
 
     def mask(events):

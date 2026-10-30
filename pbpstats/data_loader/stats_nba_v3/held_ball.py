@@ -1,7 +1,12 @@
 """Versioned held-ball turnover: the original's same-clock rule at the recorded turnover."""
 
-from pbpstats.resources.enhanced_pbp import StartOfPeriod, Substitution, Turnover
-from pbpstats.resources.enhanced_pbp.stats_nba.jump_ball import StatsJumpBall
+from pbpstats.resources.enhanced_pbp import (
+    JumpBall,
+    StartOfPeriod,
+    Substitution,
+    Turnover,
+)
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
 
 
 HELD_BALL_VERSION = "held_ball_turnover_v2"
@@ -23,7 +28,7 @@ def is_candidate(event, following, substitutions=()):
     same-clock case. Past stoppage substitutions, the same clock qualifies.
     """
     return (
-        isinstance(event, StatsJumpBall)
+        isinstance(event, JumpBall)
         and isinstance(following, Turnover)
         and following.period == event.period
         and not following.is_no_turnover
@@ -39,7 +44,7 @@ def is_candidate(event, following, substitutions=()):
 def is_candidate_at(items, index):
     """``is_candidate`` for an unlinked event list, past stoppage substitutions."""
     event = items[index]
-    if not isinstance(event, StatsJumpBall):
+    if not isinstance(event, JumpBall):
         return False
     following = index + 1
     while following < len(items) and is_stoppage_substitution(event, items[following]):
@@ -51,7 +56,7 @@ def is_candidate_at(items, index):
     )
 
 
-class V3HeldBallJumpBall(StatsJumpBall):
+class V3HeldBallJumpBall(StatsNbaV3JumpBall):
     """A jump ball whose held-ball turnover is recorded after the tip.
 
     The original does not change possession at a jump ball when the next event

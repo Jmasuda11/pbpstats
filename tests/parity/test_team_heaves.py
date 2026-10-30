@@ -42,7 +42,7 @@ def test_team_statistics_do_not_debit_any_shooter_and_keep_blocker_credit(blocke
     loaded = load_v3(rows)
     heave = next(e for e in loaded.events if isinstance(e, V3TeamHeave))
     assert heave.player1_id == 0 and heave.team_id == HOME
-    assert heave.event_action_type is None
+    assert not hasattr(heave, "event_action_type")
     assert heave.distance is None and heave.locX is None and heave.locY is None
     assert heave.shot_data["Attribution"] == "team"
     assert heave.shot_data["IsTeamHeave"]

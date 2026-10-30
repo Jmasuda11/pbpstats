@@ -23,7 +23,6 @@ from pbpstats.data_loader.stats_nba_v3 import (
     web,
 )
 from pbpstats.data_loader.stats_nba_v3.decoder import (
-    FLAGRANT_FREE_THROWS,
     V2_JUMP_BALL_FIELDS,
     DecodedV3,
 )
@@ -493,7 +492,7 @@ def test_turnover_edit_adds_the_turnover_v3_omits():
     entry = dict(before=n["timeout"], player=1, subtype="Offensive Foul Turnover")
     loaded = load(rows, files=edits(EVENT_TURNOVERS, {str(n["added"]): entry}))
     turnover = next(x for x in loaded.events if x.event_num == n["added"])
-    assert isinstance(turnover, Turnover) and turnover.event_action_type == 37
+    assert isinstance(turnover, Turnover) and turnover.sub_type == "Offensive Foul Turnover"
     assert (turnover.player1_id, turnover.team_id, turnover.clock) == (1, HOME, "9:50")
     assert turnover.description == "Player1 Offensive Foul Turnover"
     assert offenses(loaded) == [AWAY, HOME, AWAY, HOME, AWAY]
@@ -513,7 +512,7 @@ def test_turnover_edit_adds_a_team_turnover():
     entry = dict(before=n["timeout"], player=HOME, subtype="Too Many Players Turnover")
     loaded = load(rows, files=edits(EVENT_TURNOVERS, {str(n["added"]): entry}))
     turnover = next(x for x in loaded.events if x.event_num == n["added"])
-    assert isinstance(turnover, Turnover) and turnover.event_action_type == 44
+    assert isinstance(turnover, Turnover) and turnover.sub_type == "Too Many Players Turnover"
     assert (turnover.player1_id, turnover.team_id, turnover.clock) == (0, HOME, "9:50")
     assert turnover.description == "Too Many Players Turnover"
     assert offenses(loaded) == [AWAY, HOME, AWAY, HOME, AWAY]
@@ -827,8 +826,8 @@ def test_free_throw_subtype_edit_numbers_a_flagrant_trip():
         str(n["second"]): "Free Throw Flagrant 2 of 2",
     }, WNBA), game=WNBA)
     first, second = (x for x in loaded.events if x.event_num in (n["first"], n["second"]))
-    assert (first.event_action_type, second.event_action_type) == (
-        FLAGRANT_FREE_THROWS[1, 2], FLAGRANT_FREE_THROWS[2, 2]
+    assert (first.sub_type, second.sub_type) == (
+        "Free Throw Flagrant 1 of 2", "Free Throw Flagrant 2 of 2"
     )
     assert first.description == "MISS Player1 Free Throw Flagrant 1 of 2"
     assert second.description == "Player1 Free Throw Flagrant 2 of 2 (1 PTS)"
@@ -1420,7 +1419,7 @@ def test_recorded_corrections_from_2022_23_review(game, recorded, trip, offense,
     ("0022100115", TeamHasBackToBackPossessionsException, [291, 341, 342, 293, 294], 1610612750,
      {1610612746: 100, 1610612750: 99}, []),
     ("0022100142", TeamHasBackToBackPossessionsException, [286, 291], 1610612749,
-     {1610612749: 99, 1610612764: 97}, [(291, "event_action_type", 44)]),
+     {1610612749: 99, 1610612764: 97}, [(291, "sub_type", "Too Many Players Turnover")]),
     ("0022100172", TeamHasBackToBackPossessionsException,
      [636, 637, 638, 640, 641, 642, 643, 644, 645, 660], 1610612762,
      {1610612754: 98, 1610612762: 97}, [(660, "is_possession_ending_event", True)]),

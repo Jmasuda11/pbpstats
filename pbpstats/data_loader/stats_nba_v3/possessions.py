@@ -8,8 +8,8 @@ import math
 from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
 from pbpstats.data_loader.stats_nba.possessions.loader import StatsNbaPossessionLoader
 from pbpstats.resources.enhanced_pbp import FieldGoal, Substitution
-from pbpstats.resources.enhanced_pbp.stats_nba.enhanced_pbp_factory import (
-    StatsNbaEnhancedPbpFactory,
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
+    StatsNbaV3EnhancedPbpFactory,
 )
 from pbpstats.resources.possessions.possession import Possession
 
@@ -183,7 +183,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
         if validate_source_order:
             self._make_pbp_items()
         else:
-            self.factory = StatsNbaEnhancedPbpFactory()
+            self.factory = StatsNbaV3EnhancedPbpFactory()
             self.items = [
                 self.factory.get_event_class(row["EVENTMSGTYPE"])(row, index)
                 for index, row in enumerate(self.data)
@@ -213,6 +213,19 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 )))
             event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
+
+    def _make_pbp_items(self):
+        # The original's, with the V3 factory, which its order repairs also use
+        # when they rebuild the events.
+        self._fix_order_when_technical_foul_before_period_start()
+        self.factory = StatsNbaV3EnhancedPbpFactory()
+        self.items = [
+            self.factory.get_event_class(item["EVENTMSGTYPE"])(item, i)
+            for i, item in enumerate(self.data)
+        ]
+        self._add_extra_attrs_to_all_events()
+        self._check_rebound_event_order(6)
+        self._add_shot_x_y_coords()
 
     def _reviewed_entries(self, name, empty):
         return reviewed_entries(self.overrides, name, self.game_id, empty)
@@ -336,6 +349,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 raise V3DecodeError("Event subtype override does not fit the recorded event")
             recorded = names[row[code]]
             row[code] = table[label]
+            row[headers.index("V3_SUB_TYPE")] = label
             if row[kind] == 3:
                 for key in ("HOMEDESCRIPTION", "VISITORDESCRIPTION", "NEUTRALDESCRIPTION"):
                     if key in headers and isinstance(row[headers.index(key)], str):
@@ -492,6 +506,7 @@ class _PreparedEvents(StatsNbaEnhancedPbpLoader):
                 PCTIMESTRING=anchor["PCTIMESTRING"], PLAYER1_ID=person,
                 PLAYER1_TEAM_ID=team, NEUTRALDESCRIPTION=description,
                 EVENTMSGTYPE=5, EVENTMSGACTIONTYPE=TURNOVERS[label],
+                V3_ACTION_TYPE="Turnover", V3_SUB_TYPE=label,
             )
             rows.insert(index[before], [row[key] for key in headers])
             index = {r[number]: i for i, r in enumerate(rows)}

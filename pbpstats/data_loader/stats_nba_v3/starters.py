@@ -7,7 +7,9 @@ import hashlib
 import requests
 
 from pbpstats import NBA_STRING
-from pbpstats.resources.enhanced_pbp.stats_nba.start_of_period import StatsStartOfPeriod
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.start_of_period import (
+    StatsNbaV3StartOfPeriod,
+)
 
 from .decoder import V3DecodeError
 
@@ -107,7 +109,7 @@ class StarterRecovery:
         self.applied_teams = []
 
     def load(self):
-        starters = StatsStartOfPeriod.get_period_starters(self)
+        starters = StatsNbaV3StartOfPeriod.get_period_starters(self)
         self.diagnostics.append(
             dict(
                 code="starter_recovery",

@@ -20,8 +20,8 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
 )
 from pbpstats.data_loader.stats_nba_v3.possessions import TEAM_IDS_GUARD, V3Possession
 from pbpstats.resources.possessions.possession import Possession
-from pbpstats.resources.enhanced_pbp.stats_nba.enhanced_pbp_factory import (
-    StatsNbaEnhancedPbpFactory,
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
+    StatsNbaV3EnhancedPbpFactory,
 )
 from pbpstats.resources.enhanced_pbp.stats_nba.foul import StatsFoul
 from tools.parity.reference import ROOT, prepare_reference
@@ -75,9 +75,9 @@ def test_all_independent_synthetic_sequences_match_original():
     assert result["matching_credit_cases"] == 145
 
 
-def test_original_event_classes_are_used_without_rule_overrides():
+def test_factory_event_classes_are_used_without_rule_overrides():
     loaded = load_synthetic(wrap([e("make"), e("turnover", 580, AWAY, 11)]))
-    factory = StatsNbaEnhancedPbpFactory()
+    factory = StatsNbaV3EnhancedPbpFactory()
     for event in loaded.events:
         assert type(event) is factory.get_event_class(event.event_type)
     assert loaded.capabilities["full_game_validated"] is False
@@ -119,7 +119,7 @@ def test_blank_turnover_reason_is_the_recorded_v2_no_turnover_code():
     turnover["subType"] = ""
     loaded = load_synthetic_rows(rows)
     event = next(x for x in loaded.events if x.event_num == turnover["actionNumber"])
-    assert event.event_action_type == 0
+    assert event.sub_type == ""
     assert event.is_no_turnover and not event.is_possession_ending_event
 
 
@@ -165,7 +165,7 @@ def test_recorded_non_unsportsmanlike_technicals_outside_the_roster(game, event,
     box = (data / f"stats_v3_boxscore_{game}.json").read_bytes()
     loader = web.load_game(game, pbp, box, "recorded")
     foul = next(x for x in loader.events if x.event_num == event)
-    assert foul.event_action_type == 12 and foul.is_technical
+    assert foul.sub_type == "Non-Unsportsmanlike Technical" and foul.is_technical
     assert dict(code="non_roster_actor", event_num=event, person_id=person, team_id=team,
                 basis="recorded_personId_and_teamId_as_in_v2") in loader.diagnostics
 
@@ -244,7 +244,7 @@ def test_lone_jump_ball_after_a_replay_review_gets_its_offense():
     jump = next(
         p
         for p in loaded.items
-        if [type(x).__name__ for x in p.events] == ["StatsJumpBall"]
+        if [type(x).__name__ for x in p.events] == ["StatsNbaV3JumpBall"]
     )
     with pytest.raises(AttributeError, match="team_id"):
         Possession.get_team_ids(jump)  # the original method, same possessions
