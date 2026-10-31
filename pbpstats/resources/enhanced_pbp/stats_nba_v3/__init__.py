@@ -5,7 +5,10 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3.end_of_period import (
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.field_goal import StatsNbaV3FieldGoal
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.foul import StatsNbaV3Foul
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.free_throw import StatsNbaV3FreeThrow
-from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import (
+    StatsNbaV3JumpBall,
+    V3HeldBallJumpBall,
+)
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.rebound import StatsNbaV3Rebound
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.replay import StatsNbaV3Replay
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.start_of_period import (
@@ -17,6 +20,7 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3.substitution import (
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.timeout import StatsNbaV3Timeout
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.turnover import StatsNbaV3Turnover
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.violation import StatsNbaV3Violation
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import V3TeamHeave
 
 __all__ = [
     "StatsNbaV3Ejection",
@@ -32,4 +36,6 @@ __all__ = [
     "StatsNbaV3Timeout",
     "StatsNbaV3Turnover",
     "StatsNbaV3Violation",
+    "V3HeldBallJumpBall",
+    "V3TeamHeave",
 ]

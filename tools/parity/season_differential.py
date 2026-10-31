@@ -402,7 +402,7 @@ def install_held_ball():
     from pbpstats.resources.enhanced_pbp.stats_nba.jump_ball import StatsJumpBall
 
     spec = importlib.util.spec_from_file_location(
-        "held_ball_extension", ROOT / "pbpstats/data_loader/stats_nba_v3/held_ball.py"
+        "held_ball_extension", ROOT / "pbpstats/resources/enhanced_pbp/stats_nba_v3/held_ball.py"
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -678,7 +678,7 @@ def main():
         args.side, args.output = args.worker, args.records
         return run_worker(args)
 
-    from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
+    from pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball import HELD_BALL_VERSION
     from tools.parity.paired_season import SEASONS, manifest, season
     from tools.parity.reference import prepare_reference
 

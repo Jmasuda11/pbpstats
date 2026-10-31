@@ -24,6 +24,8 @@ from pbpstats.data_loader import (
     StatsNbaV3PossessionWebLoader,
 )
 from pbpstats.data_loader.factory import DataLoaderFactory
+from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
+from pbpstats.data_loader.stats_nba.pbp.loader import StatsNbaPbpLoader
 from pbpstats.data_loader.stats_nba_v3 import (
     V3DecodeError,
     V3EvidenceRequired,
@@ -32,6 +34,10 @@ from pbpstats.data_loader.stats_nba_v3 import (
 )
 from pbpstats.data_loader.stats_nba_v3.decoder import live_play_by_play_url
 from pbpstats.resources.boxscore.boxscore import Boxscore
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
+    StatsNbaV3EnhancedPbpFactory,
+)
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import V3TeamHeave
 from tools.parity.reference import ROOT
 
 DATA = ROOT / "tests/parity/data/recorded_evidence"
@@ -219,3 +225,15 @@ def test_client_loads_every_v3_resource(tmp_path):
     assert len(game.boxscore.player_items) == len(
         StatsNbaV3BoxscoreLoader(PLAIN, StatsNbaV3BoxscoreFileLoader(directory)).items
     ) - 2
+
+
+def test_enhanced_loader_is_built_on_the_pbp_loader_as_the_originals_is(tmp_path):
+    assert StatsNbaEnhancedPbpLoader.__bases__[0] is StatsNbaPbpLoader
+    assert StatsNbaV3EnhancedPbpLoader.__bases__[0] is StatsNbaV3PbpLoader
+    directory = str(data_directory(tmp_path, PLAIN))
+    loader = StatsNbaV3EnhancedPbpLoader(PLAIN, StatsNbaV3EnhancedPbpFileLoader(directory))
+    assert loader.source_data == (DATA / f"stats_v3_{PLAIN}.json").read_bytes()
+    assert {row["event_num"] for row in loader.data} == {e.event_num for e in loader.items}
+    # The factory gives every class from its row, a team heave's too.
+    row = {"action_type": "Heave", "sub_type": "Team Field Goal Attempt"}
+    assert StatsNbaV3EnhancedPbpFactory().get_event_class(row) is V3TeamHeave

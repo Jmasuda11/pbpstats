@@ -30,56 +30,16 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
 from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import (
     AND_ONE_CLOCK_VERSION,
     StatsNbaV3EnhancedPbpLoader,
-    V3HeldBallJumpBall,
 )
-from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
 from pbpstats.data_loader.stats_nba_v3.overrides import BAD_POSSESSIONS
-from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION
 from pbpstats.resources.enhanced_pbp import Substitution
-from pbpstats.resources.possessions.possession import Possession
-
-
-TEAM_IDS_GUARD = "possession_team_ids_skip_teamless_events_v1"
-
-
-class V3Possession(Possession):
-    """Original Possession with one defect guarded and reviewed clock resets.
-
-    The original get_team_ids skips team-less events in its own possession but
-    not in neighbouring ones. Replay events never have a team, in V2 or V3, so
-    a lone jump-ball possession after a replay review raised AttributeError.
-    Wherever the original returns, this returns the identical list.
-
-    A possession that follows a reviewed game-clock reset starts at the clock
-    the reset set, not at the previous possession's last clock.
-    """
-
-    @property
-    def start_time(self):
-        previous = getattr(self, "previous_possession", None)
-        reset = getattr(previous.events[-1], "reviewed_clock_reset", None) if previous else None
-        return reset if reset is not None else super().start_time
-
-    def get_team_ids(self):
-        def team_ids_of(possession):
-            return [
-                event.team_id
-                for event in possession.events
-                if hasattr(event, "team_id") and event.team_id != 0
-            ]
-
-        team_ids = list(set(team_ids_of(self)))
-        prev_poss = self.previous_possession
-        while len(team_ids) != 2 and prev_poss is not None:
-            team_ids += team_ids_of(prev_poss)
-            team_ids = list(set(team_ids))
-            prev_poss = prev_poss.previous_possession
-        next_poss = self.next_possession
-        while len(team_ids) != 2 and next_poss is not None:
-            team_ids += team_ids_of(next_poss)
-            team_ids = list(set(team_ids))
-            next_poss = next_poss.next_possession
-        return team_ids
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball import HELD_BALL_VERSION
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import V3HeldBallJumpBall
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION
+from pbpstats.resources.possessions.stats_nba_v3_possession import (
+    TEAM_IDS_GUARD,
+    V3Possession,
+)
 
 
 class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):

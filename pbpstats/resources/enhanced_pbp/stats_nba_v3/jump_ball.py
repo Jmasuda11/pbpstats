@@ -2,6 +2,7 @@ from pbpstats.resources.enhanced_pbp import Foul, JumpBall, Turnover
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_item import (
     StatsNbaV3EnhancedPbpItem,
 )
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball import HeldBallJumpBall
 
 
 class StatsNbaV3JumpBall(JumpBall, StatsNbaV3EnhancedPbpItem):
@@ -32,3 +33,9 @@ class StatsNbaV3JumpBall(JumpBall, StatsNbaV3EnhancedPbpItem):
             team_ids = list(self.current_players.keys())
             return team_ids[0] if team_ids[1] == self.team_id else team_ids[1]
         return self.team_id
+
+
+class V3HeldBallJumpBall(HeldBallJumpBall, StatsNbaV3JumpBall):
+    """
+    Class for a jump ball under the held-ball rule
+    """

@@ -17,7 +17,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     TECHNICAL_FOULS,
     DecodedV3,
 )
-from pbpstats.data_loader.stats_nba_v3.possessions.loader import TEAM_IDS_GUARD, V3Possession
+from pbpstats.resources.possessions.stats_nba_v3_possession import TEAM_IDS_GUARD, V3Possession
 from pbpstats.resources.possessions.possession import Possession
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,

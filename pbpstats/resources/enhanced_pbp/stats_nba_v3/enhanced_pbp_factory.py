@@ -14,6 +14,7 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3.replay import StatsNbaV3Replay
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.start_of_period import (
     StatsNbaV3StartOfPeriod,
 )
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import V3TeamHeave
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.substitution import (
     StatsNbaV3Substitution,
 )
@@ -24,7 +25,8 @@ from pbpstats.resources.enhanced_pbp.stats_nba_v3.violation import StatsNbaV3Vio
 EVENT_CLASSES = {
     "Made Shot": StatsNbaV3FieldGoal,
     "Missed Shot": StatsNbaV3FieldGoal,
-    "Heave": StatsNbaV3FieldGoal,
+    # The decoder rejects a heave that is not a recorded team heave.
+    "Heave": V3TeamHeave,
     "Free Throw": StatsNbaV3FreeThrow,
     "Rebound": StatsNbaV3Rebound,
     "Turnover": StatsNbaV3Turnover,

@@ -15,8 +15,8 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3Overrides,
     web,
 )
-from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
-from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import V3HeldBallJumpBall
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball import HELD_BALL_VERSION
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import V3HeldBallJumpBall
 from pbpstats.resources.enhanced_pbp import JumpBall, Substitution, Turnover
 from pbpstats.data_loader.stats_nba_v3.overrides import CHANGE_EVENTS, KEEP_EVENTS
 from tools.parity.reference import ROOT

@@ -48,7 +48,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_V2_JUMP_BALLS,
     SUPPORTED,
 )
-from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 from pbpstats.resources.enhanced_pbp import Turnover
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap

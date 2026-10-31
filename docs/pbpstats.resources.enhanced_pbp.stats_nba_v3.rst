@@ -57,6 +57,14 @@ Free Throw
    :undoc-members:
    :show-inheritance:
 
+Held Ball
+---------
+
+.. automodule:: pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Jump Ball
 -----------
 
@@ -93,6 +101,14 @@ Substitution
 -------------
 
 .. automodule:: pbpstats.resources.enhanced_pbp.stats_nba_v3.substitution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Team Heave
+----------
+
+.. automodule:: pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave
    :members:
    :undoc-members:
    :show-inheritance:

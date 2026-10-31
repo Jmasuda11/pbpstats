@@ -1303,7 +1303,9 @@ class DecodedV3:
         return True
 
     def _team_heave_team(self, row):
-        from .team_heave import TEAM_HEAVE_VERSION
+        from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import (
+            TEAM_HEAVE_VERSION,
+        )
 
         # Trust the feed's explicit classification; do not reclassify player shots
         # using distance/time thresholds or infer who attempted the shot. Team

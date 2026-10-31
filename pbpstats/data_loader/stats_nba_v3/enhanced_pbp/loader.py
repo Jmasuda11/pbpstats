@@ -23,7 +23,6 @@ import json
 import math
 
 from pbpstats.data_loader.nba_enhanced_pbp_loader import NbaEnhancedPbpLoader
-from pbpstats.data_loader.stats_nba_v3.base import StatsNbaV3LoaderBase
 from pbpstats.data_loader.stats_nba_v3.boxscore.loader import StatsNbaV3BoxscoreLoader
 from pbpstats.data_loader.stats_nba_v3.decoder import (
     FOULS,
@@ -39,7 +38,6 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     V3JumpBallEvidenceRequired,
     clock_text,
 )
-from pbpstats.data_loader.stats_nba_v3.held_ball import HeldBallJumpBall, is_candidate_at
 from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
 from pbpstats.data_loader.stats_nba_v3.names import (
     add_actor_aliases,
@@ -69,22 +67,20 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     KEEP_EVENTS,
     STARTERS,
 )
+from pbpstats.data_loader.stats_nba_v3.pbp.loader import StatsNbaV3PbpLoader
 from pbpstats.data_loader.stats_nba_v3.starters import (
     StarterRecovery,
     V3EvidenceRequired,
     V3StarterBoxscore,
 )
-from pbpstats.data_loader.stats_nba_v3.team_heave import V3TeamHeave
 from pbpstats.resources.enhanced_pbp import FieldGoal
 from pbpstats.resources.enhanced_pbp.rebound import EventOrderError
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
 )
-from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
-
-
-class V3HeldBallJumpBall(HeldBallJumpBall, StatsNbaV3JumpBall):
-    """A native jump ball under the held-ball rule."""
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.held_ball import is_candidate_at
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import V3HeldBallJumpBall
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import V3TeamHeave
 
 
 # NBA V3 records an and-one's basket, foul and free throw at one clock: from
@@ -233,7 +229,7 @@ def with_evidence(load, context, fetch_boxscore=None, fetch_live=None):
             )
 
 
-class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
+class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
     """
     Loads stats.nba.com source play-by-play V3 data for game.
     Events are stored in items attribute as :obj:`~pbpstats.resources.enhanced_pbp.enhanced_pbp_item.EnhancedPbpItem` objects
@@ -254,13 +250,35 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
     parent_object = "Game"
 
     def __init__(self, game_id, source_loader):
-        self.file_directory = source_loader.file_directory
-        pbp = source_loader.load_data(game_id)
-        overrides = source_loader.load_overrides(game_id, pbp)
-        boxscore = load_boxscore(game_id, source_loader.boxscore_source_loader)
+        self.source_loader = source_loader
+        super().__init__(game_id, source_loader)
+
+    @classmethod
+    def from_context(cls, source_bytes, context, **options):
+        """Events from recorded V3 bytes and a given game context, with no I/O.
+
+        ``options`` are ``validate_source_order``, reviewed ``overrides``, and
+        recorded ``event_order``, ``starter_boxscores`` and ``jump_balls``
+        evidence; a parse that needs evidence it is not given raises the error
+        naming it.
+        """
+        loader = cls.__new__(cls)
+        loader.source_data = source_bytes
+        loader.file_directory = None
+        loader._load(context, **options)
+        return loader
+
+    def _make_pbp_items(self):
+        """
+        makes the events from the play-by-play, in the context its box score
+        gives, asking the source loader for the evidence the parse needs
+        """
+        source_loader = self.source_loader
+        overrides = source_loader.load_overrides(self.game_id, self.source_data)
+        boxscore = load_boxscore(self.game_id, source_loader.boxscore_source_loader)
         context = boxscore_context(
-            game_id,
-            pbp,
+            self.game_id,
+            self.source_data,
             boxscore,
             source_loader.source,
             source_loader.load_aliases(boxscore),
@@ -269,7 +287,6 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
         def parse(fetch_live=None):
             with_evidence(
                 lambda boxscores, jump_balls: self._load(
-                    pbp,
                     context,
                     overrides=overrides,
                     starter_boxscores=boxscores,
@@ -304,23 +321,8 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
                 raise
             parse(source_loader.load_live)
 
-    @classmethod
-    def from_context(cls, source_bytes, context, **options):
-        """Events from recorded V3 bytes and a given game context, with no I/O.
-
-        ``options`` are ``validate_source_order``, reviewed ``overrides``, and
-        recorded ``event_order``, ``starter_boxscores`` and ``jump_balls``
-        evidence; a parse that needs evidence it is not given raises the error
-        naming it.
-        """
-        loader = cls.__new__(cls)
-        loader.file_directory = None
-        loader._load(source_bytes, context, **options)
-        return loader
-
     def _load(
         self,
-        source_bytes,
         context,
         *,
         validate_source_order=True,
@@ -330,10 +332,10 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
         jump_balls=None,
     ):
         self.overrides, self.override_diagnostics = (
-            overrides.decode(source_bytes) if overrides is not None else ({}, [])
+            overrides.decode(self.source_data) if overrides is not None else ({}, [])
         )
         decoded = DecodedV3(
-            source_bytes,
+            self.source_data,
             context,
             jump_balls,
             locations=reviewed_entries(
@@ -375,7 +377,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
                 "Starter boxscores must be keyed by positive period numbers"
             )
         for evidence in starter_boxscores.values():
-            evidence.validate(source_bytes, context.game_id)
+            evidence.validate(self.source_data, context.game_id)
         self.starter_boxscores = starter_boxscores
         self.repairs = []
         # The rows corrections and order repairs edit, as the original edits
@@ -394,7 +396,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
         self.clock_resets = self._apply_reviewed_clock_resets()
         self._apply_reviewed_event_order()
         if validate_source_order:
-            self._make_pbp_items()
+            self._make_events()
         else:
             self.factory = StatsNbaV3EnhancedPbpFactory()
             self.items = [
@@ -427,7 +429,8 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
             event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
 
-    def _make_pbp_items(self):
+    def _make_events(self):
+        # The original's _make_pbp_items, on the corrected rows.
         self._fix_order_when_technical_foul_before_period_start()
         self.factory = StatsNbaV3EnhancedPbpFactory()
         self.items = [
@@ -919,13 +922,12 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
 
     def _add_extra_attrs_to_all_events(self):
         # This hook also runs after each original source-order repair rebuild.
-        # Install extension events before linking/enhancement, without changing
-        # the global factory or any original event's decision methods.
+        # A jump ball the held-ball rule covers becomes its extension class
+        # before linking/enhancement; the rule depends on the events after it,
+        # which the factory does not see.
         rows = {r["event_num"]: r for r in self.data}
         self.items = [
-            V3TeamHeave(rows[event.event_num], index)
-            if event.event_num in self.decoded.team_heaves
-            else V3HeldBallJumpBall(rows[event.event_num], index)
+            V3HeldBallJumpBall(rows[event.event_num], index)
             if is_candidate_at(self.items, index)
             else event
             for index, event in enumerate(self.items)

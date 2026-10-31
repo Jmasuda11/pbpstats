@@ -6,7 +6,7 @@ import json
 import pytest
 
 from pbpstats.data_loader.stats_nba_v3 import V3DecodeError
-from pbpstats.data_loader.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 from tools.parity.reference import ROOT, digest, prepare_reference
 from tools.parity.run import worker
 from tools.parity.snapshot import first_difference

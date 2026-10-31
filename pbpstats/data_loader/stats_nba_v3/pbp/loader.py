@@ -40,11 +40,6 @@ class StatsNbaV3PbpLoader(StatsNbaV3LoaderBase):
         self._make_pbp_items()
 
     def _make_pbp_items(self):
+        # The recorded actions; the enhanced loader's rows replace them.
+        self.data = json.loads(self.source_data)["game"]["actions"]
         self.items = [StatsNbaV3PbpItem(item, i) for i, item in enumerate(self.data)]
-
-    @property
-    def data(self):
-        """
-        returns the recorded actions from the raw JSON response
-        """
-        return json.loads(self.source_data)["game"]["actions"]
