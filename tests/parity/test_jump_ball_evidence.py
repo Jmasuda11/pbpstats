@@ -83,9 +83,9 @@ def test_team_won_jump_ball_takes_the_opposing_jumper_and_team_from_live():
     with pytest.raises(V3JumpBallEvidenceRequired, match="explicit resolvable"):
         DecodedV3(pbp, context)
     result = decoded("0022500001", live)
-    row = next(r for r in result.projected if r["EVENTNUM"] == 424)
-    assert (row["PLAYER1_ID"], row["PLAYER2_ID"]) == (1628392, 203500)
-    assert (row["PLAYER3_ID"], row["PLAYER3_TEAM_ID"]) == (OKC, None)
+    row = next(r for r in result.projected if r["event_num"] == 424)
+    assert (row["player1_id"], row["player3_id"]) == (1628392, 203500)
+    assert (row["team_id"], row["player2_id"]) == (OKC, None)
     jump = StatsNbaV3JumpBall(row, 0)
     assert jump.team_id == OKC and not hasattr(jump, "player2_id")
     assert [d["event_num"] for d in result.recorded_jump_balls] == [424]
@@ -105,9 +105,9 @@ def team_recovery_2026_27(change=None):
 
 def test_2026_27_live_team_recovery_without_a_person_is_a_team_recovery():
     result = decoded("0022600095", team_recovery_2026_27())
-    row = next(r for r in result.projected if r["EVENTNUM"] == 744)
-    assert (row["PLAYER1_ID"], row["PLAYER2_ID"]) == (1627783, 1642258)
-    assert (row["PLAYER3_ID"], row["PLAYER3_TEAM_ID"]) == (IND, None)
+    row = next(r for r in result.projected if r["event_num"] == 744)
+    assert (row["player1_id"], row["player3_id"]) == (1627783, 1642258)
+    assert (row["team_id"], row["player2_id"]) == (IND, None)
     assert result.recorded_jump_balls == [dict(
         code="recorded_live_jump_ball", event_num=744, jumpers=[1627783, 1642258],
         recipient=IND, team_recovery=True,

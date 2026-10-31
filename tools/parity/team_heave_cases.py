@@ -94,11 +94,13 @@ def load_v3(rows, game_id=GAME):
 
 
 def behavior_snapshot(loaded):
+    from pbpstats.resources.enhanced_pbp import Rebound
+
     result = snapshot(loaded)
     # All rebound statistics include retained shooter-team, blocker and rebounder
     # attribution. Shot-only extension metadata/counters are tested separately.
     result["rebound_stats"] = [
         {"event_id": event.event_num, "stats": stats_rows(event.event_stats)}
-        for event in loaded.events if event.event_type == 4
+        for event in loaded.events if isinstance(event, Rebound)
     ]
     return result

@@ -5,6 +5,7 @@ import json
 import pytest
 
 from pbpstats.data_loader.stats_nba_v3 import V3DecodeError
+from pbpstats.resources.enhanced_pbp import JumpBall
 from tools.parity.participant_cases import catalog, load_v3, v3_inputs
 from tools.parity.reference import ROOT, prepare_reference
 from tools.parity.run import compare, worker
@@ -30,7 +31,7 @@ def test_resolution_records_all_candidates_and_exact_on_court_evidence(case):
     (decision,) = loaded.decoded.participant_resolutions
     assert decision["candidates"] == case["namesakes"]
     assert decision["player_id"] == case["recipient"]
-    jump = next(e for e in loaded.events if e.event_type == 10)
+    jump = next(e for e in loaded.events if isinstance(e, JumpBall))
     # Original StatsEnhancedPbpItem exposes the recipient as player2_id and
     # opposing jumper as player3_id, swapping the constructor's V2 fields.
     assert jump.player2_id == case["recipient"]

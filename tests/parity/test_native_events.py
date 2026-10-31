@@ -29,23 +29,42 @@ from tools.parity.v2_codes import labels
 HOME, AWAY = 1610612737, 1610612738
 
 
-def row(event_type, code, action_type, sub_type, **people):
-    """A decoded row: V2's codes for the original, V3's labels for native classes."""
-    event = dict(
-        GAME_ID="0022400001",
-        EVENTNUM=10,
-        PERIOD=1,
-        PCTIMESTRING="5:00",
-        EVENTMSGTYPE=event_type,
-        EVENTMSGACTIONTYPE=code,
-        PLAYER1_ID=0,
-        PLAYER1_TEAM_ID=None,
-        NEUTRALDESCRIPTION="",
-        V3_ACTION_TYPE=action_type,
-        V3_SUB_TYPE=sub_type,
+def original(event_type, code, **fields):
+    """A V2 row, as the original's class reads one."""
+    return dict(
+        dict(
+            GAME_ID="0022400001",
+            EVENTNUM=10,
+            PERIOD=1,
+            PCTIMESTRING="5:00",
+            EVENTMSGTYPE=event_type,
+            EVENTMSGACTIONTYPE=code,
+            PLAYER1_ID=0,
+            PLAYER1_TEAM_ID=None,
+            NEUTRALDESCRIPTION="",
+        ),
+        **fields,
     )
-    event.update(people)
-    return event
+
+
+def native(action_type, sub_type, **facts):
+    """The same event's facts, as the native class reads them."""
+    return dict(
+        dict(
+            game_id="0022400001",
+            event_num=10,
+            period=1,
+            clock="5:00",
+            description="",
+            action_type=action_type,
+            sub_type=sub_type,
+            team_id=None,
+            player1_id=0,
+            player2_id=None,
+            player3_id=None,
+        ),
+        **facts,
+    )
 
 
 def same(native, original, names):
@@ -55,10 +74,9 @@ def same(native, original, names):
 
 @pytest.mark.parametrize("label, code", labels("Instant Replay"))
 def test_replay_rulings(label, code):
-    event = row(18, code, "Instant Replay", label)
     same(
-        StatsNbaV3Replay(event, 0),
-        StatsReplay(event, 0),
+        StatsNbaV3Replay(native("Instant Replay", label), 0),
+        StatsReplay(original(18, code), 0),
         ("support_ruling", "overturn_ruling", "ruling_stands"),
     )
 
@@ -67,23 +85,32 @@ def test_replay_rulings(label, code):
 @pytest.mark.parametrize("event_type, action_type", [(1, "Made Shot"), (2, "Missed Shot")])
 @pytest.mark.parametrize("value", ["", " 3PT "], ids=["2pt", "3pt"])
 def test_field_goals(label, code, event_type, action_type, value):
-    event = row(
-        event_type, code, action_type, label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME,
-        NEUTRALDESCRIPTION=f"Player 24'{value}{label}",
+    text = f"Player 24'{value}{label}"
+    same(
+        StatsNbaV3FieldGoal(
+            native(action_type, label, player1_id=201, team_id=HOME, description=text), 0
+        ),
+        StatsFieldGoal(
+            original(
+                event_type, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, NEUTRALDESCRIPTION=text
+            ),
+            0,
+        ),
+        ("is_made", "shot_value"),
     )
-    same(StatsNbaV3FieldGoal(event, 0), StatsFieldGoal(event, 0), ("is_made", "shot_value"))
 
 
 @pytest.mark.parametrize("label, code", labels("Free Throw"))
 @pytest.mark.parametrize("miss", ["", "MISS "], ids=["made", "missed"])
 def test_free_throws(label, code, miss):
-    event = row(
-        3, code, "Free Throw", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME,
-        NEUTRALDESCRIPTION=f"{miss}Player {label}",
-    )
+    text = f"{miss}Player {label}"
     same(
-        StatsNbaV3FreeThrow(event, 0),
-        StatsFreeThrow(event, 0),
+        StatsNbaV3FreeThrow(
+            native("Free Throw", label, player1_id=201, team_id=HOME, description=text), 0
+        ),
+        StatsFreeThrow(
+            original(3, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, NEUTRALDESCRIPTION=text), 0
+        ),
         (
             "is_made",
             "is_ft_1_of_1",
@@ -103,10 +130,9 @@ def test_free_throws(label, code, miss):
 
 @pytest.mark.parametrize("label, code", labels("Foul"))
 def test_fouls(label, code):
-    event = row(6, code, "Foul", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME)
     same(
-        StatsNbaV3Foul(event, 0),
-        StatsFoul(event, 0),
+        StatsNbaV3Foul(native("Foul", label, player1_id=201, team_id=HOME), 0),
+        StatsFoul(original(6, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME), 0),
         (
             "is_personal_foul",
             "is_shooting_foul",
@@ -137,10 +163,9 @@ def test_fouls(label, code):
 
 @pytest.mark.parametrize("label, code", labels("Violation"))
 def test_violations(label, code):
-    event = row(7, code, "Violation", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME)
     same(
-        StatsNbaV3Violation(event, 0),
-        StatsViolation(event, 0),
+        StatsNbaV3Violation(native("Violation", label, player1_id=201, team_id=HOME), 0),
+        StatsViolation(original(7, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME), 0),
         (
             "is_delay_of_game",
             "is_goaltend_violation",
@@ -155,19 +180,24 @@ def test_violations(label, code):
 @pytest.mark.parametrize("label, code", labels("Rebound"))
 @pytest.mark.parametrize("rebounder", [201, 0], ids=["player", "team"])
 def test_rebound_placeholders(label, code, rebounder):
-    event = row(4, code, "Rebound", label, PLAYER1_ID=rebounder, PLAYER1_TEAM_ID=HOME)
-    same(StatsNbaV3Rebound(event, 0), StatsRebound(event, 0), ("is_placeholder",))
+    same(
+        StatsNbaV3Rebound(native("Rebound", label, player1_id=rebounder, team_id=HOME), 0),
+        StatsRebound(original(4, code, PLAYER1_ID=rebounder, PLAYER1_TEAM_ID=HOME), 0),
+        ("is_placeholder",),
+    )
 
 
 @pytest.mark.parametrize("label, code", labels("Turnover"))
 @pytest.mark.parametrize("stealer", [301, None], ids=["stolen", "not stolen"])
 def test_turnovers(label, code, stealer):
-    event = row(
-        5, code, "Turnover", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, PLAYER2_ID=stealer
-    )
+    # V2 records the stealer as its second player, the original's player 3.
     same(
-        StatsNbaV3Turnover(event, 0),
-        StatsTurnover(event, 0),
+        StatsNbaV3Turnover(
+            native("Turnover", label, player1_id=201, team_id=HOME, player3_id=stealer), 0
+        ),
+        StatsTurnover(
+            original(5, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, PLAYER2_ID=stealer), 0
+        ),
         (
             "is_steal",
             "is_no_turnover",
@@ -187,10 +217,15 @@ def test_turnovers(label, code, stealer):
 
 
 def test_substitution_players():
-    event = row(8, 0, "Substitution", "", PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, PLAYER2_ID=202)
-    native, original = StatsNbaV3Substitution(event, 0), StatsSubstitution(event, 0)
-    same(native, original, ("outgoing_player_id", "incoming_player_id"))
-    assert (native.outgoing_player_id, native.incoming_player_id) == (201, 202)
+    event = StatsNbaV3Substitution(
+        native("Substitution", "", player1_id=201, team_id=HOME, player2_id=202), 0
+    )
+    same(
+        event,
+        StatsSubstitution(original(8, 0, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME, PLAYER2_ID=202), 0),
+        ("outgoing_player_id", "incoming_player_id"),
+    )
+    assert (event.outgoing_player_id, event.incoming_player_id) == (201, 202)
 
 
 @pytest.mark.parametrize("label, code", labels("Jump Ball"))
@@ -200,22 +235,35 @@ def test_substitution_players():
     ids=["tipped to a player", "tipped out of bounds"],
 )
 def test_jump_ball_participants(label, code, recipient, recipient_team):
-    event = row(
-        10, code, "Jump Ball", label, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME,
-        PLAYER2_ID=301, PLAYER3_ID=recipient, PLAYER3_TEAM_ID=recipient_team,
+    # V2 records the other jumper second and the recipient third, with the
+    # recipient's team, or the team itself when no player recovered the tip.
+    event = StatsNbaV3JumpBall(
+        native(
+            "Jump Ball", label, player1_id=201, team_id=recipient_team or recipient,
+            player2_id=recipient if recipient_team else None, player3_id=301,
+        ),
+        0,
     )
-    native, original = StatsNbaV3JumpBall(event, 0), StatsJumpBall(event, 0)
-    same(native, original, ("team_id", "winning_team", "player1_id", "player3_id"))
-    assert hasattr(native, "player2_id") == hasattr(original, "player2_id")
-    assert getattr(native, "player2_id", None) == getattr(original, "player2_id", None)
+    v2 = StatsJumpBall(
+        original(
+            10, code, PLAYER1_ID=201, PLAYER1_TEAM_ID=HOME,
+            PLAYER2_ID=301, PLAYER3_ID=recipient, PLAYER3_TEAM_ID=recipient_team,
+        ),
+        0,
+    )
+    same(event, v2, ("team_id", "winning_team", "player1_id", "player3_id"))
+    assert hasattr(event, "player2_id") == hasattr(v2, "player2_id")
+    assert getattr(event, "player2_id", None) == getattr(v2, "player2_id", None)
 
 
-def test_native_events_never_read_v2_action_codes():
-    native = StatsNbaV3Replay(row(18, 4, "Instant Replay", "Coach Challenge Support Ruling"), 0)
-    assert native.sub_type == "Coach Challenge Support Ruling"
-    assert not hasattr(native, "event_action_type")
+def test_native_events_carry_no_v2_code():
+    event = StatsNbaV3Replay(native("Instant Replay", "Coach Challenge Support Ruling"), 0)
+    assert event.sub_type == "Coach Challenge Support Ruling"
+    assert not hasattr(event, "event_type") and not hasattr(event, "event_action_type")
 
 
 def test_native_events_print_as_the_original_does():
-    event = row(18, 4, "Instant Replay", "Coach Challenge Support Ruling")
-    assert repr(StatsNbaV3Replay(event, 0)) == repr(StatsReplay(event, 0))
+    label = "Coach Challenge Support Ruling"
+    assert repr(StatsNbaV3Replay(native("Instant Replay", label), 0)) == repr(
+        StatsReplay(original(18, 4), 0)
+    )

@@ -79,7 +79,7 @@ def test_factory_event_classes_are_used_without_rule_overrides():
     loaded = load_synthetic(wrap([e("make"), e("turnover", 580, AWAY, 11)]))
     factory = StatsNbaV3EnhancedPbpFactory()
     for event in loaded.events:
-        labels = dict(V3_ACTION_TYPE=event.action_type, V3_SUB_TYPE=event.sub_type)
+        labels = dict(action_type=event.action_type, sub_type=event.sub_type)
         assert type(event) is factory.get_event_class(labels)
     assert loaded.capabilities["full_game_validated"] is False
     with pytest.raises(V3DecodeError, match="attribution completeness"):
@@ -309,7 +309,7 @@ def test_roster_names_match_regardless_of_surrounding_whitespace():
     )
     context.roster[6]["names"] = [" Player6 "]
     projected = decode(payload, context).projected
-    assert [r["PLAYER2_ID"] for r in projected if r["EVENTMSGTYPE"] == 8] == [6]
+    assert [r["player2_id"] for r in projected if r["action_type"] == "Substitution"] == [6]
 
 
 def test_unrecorded_turnover_reason_is_rejected():
@@ -349,7 +349,7 @@ def test_secondary_block_is_grouped_without_losing_source_rows():
     )
     payload["game"]["actions"].insert(2, secondary)
     decoded = decode(payload, context)
-    assert decoded.projected[1]["PLAYER3_ID"] == 11
+    assert decoded.projected[1]["player3_id"] == 11
     assert decoded.groups[2]["source_indices"] == (1, 2)
     assert sum(
         len(group["source_indices"]) for group in decoded.groups.values()
@@ -374,7 +374,7 @@ def test_assist_after_points_annotation_resolves_exact_player():
     payload["game"]["actions"][1][
         "description"
     ] = "Player1 Jump Shot (2 PTS) (Player2 1 AST)"
-    assert decode(payload, context).projected[1]["PLAYER2_ID"] == 2
+    assert decode(payload, context).projected[1]["player2_id"] == 2
 
 
 def test_explicit_three_point_value_preserves_raw_description():

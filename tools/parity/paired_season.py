@@ -422,7 +422,7 @@ def decoder_comparison(v3, facts):
                 )
                 continue
             event_type, action_type = CODES.get(
-                (projected["V3_ACTION_TYPE"], projected["V3_SUB_TYPE"]), (None, None)
+                (projected["action_type"], projected["sub_type"]), (None, None)
             )
             outcome = dict(status="decoded", event_type=event_type, action_type=action_type)
             break

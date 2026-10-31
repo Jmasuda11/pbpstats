@@ -190,11 +190,8 @@ def test_other_season_codes_match_their_pinned_v2_row_and_recording(observation)
 
     loader = web.load_game(v3["game_id"], pbp, box, "recorded", fetch_boxscore=fetch)
     event = next(x for x in loader.events if x.event_num == action["actionNumber"])
-    # A native event decides from the V3 label, an original one from the V2 code.
-    if hasattr(event, "sub_type"):
-        assert (event.event_type, event.sub_type) == (observation["code"][0], action["subType"])
-    else:
-        assert (event.event_type, event.event_action_type) == tuple(observation["code"])
+    # The native event decides from the V3 label, whose V2 code is pinned above.
+    assert [event.action_type, event.sub_type] == observation["label"]
 
 
 @pytest.mark.parametrize("unrecorded", UNRECORDED["unrecorded"], ids=lambda u: u["label"][1])

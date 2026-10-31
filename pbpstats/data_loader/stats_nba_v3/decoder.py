@@ -314,8 +314,9 @@ FOULS_WITHOUT_FOULED_PLAYER = {
     "Flopping",
     "Bench",
 }
-# V2 records the second named player of a double foul as PLAYER2, always on
-# the opposing team. A coach's double technical names no second person in V3.
+# A double foul's second named player, always on the opposing team, is its
+# player 3, as the original reads the second player V2 records. A coach's
+# double technical names no second person in V3.
 DOUBLE_FOULS = {
     "Double Personal": re.compile(
         r"Foul : Double Personal - (.+?) \(\d+ PF\), (.+?) \(\d+ PF\)(?: \([^()]*\))?"
@@ -536,14 +537,11 @@ class DecodedV3:
                     )
                 projected = self._decode(row, group, active_players)
                 if (
-                    projected["V3_ACTION_TYPE"] == "Substitution"
+                    projected["action_type"] == "Substitution"
                     and active_players is not None
                     and row["actionNumber"] not in self.reviewed_removed
                 ):
-                    outgoing, incoming = (
-                        projected["PLAYER1_ID"],
-                        projected["PLAYER2_ID"],
-                    )
+                    outgoing, incoming = projected["player1_id"], projected["player2_id"]
                     if outgoing not in active_players or incoming in active_players:
                         raise V3DecodeError(
                             "Substitution contradicts recorded starter/substitution stream"
@@ -681,20 +679,23 @@ class DecodedV3:
         ):
             raise V3DecodeError("Event requires a known team")
         event = dict(
-            GAME_ID=self.context.game_id,
-            EVENTNUM=row["actionNumber"],
-            PERIOD=row["period"],
-            PCTIMESTRING=clock_text(row["clock"]),
-            PLAYER1_ID=player,
-            PLAYER1_TEAM_ID=team or None,
-            PLAYER2_ID=None,
-            PLAYER3_ID=None,
-            PLAYER3_TEAM_ID=None,
-            NEUTRALDESCRIPTION=row["description"],
+            game_id=self.context.game_id,
+            event_num=row["actionNumber"],
+            period=row["period"],
+            clock=clock_text(row["clock"]),
+            description=row["description"],
             # The labels native event classes decide from, as a rule or a
             # reviewed correction leaves them.
-            V3_ACTION_TYPE=kind,
-            V3_SUB_TYPE=subtype,
+            action_type=kind,
+            sub_type=subtype,
+            # The people, by the roles the original's events give them: player 2
+            # is an assister, an incoming player or a jump ball's recipient;
+            # player 3 a blocker, a stealer, a double foul's other party or the
+            # other jumper. None is no one.
+            team_id=team or None,
+            player1_id=player,
+            player2_id=None,
+            player3_id=None,
         )
         roles = {}
         for _, secondary in group:
@@ -769,22 +770,19 @@ class DecodedV3:
                 raise V3DecodeError("Description contradicts field goal facts")
             if subtype not in SHOTS:
                 raise V3DecodeError("Unsupported shot subtype {!r}".format(subtype))
-            event["EVENTMSGTYPE"] = 1 if made else 2
             # Shared shot value reads the description; retain explicit V3 value in
             # the derived constructor description while leaving raw text intact.
-            if row["shotValue"] == 3 and "3PT" not in event["NEUTRALDESCRIPTION"]:
-                event["NEUTRALDESCRIPTION"] += " 3PT "
+            if row["shotValue"] == 3 and "3PT" not in event["description"]:
+                event["description"] += " 3PT "
             assist = re.search(r"\(([^()]+?) \d+ AST\)", row["description"])
             if assist:
                 if not made:
                     raise V3DecodeError("A missed shot cannot have an assist")
-                event["PLAYER2_ID"] = self._resolve(assist[1], team)
-            event["PLAYER3_ID"] = roles.get("blocker")
+                event["player2_id"] = self._resolve(assist[1], team)
+            event["player3_id"] = roles.get("blocker")
         elif kind == "Heave":
-            # Missed-field-goal category for the original rebound/order methods;
-            # a dedicated extension class supplies semantics, with no V2 subtype.
-            event["EVENTMSGTYPE"] = 2
-            event["PLAYER3_ID"] = roles.get("blocker")
+            # A missed field goal, whose team-heave class supplies the rest.
+            event["player3_id"] = roles.get("blocker")
         elif kind == "Free Throw":
             description = row["description"]
             if row["actionNumber"] in self.reviewed_free_throw_subtypes:
@@ -830,9 +828,7 @@ class DecodedV3:
                     raise V3DecodeError("Invalid free throw numbering")
                 if category == "Technical" and (attempt, total) not in TECHNICAL_FREE_THROWS:
                     raise V3DecodeError("Unsupported technical attempt pattern")
-            event.update(
-                EVENTMSGTYPE=3, NEUTRALDESCRIPTION=description, V3_SUB_TYPE=subtype
-            )
+            event.update(description=description, sub_type=subtype)
             # Outcome is described by MISS; category/numbering must be explicit.
             if subtype not in description:
                 raise V3DecodeError("Free throw description disagrees with subtype")
@@ -845,10 +841,9 @@ class DecodedV3:
             if kind == "Foul" and subtype == "Personal Take" and self._transition_take_foul(
                 row, team
             ):
-                event["V3_SUB_TYPE"] = "Transition Take"
-            event["EVENTMSGTYPE"] = {"Foul": 6, "Turnover": 5, "Violation": 7}[kind]
+                event["sub_type"] = "Transition Take"
             if kind == "Turnover":
-                event["PLAYER2_ID"] = roles.get("stealer")
+                event["player3_id"] = roles.get("stealer")
             elif kind == "Foul" and subtype in DOUBLE_FOULS and not non_roster:
                 match = DOUBLE_FOULS[subtype].fullmatch(row["description"].strip())
                 opponent = next(t for t in self.context.team_ids if t != team)
@@ -861,7 +856,7 @@ class DecodedV3:
                             "Event foul-opponent override does not fit the recorded event"
                         )
                     self._unused_reviewed["foul-opponent"].discard(row["actionNumber"])
-                    event["PLAYER2_ID"] = reviewed
+                    event["player3_id"] = reviewed
                     self.reviewed_inputs.append(dict(
                         code="reviewed_foul_opponent", event_num=row["actionNumber"],
                         player_id=reviewed,
@@ -870,7 +865,7 @@ class DecodedV3:
                     raise V3DecodeError("Double foul requires both recorded participants")
                 else:
                     try:
-                        event["PLAYER2_ID"] = self._resolve(match[2], opponent)
+                        event["player3_id"] = self._resolve(match[2], opponent)
                     except V3DecodeError:
                         # The other party of a double technical can be a coach, for
                         # whom V3 records no ID. The original's decisions and
@@ -895,7 +890,6 @@ class DecodedV3:
         elif kind == "Rebound":
             if subtype not in REBOUNDS:
                 raise V3DecodeError("Unsupported rebound subtype")
-            event["EVENTMSGTYPE"] = 4
         elif kind == "Substitution":
             match = re.fullmatch(r"SUB: (.+) FOR (.+)", row["description"])
             if subtype or not match or self._resolve(match[2], team) != player:
@@ -918,8 +912,8 @@ class DecodedV3:
                     code="reviewed_substitution_outgoing", event_num=row["actionNumber"],
                     recorded_player_id=player, player_id=reviewed,
                 ))
-                event["PLAYER1_ID"] = reviewed
-            event.update(EVENTMSGTYPE=8, PLAYER2_ID=incoming)
+                event["player1_id"] = reviewed
+            event["player2_id"] = incoming
         elif kind == "Jump Ball":
             # Coach-challenge descriptions carry a "(CC) " marker, others never do.
             marker = r"\(CC\) " if subtype == "Coach Challenge" else ""
@@ -960,24 +954,26 @@ class DecodedV3:
                     jumper, recipient, recipient_team = self._recorded_jump_ball(
                         row, opponent, match
                     )
+            # The tip's winner is the recipient's team, or the team that
+            # recovered it when no player did.
             event.update(
-                EVENTMSGTYPE=10,
-                PLAYER2_ID=jumper,
-                PLAYER3_ID=recipient,
-                PLAYER3_TEAM_ID=recipient_team,
+                team_id=recipient_team or recipient,
+                player2_id=recipient if recipient_team else None,
+                player3_id=jumper,
             )
-        elif kind == "period" and subtype in ("start", "end"):
-            event["EVENTMSGTYPE"] = 12 if subtype == "start" else 13
-        elif kind == "Timeout" and subtype in self.timeouts:
-            event["EVENTMSGTYPE"] = 9
-        elif kind == "Instant Replay" and subtype in REPLAYS:
-            event["EVENTMSGTYPE"] = 18
-        elif kind == "Ejection" and subtype in EJECTIONS:
-            event["EVENTMSGTYPE"] = 11
-        else:
+        elif not (
+            kind == "period" and subtype in ("start", "end")
+            or kind == "Timeout" and subtype in self.timeouts
+            or kind == "Instant Replay" and subtype in REPLAYS
+            or kind == "Ejection" and subtype in EJECTIONS
+        ):
             raise V3DecodeError(
                 "Unsupported event type/subtype {!r}/{!r}".format(kind, subtype)
             )
+        if event["team_id"] is None and kind != "Instant Replay":
+            # As the original reads an event with no team: its person, a coach
+            # or no one, stands as its team. A replay keeps no team.
+            event["team_id"], event["player1_id"] = event["player1_id"], 0
         return event
 
     def _recorded_jump_ball(self, row, opponent, match):

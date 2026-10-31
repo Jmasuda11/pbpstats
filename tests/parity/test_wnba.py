@@ -146,7 +146,7 @@ def test_wnba_only_codes_are_recorded_for_wnba_and_never_for_nba(facts):
 )
 def test_wnba_only_codes_decode_for_wnba_games_alone(label, code):
     event = decoded_sample(label).projected[0]
-    assert (event["V3_ACTION_TYPE"], event["V3_SUB_TYPE"]) == label
+    assert (event["action_type"], event["sub_type"]) == label
     assert v2_codes.CODES[label] == code
     with pytest.raises(V3DecodeError):
         decoded_sample(label, game_id="0022500001")

@@ -46,6 +46,6 @@ class StatsNbaV3EnhancedPbpFactory:
         returns the class for a decoded event, by its V3 action type, and a
         period's by its subtype
         """
-        if event["V3_ACTION_TYPE"] == "period":
-            return PERIOD_CLASSES[event["V3_SUB_TYPE"]]
-        return EVENT_CLASSES[event["V3_ACTION_TYPE"]]
+        if event["action_type"] == "period":
+            return PERIOD_CLASSES[event["sub_type"]]
+        return EVENT_CLASSES[event["action_type"]]

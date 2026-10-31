@@ -17,7 +17,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
 )
 from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
 from pbpstats.data_loader.stats_nba_v3.possessions import V3HeldBallJumpBall
-from pbpstats.resources.enhanced_pbp import Substitution
+from pbpstats.resources.enhanced_pbp import JumpBall, Substitution, Turnover
 from pbpstats.data_loader.stats_nba_v3.overrides import CHANGE_EVENTS, KEEP_EVENTS
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
@@ -98,7 +98,7 @@ def credits(loaded):
 
 def test_later_turnover_by_the_team_that_lost_the_tip_ends_its_possession():
     loaded = load(held_ball(587))
-    jump, turnover = (x for x in loaded.events if x.event_type in (10, 5))
+    jump, turnover = (x for x in loaded.events if isinstance(x, (JumpBall, Turnover)))
     assert isinstance(jump, V3HeldBallJumpBall)
     assert jump.held_ball_turnover is turnover
     assert not jump.is_possession_ending_event and turnover.is_possession_ending_event
@@ -137,7 +137,7 @@ def test_original_alone_fails_its_alternation_check():
 
 def test_stoppage_substitution_between_the_jump_ball_and_its_turnover():
     loaded = load(held_ball(587, substitution=590))
-    jump, substitution, turnover = (x for x in loaded.events if x.event_type in (10, 8, 5))
+    jump, substitution, turnover = (x for x in loaded.events if isinstance(x, (JumpBall, Substitution, Turnover)))
     assert isinstance(jump, V3HeldBallJumpBall) and isinstance(substitution, Substitution)
     assert jump.stoppage_substitutions == [substitution]
     assert jump.held_ball_turnover is turnover
@@ -158,11 +158,12 @@ def test_same_clock_turnover_past_a_substitution_gets_the_same_clock_decisions()
     # with the substitution logged between them, the extension decides it alike.
     plain, logged = load(held_ball(590)), load(held_ball(590, substitution=590))
     assert not any(isinstance(x, V3HeldBallJumpBall) for x in plain.events)
-    jump = next(x for x in logged.events if x.event_type == 10)
+    jump = next(x for x in logged.events if isinstance(x, JumpBall))
     assert isinstance(jump, V3HeldBallJumpBall) and jump.held_ball_turnover is not None
 
     def shape(loaded):
-        return [(p.offense_team_id, [x.event_type for x in p.events if x.event_type != 8])
+        return [(p.offense_team_id, [x.action_type for x in p.events
+                                     if x.action_type != "Substitution"])
                 for p in loaded.items]
 
     assert shape(logged) == shape(plain)
@@ -176,8 +177,8 @@ def test_held_ball_on_the_player_who_just_stole_the_ball():
     # HOME loses the ball to AWAY's steal; the stealer is tied up at once and
     # HOME wins the tip; AWAY is charged with the held ball two seconds later.
     loaded = load(held_ball(588, tip_team=HOME, turnover_team=AWAY, steal=True))
-    steal, turnover = (x for x in loaded.events if x.event_type == 5)
-    jump = next(x for x in loaded.events if x.event_type == 10)
+    steal, turnover = (x for x in loaded.events if isinstance(x, Turnover))
+    jump = next(x for x in loaded.events if isinstance(x, JumpBall))
     assert isinstance(jump, V3HeldBallJumpBall)
     assert jump.steal_turnover is steal and jump.held_ball_turnover is turnover
     assert steal.is_possession_ending_event and not jump.is_possession_ending_event

@@ -15,6 +15,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
 )
 from pbpstats.resources.enhanced_pbp.start_of_period import (
     InvalidNumberOfStartersException,
+    StartOfPeriod,
 )
 from tools.parity.starter_cases import catalog, inputs, candidate, STARTERS, FILE
 from tools.parity.scenarios import GAME, HOME, AWAY
@@ -169,7 +170,7 @@ def test_partial_context_recovers_only_the_missing_period():
         raw, context, starter_boxscores={2: V3StarterBoxscore(**fields)}
     )
     assert {
-        e.period: e.period_starters for e in loaded.events if e.event_type == 12
+        e.period: e.period_starters for e in loaded.events if isinstance(e, StartOfPeriod)
     } == {1: STARTERS, 2: STARTERS}
     assert [
         d["period"] for d in loaded.diagnostics if d["code"] == "starter_recovery"

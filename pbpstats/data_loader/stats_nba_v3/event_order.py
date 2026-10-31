@@ -47,7 +47,7 @@ class V3EventOrder:
             type(n) is not int or n < 0 or type(p) is not int or p < 1 for n, p in order
         ):
             raise V3DecodeError("Invalid provider event number or period")
-        periods = {row["EVENTNUM"]: row["PERIOD"] for row in decoded.projected}
+        periods = {row["event_num"]: row["period"] for row in decoded.projected}
         matched = [(n, p) for n, p in order if n in periods]
         if Counter(n for n, _ in matched) != Counter(periods.keys()):
             raise V3DecodeError(

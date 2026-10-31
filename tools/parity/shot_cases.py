@@ -93,6 +93,8 @@ def v3_inputs(case):
 
 
 def shot_snapshot(loaded):
+    from pbpstats.resources.enhanced_pbp import FieldGoal
+
     result = snapshot(loaded)
     # No attempt()/unavailable placeholders: all these shot facts must evaluate.
     result["shot_details"] = [
@@ -110,6 +112,6 @@ def shot_snapshot(loaded):
             }
         )
         for event in loaded.events
-        if event.event_type in (1, 2)
+        if isinstance(event, FieldGoal)
     ]
     return result

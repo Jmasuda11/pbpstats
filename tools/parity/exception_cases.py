@@ -382,6 +382,8 @@ def property_events(case, provider):
 
 
 def observe(case, provider, folder):
+    from pbpstats.resources.enhanced_pbp import Rebound
+
     if case["boundary"] == "starter_loader":
         from tools.parity.starter_cases import observe as starter_observe
 
@@ -389,7 +391,7 @@ def observe(case, provider, folder):
     if case["boundary"] != "loader":
         events = property_events(case, provider)
         if case["boundary"] == "rebound_property":
-            rebound = next(e for e in events if e.event_type == 4)
+            rebound = next(e for e in events if isinstance(e, Rebound))
             return {"missed_shot": rebound.missed_shot.event_num}
         if case["boundary"] == "starter_boxscore":
             from types import SimpleNamespace
@@ -473,7 +475,7 @@ def observe(case, provider, folder):
                 keep=e.non_possession_changing_override,
                 previous=e.previous_event.event_num if e.previous_event else None,
                 next=e.next_event.event_num if e.next_event else None,
-                missed_shot=e.missed_shot.event_num if e.event_type == 4 else None,
+                missed_shot=e.missed_shot.event_num if isinstance(e, Rebound) else None,
             )
             for e in loaded.events
         ],

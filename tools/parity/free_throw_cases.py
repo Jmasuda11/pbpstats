@@ -95,6 +95,8 @@ def v3_inputs(case):
 
 
 def free_throw_snapshot(loaded):
+    from pbpstats.resources.enhanced_pbp import FreeThrow
+
     result = shot_snapshot(loaded)
     result["free_throw_details"] = [
         scalar(
@@ -132,6 +134,6 @@ def free_throw_snapshot(loaded):
             )
         )
         for event in loaded.events
-        if event.event_type == 3
+        if isinstance(event, FreeThrow)
     ]
     return result

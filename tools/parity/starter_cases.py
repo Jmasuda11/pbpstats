@@ -281,6 +281,7 @@ def candidate(case):
 
 
 def observe(case, provider, folder):
+    from pbpstats.resources.enhanced_pbp import StartOfPeriod
     from tools.parity.worker import credit_snapshot
 
     calls = []
@@ -307,7 +308,9 @@ def observe(case, provider, folder):
         requests=calls,
         credits=credit_snapshot(loaded),
         starters={
-            e.period: e.period_starters for e in loaded.events if e.event_type == 12
+            e.period: e.period_starters
+            for e in loaded.events
+            if isinstance(e, StartOfPeriod)
         },
         events=[
             dict(number=e.event_num, lineup=e.current_players) for e in loaded.events
