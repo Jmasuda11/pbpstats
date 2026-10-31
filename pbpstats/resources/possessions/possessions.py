@@ -6,6 +6,7 @@ from operator import itemgetter
 
 from pbpstats import KEYS_OFF_BY_FACTOR_OF_5_WHEN_AGGREGATING_FOR_TEAM_AND_LINEUPS
 from pbpstats.resources.base import Base
+from pbpstats.resources.possessions.stats_nba_v3_possession import V3Possession
 
 
 class Possessions(Base):
@@ -28,6 +29,15 @@ class Possessions(Base):
         return self.__dict__
 
     def _aggregate_event_stats(self, *args):
+        # V3 does not record every fouled player, so its detailed statistics
+        # are gated here as on the V3 possession loader.
+        if any(isinstance(item, V3Possession) for item in self.items):
+            # Imported here: the data loaders import the resources.
+            from pbpstats.data_loader.stats_nba_v3.decoder import V3DecodeError
+
+            raise V3DecodeError(
+                "Detailed statistics are unavailable until attribution completeness is verified"
+            )
         stats = [
             event_stat
             for item in self.items

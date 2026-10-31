@@ -227,6 +227,17 @@ def test_client_loads_every_v3_resource(tmp_path):
     ) - 2
 
 
+def test_client_keeps_detailed_statistics_gated(tmp_path):
+    directory = str(data_directory(tmp_path, PLAIN))
+    client = Client(dict(
+        dir=directory, Possessions={"source": "file", "data_provider": "stats_nba_v3"}
+    ))
+    possessions = client.Game(PLAIN).possessions
+    for name in ("team_stats", "opponent_stats", "player_stats", "lineup_stats", "lineup_opponent_stats"):
+        with pytest.raises(V3DecodeError, match="attribution completeness"):
+            getattr(possessions, name)
+
+
 def test_enhanced_loader_is_built_on_the_pbp_loader_as_the_originals_is(tmp_path):
     assert StatsNbaEnhancedPbpLoader.__bases__[0] is StatsNbaPbpLoader
     assert StatsNbaV3EnhancedPbpLoader.__bases__[0] is StatsNbaV3PbpLoader
