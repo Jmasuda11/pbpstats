@@ -1,48 +1,52 @@
-"""Offline construction of native V3 events and the original's possessions."""
+"""
+``StatsNbaV3EnhancedPbpLoader`` loads play-by-play V3 data for a game and
+creates :obj:`~pbpstats.resources.enhanced_pbp.enhanced_pbp_item.EnhancedPbpItem` objects
+for each event, with native V3 event classes
 
-from collections import Counter
+Enhanced data for each event includes current players on floor, score, fouls to give and number of fouls committed by each player,
+plus additional data depending on event type, as the original enhances V2 events
+
+The following code will load pbp data for game id "0022500001" from files located in subdirectories of the /data directory
+
+.. code-block:: python
+
+    from pbpstats.data_loader import StatsNbaV3EnhancedPbpFileLoader, StatsNbaV3EnhancedPbpLoader
+
+    source_loader = StatsNbaV3EnhancedPbpFileLoader("/data")
+    pbp_loader = StatsNbaV3EnhancedPbpLoader("0022500001", source_loader)
+    print(pbp_loader.items[0].data)  # prints dict with the first event of the game
+"""
 from copy import deepcopy
 from decimal import Decimal
+import hashlib
+import json
 import math
 
-from pbpstats import (
-    G_LEAGUE_GAME_ID_PREFIX,
-    G_LEAGUE_STRING,
-    NBA_GAME_ID_PREFIX,
-    NBA_STRING,
-    WNBA_GAME_ID_PREFIX,
-    WNBA_STRING,
-)
 from pbpstats.data_loader.nba_enhanced_pbp_loader import NbaEnhancedPbpLoader
-from pbpstats.data_loader.stats_nba.possessions.loader import StatsNbaPossessionLoader
-from pbpstats.resources.enhanced_pbp import FieldGoal, Substitution
-from pbpstats.resources.enhanced_pbp.rebound import EventOrderError
-from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
-    StatsNbaV3EnhancedPbpFactory,
-)
-from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
-from pbpstats.resources.possessions.possession import Possession
-
-from .decoder import (
-    BLANK_FLAGRANT_FREE_THROW_VERSION,
+from pbpstats.data_loader.stats_nba_v3.base import StatsNbaV3LoaderBase
+from pbpstats.data_loader.stats_nba_v3.boxscore.loader import StatsNbaV3BoxscoreLoader
+from pbpstats.data_loader.stats_nba_v3.decoder import (
     FOULS,
     FREE_THROWS,
     REBOUNDS,
-    TEAMLESS_EXCESS_TIMEOUT_VERSION,
-    TEAMLESS_TECHNICAL_VERSION,
-    TECHNICAL_FREE_THROW_VERSION,
-    TRANSITION_TAKE_FOUL_VERSION,
-    VOIDED_SECOND_FREE_THROW_VERSION,
     TECHNICAL_FOULS,
     TEAM_TURNOVERS,
     TURNOVERS,
     VIOLATIONS,
     DecodedV3,
+    V3Context,
     V3DecodeError,
+    V3JumpBallEvidenceRequired,
     clock_text,
 )
-from .overrides import (
-    BAD_POSSESSIONS,
+from pbpstats.data_loader.stats_nba_v3.held_ball import HeldBallJumpBall, is_candidate_at
+from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
+from pbpstats.data_loader.stats_nba_v3.names import (
+    add_actor_aliases,
+    add_unaccented_names,
+    require,
+)
+from pbpstats.data_loader.stats_nba_v3.overrides import (
     CHANGE_EVENTS,
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
@@ -65,12 +69,18 @@ from .overrides import (
     KEEP_EVENTS,
     STARTERS,
 )
-from .starters import StarterRecovery
-from .held_ball import HELD_BALL_VERSION, HeldBallJumpBall, is_candidate_at
-from .team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
-
-
-TEAM_IDS_GUARD = "possession_team_ids_skip_teamless_events_v1"
+from pbpstats.data_loader.stats_nba_v3.starters import (
+    StarterRecovery,
+    V3EvidenceRequired,
+    V3StarterBoxscore,
+)
+from pbpstats.data_loader.stats_nba_v3.team_heave import V3TeamHeave
+from pbpstats.resources.enhanced_pbp import FieldGoal
+from pbpstats.resources.enhanced_pbp.rebound import EventOrderError
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
+    StatsNbaV3EnhancedPbpFactory,
+)
+from pbpstats.resources.enhanced_pbp.stats_nba_v3.jump_ball import StatsNbaV3JumpBall
 
 
 class V3HeldBallJumpBall(HeldBallJumpBall, StatsNbaV3JumpBall):
@@ -116,64 +126,257 @@ def reviewed_entries(overrides, name, game_id, empty):
     return games.get(game_id, games.get(int(game_id), empty))
 
 
-class V3Possession(Possession):
-    """Original Possession with one defect guarded and reviewed clock resets.
+def load_boxscore(game_id, source_loader):
+    """The game's box score loader; a malformed response is a decode rejection."""
+    try:
+        return StatsNbaV3BoxscoreLoader(game_id, source_loader)
+    except V3DecodeError:
+        raise
+    except (ValueError, KeyError, TypeError) as error:
+        raise V3DecodeError("Unexpected box score or play-by-play response") from error
 
-    The original get_team_ids skips team-less events in its own possession but
-    not in neighbouring ones. Replay events never have a team, in V2 or V3, so
-    a lone jump-ball possession after a replay review raised AttributeError.
-    Wherever the original returns, this returns the identical list.
 
-    A possession that follows a reviewed game-clock reset starts at the clock
-    the reset set, not at the previous possession's last clock.
+def boxscore_context(game_id, pbp_bytes, boxscore, source, aliases=None):
+    """Teams and the named roster from the official box score, bound to the PBP.
+
+    Names come from the box score's players, the play-by-play's own ID-bound
+    actor names and descriptions, and unaccented variants; nobody is guessed
+    from a name. ``aliases`` maps a box-score person ID to reviewed extra
+    names, for descriptions that use a name the box score does not (for
+    example a given name). Period starters are left to the original's
+    inference.
+    """
+    try:
+        rows = json.loads(pbp_bytes)["game"]["actions"]
+    except (ValueError, KeyError, TypeError) as error:
+        raise V3DecodeError("Unexpected box score or play-by-play response") from error
+    roster = {}
+    for player in boxscore.items:
+        if not hasattr(player, "player_id"):
+            continue  # a team's totals
+        first = getattr(player, "firstName", None)
+        family = getattr(player, "familyName", None)
+        names = [family, getattr(player, "nameI", None)]
+        if first and family:
+            names.append(first + " " + family)
+        roster[player.player_id] = {
+            "team_id": player.team_id,
+            "names": sorted({n for n in names if n}),
+        }
+    for row in rows:
+        facts = roster.get(row.get("personId"))
+        if facts is None:
+            continue
+        require(
+            row.get("teamId") in (0, facts["team_id"]),
+            "roster_identity",
+            "Play-by-play actor contradicts the box score team",
+        )
+        for key in ("playerName", "playerNameI"):
+            name = row.get(key)
+            if isinstance(name, str) and name.strip() and name not in facts["names"]:
+                facts["names"].append(name)
+    for identity, names in (aliases or {}).items():
+        require(identity in roster, "alias", "Alias for a player not in the box score")
+        roster[identity]["names"] += [
+            n for n in names if n not in roster[identity]["names"]
+        ]
+    add_actor_aliases(rows, roster)
+    add_unaccented_names(roster)
+    teams = (boxscore.home_team_id, boxscore.away_team_id)
+    return V3Context(
+        game_id, teams, roster, {}, source, hashlib.sha256(pbp_bytes).hexdigest()
+    )
+
+
+def boxscore_starters(boxscore):
+    """First-period starters marked in the box score, when each team has five."""
+    starters = {boxscore.home_team_id: [], boxscore.away_team_id: []}
+    for player in boxscore.items:
+        if hasattr(player, "player_id") and getattr(player, "position", None):
+            starters[player.team_id].append(player.player_id)
+    return starters if all(len(p) == 5 for p in starters.values()) else None
+
+
+def with_evidence(load, context, fetch_boxscore=None, fetch_live=None):
+    """``load(starter_boxscores, jump_balls)``, given the evidence it asks for.
+
+    When the original's starter inference falls back to its period-start box
+    score request, ``fetch_boxscore(period, url, params)`` must return that
+    response; it is recorded as V3StarterBoxscore evidence. Without it, the
+    V3EvidenceRequired error names the exact request instead. A jump ball V3
+    leaves undecided likewise needs ``fetch_live(url)`` to return the live
+    play-by-play, recorded as V3JumpBallEvidence.
+    """
+    boxscores, jump_balls = {}, None
+    while True:
+        try:
+            return load(boxscores, jump_balls)
+        except V3JumpBallEvidenceRequired as needed:
+            if fetch_live is None or jump_balls is not None:
+                raise
+            response = fetch_live(needed.url)
+            jump_balls = V3JumpBallEvidence(
+                response.content, response.url, context.pbp_sha256
+            )
+        except V3EvidenceRequired as needed:
+            if fetch_boxscore is None or needed.period in boxscores:
+                raise
+            response = fetch_boxscore(needed.period, needed.url, needed.params)
+            boxscores[needed.period] = V3StarterBoxscore(
+                response.content,
+                response.url,
+                context.pbp_sha256,
+                needed.params,
+                response.status_code,
+                response.reason or "",
+            )
+
+
+class StatsNbaV3EnhancedPbpLoader(StatsNbaV3LoaderBase, NbaEnhancedPbpLoader):
+    """
+    Loads stats.nba.com source play-by-play V3 data for game.
+    Events are stored in items attribute as :obj:`~pbpstats.resources.enhanced_pbp.enhanced_pbp_item.EnhancedPbpItem` objects
+
+    The game's context comes from its box score: the teams, and each player's
+    names. Reviewed corrections apply only to the play-by-play bytes they were
+    reviewed against. Then the rows the decoder names by role get the reviewed
+    corrections, the original's order repairs, linking and enhancement.
+
+    :param str game_id: NBA Stats Game Id
+    :param source_loader: :obj:`~pbpstats.data_loader.stats_nba_v3.enhanced_pbp.file.StatsNbaV3EnhancedPbpFileLoader` or :obj:`~pbpstats.data_loader.stats_nba_v3.enhanced_pbp.web.StatsNbaV3EnhancedPbpWebLoader` object
+    :raises: :obj:`~pbpstats.data_loader.stats_nba_v3.decoder.V3DecodeError`:
+        If the play-by-play cannot be decoded as recorded, or recorded evidence it needs is missing.
     """
 
-    @property
-    def start_time(self):
-        previous = getattr(self, "previous_possession", None)
-        reset = getattr(previous.events[-1], "reviewed_clock_reset", None) if previous else None
-        return reset if reset is not None else super().start_time
+    data_provider = "stats_nba_v3"
+    resource = "EnhancedPbp"
+    parent_object = "Game"
 
-    def get_team_ids(self):
-        def team_ids_of(possession):
-            return [
-                event.team_id
-                for event in possession.events
-                if hasattr(event, "team_id") and event.team_id != 0
-            ]
+    def __init__(self, game_id, source_loader):
+        self.file_directory = source_loader.file_directory
+        pbp = source_loader.load_data(game_id)
+        overrides = source_loader.load_overrides(game_id, pbp)
+        boxscore = load_boxscore(game_id, source_loader.boxscore_source_loader)
+        context = boxscore_context(
+            game_id,
+            pbp,
+            boxscore,
+            source_loader.source,
+            source_loader.load_aliases(boxscore),
+        )
 
-        team_ids = list(set(team_ids_of(self)))
-        prev_poss = self.previous_possession
-        while len(team_ids) != 2 and prev_poss is not None:
-            team_ids += team_ids_of(prev_poss)
-            team_ids = list(set(team_ids))
-            prev_poss = prev_poss.previous_possession
-        next_poss = self.next_possession
-        while len(team_ids) != 2 and next_poss is not None:
-            team_ids += team_ids_of(next_poss)
-            team_ids = list(set(team_ids))
-            next_poss = next_poss.next_possession
-        return team_ids
+        def parse(fetch_live=None):
+            with_evidence(
+                lambda boxscores, jump_balls: self._load(
+                    pbp,
+                    context,
+                    overrides=overrides,
+                    starter_boxscores=boxscores,
+                    jump_balls=jump_balls,
+                ),
+                context,
+                source_loader.load_starter_boxscore,
+                fetch_live,
+            )
 
+        # Starters come from the original's own inference. Only if a name is
+        # ambiguous, such as a tip to one of two same-named players, are the
+        # box score's first-period starter markers supplied as recorded
+        # on-court evidence; the possession loader checks each such resolution
+        # against the original's lineup, and the context then lists those
+        # starters. A jump ball that stays undecided, including a team-won
+        # one, is completed from the live play-by-play.
+        try:
+            parse()
+        except V3DecodeError as error:
+            starters = boxscore_starters(boxscore)
+            if "is unresolved or ambiguous" in str(error) and starters is not None:
+                context.period_starters = {1: starters}
+                try:
+                    return parse()
+                except V3JumpBallEvidenceRequired:
+                    if source_loader.load_live is None:
+                        raise
+            elif source_loader.load_live is None or not isinstance(
+                error, V3JumpBallEvidenceRequired
+            ):
+                raise
+            parse(source_loader.load_live)
 
-class _PreparedEvents(NbaEnhancedPbpLoader):
-    """Events from the decoded rows: reviewed corrections, then the original's
-    order repairs, linking and enhancement."""
+    @classmethod
+    def from_context(cls, source_bytes, context, **options):
+        """Events from recorded V3 bytes and a given game context, with no I/O.
 
-    def __init__(
+        ``options`` are ``validate_source_order``, reviewed ``overrides``, and
+        recorded ``event_order``, ``starter_boxscores`` and ``jump_balls``
+        evidence; a parse that needs evidence it is not given raises the error
+        naming it.
+        """
+        loader = cls.__new__(cls)
+        loader.file_directory = None
+        loader._load(source_bytes, context, **options)
+        return loader
+
+    def _load(
         self,
-        decoded,
-        validate_source_order,
+        source_bytes,
+        context,
+        *,
+        validate_source_order=True,
         overrides=None,
         event_order=None,
         starter_boxscores=None,
+        jump_balls=None,
     ):
+        self.overrides, self.override_diagnostics = (
+            overrides.decode(source_bytes) if overrides is not None else ({}, [])
+        )
+        decoded = DecodedV3(
+            source_bytes,
+            context,
+            jump_balls,
+            locations=reviewed_entries(
+                self.overrides, EVENT_LOCATIONS, context.game_id, {}
+            ),
+            live_numbers=reviewed_entries(
+                self.overrides, EVENT_LIVE_NUMBERS, context.game_id, {}
+            ),
+            teams=reviewed_entries(self.overrides, EVENT_TEAMS, context.game_id, {}),
+            foul_opponents=reviewed_entries(
+                self.overrides, EVENT_FOUL_OPPONENTS, context.game_id, {}
+            ),
+            removed=reviewed_entries(self.overrides, EVENT_REMOVALS, context.game_id, {}),
+            block_removals=reviewed_entries(
+                self.overrides, EVENT_BLOCK_REMOVALS, context.game_id, []
+            ),
+            v2_jump_balls=reviewed_entries(
+                self.overrides, EVENT_V2_JUMP_BALLS, context.game_id, {}
+            ),
+            free_throw_subtypes=reviewed_entries(
+                self.overrides, EVENT_FREE_THROW_SUBTYPES, context.game_id, {}
+            ),
+            substitution_outgoing=reviewed_entries(
+                self.overrides, EVENT_SUBSTITUTION_OUTGOING, context.game_id, {}
+            ),
+        )
         self.decoded = decoded
-        self.overrides = overrides or {}
-        self.recorded_event_order = event_order
-        self.starter_boxscores = starter_boxscores or {}
-        self.game_id = decoded.context.game_id
-        self.file_directory = None
+        self.game_id = context.game_id
+        self.recorded_event_order = (
+            event_order.decode(decoded) if event_order is not None else None
+        )
+        starter_boxscores = (
+            deepcopy(starter_boxscores) if starter_boxscores is not None else {}
+        )
+        if not isinstance(starter_boxscores, dict) or any(
+            type(p) is not int or p < 1 for p in starter_boxscores
+        ):
+            raise V3DecodeError(
+                "Starter boxscores must be keyed by positive period numbers"
+            )
+        for evidence in starter_boxscores.values():
+            evidence.validate(source_bytes, context.game_id)
+        self.starter_boxscores = starter_boxscores
         self.repairs = []
         # The rows corrections and order repairs edit, as the original edits
         # its play-by-play file; decoded.projected stays as decoded.
@@ -223,15 +426,6 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
                 )))
             event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
-
-    @property
-    def league(self):
-        # As the original's stats.nba.com loaders read it from the game ID.
-        return {
-            NBA_GAME_ID_PREFIX: NBA_STRING,
-            G_LEAGUE_GAME_ID_PREFIX: G_LEAGUE_STRING,
-            WNBA_GAME_ID_PREFIX: WNBA_STRING,
-        }.get(self.game_id[:2])
 
     def _make_pbp_items(self):
         self._fix_order_when_technical_foul_before_period_start()
@@ -795,211 +989,3 @@ class _PreparedEvents(NbaEnhancedPbpLoader):
         self.data = [by_number[number] for number in order]
         self.repairs.append(deepcopy(diagnostic))
         self._save_data_to_file()
-
-
-class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
-    """Experimental NBA adapter; accepts source bytes and hash-bound context.
-
-    Native V3 event classes; the original's enhancement and possession decisions.
-    ``validate_possessions=False`` is for differential event-sequence fixtures;
-    it is not a declaration of full-game validity. Detailed V3 stats are gated.
-    """
-
-    def __init__(
-        self,
-        source_bytes,
-        context,
-        *,
-        validate_possessions=True,
-        validate_source_order=True,
-        overrides=None,
-        event_order=None,
-        starter_boxscores=None,
-        jump_balls=None,
-    ):
-        self.overrides, override_diagnostics = (
-            overrides.decode(source_bytes) if overrides is not None else ({}, [])
-        )
-        decoded = DecodedV3(
-            source_bytes,
-            context,
-            jump_balls,
-            locations=reviewed_entries(
-                self.overrides, EVENT_LOCATIONS, context.game_id, {}
-            ),
-            live_numbers=reviewed_entries(
-                self.overrides, EVENT_LIVE_NUMBERS, context.game_id, {}
-            ),
-            teams=reviewed_entries(self.overrides, EVENT_TEAMS, context.game_id, {}),
-            foul_opponents=reviewed_entries(
-                self.overrides, EVENT_FOUL_OPPONENTS, context.game_id, {}
-            ),
-            removed=reviewed_entries(self.overrides, EVENT_REMOVALS, context.game_id, {}),
-            block_removals=reviewed_entries(
-                self.overrides, EVENT_BLOCK_REMOVALS, context.game_id, []
-            ),
-            v2_jump_balls=reviewed_entries(
-                self.overrides, EVENT_V2_JUMP_BALLS, context.game_id, {}
-            ),
-            free_throw_subtypes=reviewed_entries(
-                self.overrides, EVENT_FREE_THROW_SUBTYPES, context.game_id, {}
-            ),
-            substitution_outgoing=reviewed_entries(
-                self.overrides, EVENT_SUBSTITUTION_OUTGOING, context.game_id, {}
-            ),
-        )
-        self.decoded = decoded
-        self.game_id = context.game_id
-        self.file_directory = None
-        ordering = event_order.decode(decoded) if event_order is not None else None
-        starter_boxscores = (
-            deepcopy(starter_boxscores) if starter_boxscores is not None else {}
-        )
-        if not isinstance(starter_boxscores, dict) or any(
-            type(p) is not int or p < 1 for p in starter_boxscores
-        ):
-            raise V3DecodeError(
-                "Starter boxscores must be keyed by positive period numbers"
-            )
-        for evidence in starter_boxscores.values():
-            evidence.validate(source_bytes, context.game_id)
-        enhanced = _PreparedEvents(
-            decoded, validate_source_order, self.overrides, ordering, starter_boxscores
-        )
-        self.events = enhanced.items
-        self.diagnostics = (
-            override_diagnostics + enhanced.repairs
-            + deepcopy(list(decoded.team_heaves.values()))
-            + deepcopy(decoded.team_technicals)
-            + deepcopy(decoded.label_rules)
-            + deepcopy(decoded.non_roster_actors)
-            + deepcopy(decoded.reviewed_inputs)
-            + ([dict(decoded.live_input)] if decoded.live_input else [])
-            + deepcopy(decoded.recorded_jump_balls)
-        )
-        self.items = [
-            V3Possession(events) for events in self._split_events_by_possession()
-        ]
-        self._add_extra_attrs_to_all_possessions()
-        held_balls = [
-            event.diagnostic
-            for event in self.events
-            if isinstance(event, V3HeldBallJumpBall)
-            and event.held_ball_turnover is not None
-        ]
-        self.diagnostics += held_balls
-        if sum(len(possession.events) for possession in self.items) != len(self.events):
-            raise V3DecodeError("Events left outside a possession")
-        if any(
-            getattr(event, "reviewed_clock_reset", None) is not None
-            for possession in self.items
-            for event in possession.events[:-1]
-        ):
-            raise V3DecodeError("A reviewed clock reset must end a possession")
-        self._validate_lineups()
-        if validate_possessions:
-            self._load_bad_possession_overrides()
-            self._check_that_possessions_alternate()
-        self.capabilities = {
-            "processing_rules": "original_v2_e7ccf2f",
-            "full_game_validated": False,
-            "detailed_event_stats": "unavailable",
-            "source_order_checked": validate_source_order,
-            "possession_sequence_checked": validate_possessions,
-            "defect_guards": [TEAM_IDS_GUARD],
-        }
-        extensions = [TEAM_HEAVE_VERSION] if decoded.team_heaves else []
-        rules = {
-            rule.get("code")
-            for rule in decoded.team_technicals + decoded.label_rules + enhanced.repairs
-        }
-        extensions += [
-            version
-            for version in (
-                TEAMLESS_TECHNICAL_VERSION,
-                TEAMLESS_EXCESS_TIMEOUT_VERSION,
-                TECHNICAL_FREE_THROW_VERSION,
-                TRANSITION_TAKE_FOUL_VERSION,
-                BLANK_FLAGRANT_FREE_THROW_VERSION,
-                VOIDED_SECOND_FREE_THROW_VERSION,
-                AND_ONE_CLOCK_VERSION,
-            )
-            if version in rules
-        ]
-        if held_balls:
-            extensions.append(HELD_BALL_VERSION)
-        if extensions:
-            self.capabilities["extensions"] = extensions
-
-    def _load_bad_possession_overrides(self):
-        self.bad_pbp_cases = deepcopy(self.overrides.get(BAD_POSSESSIONS, {}))
-
-    def _validate_lineups(self):
-        resolved = {r["event_num"]: r for r in self.decoded.participant_resolutions}
-        # A reviewed outgoing player replaces the one V3 records already off
-        # the floor, so the recorded player must be off it.
-        recorded_outgoing = {
-            d["event_num"]: d["recorded_player_id"]
-            for d in self.decoded.reviewed_inputs
-            if d["code"] == "reviewed_substitution_outgoing"
-        }
-        for event in self.events:
-            if event.event_num in resolved:
-                actual = sorted(
-                    p for players in event.current_players.values() for p in players
-                )
-                if actual != resolved[event.event_num]["on_court"]:
-                    raise V3DecodeError(
-                        "Participant resolution disagrees with original enhanced lineup at event {}".format(
-                            event.event_num
-                        )
-                    )
-            if isinstance(event, Substitution):
-                before = event.previous_event.current_players
-                if (
-                    event.player1_id not in before[event.team_id]
-                    or event.player2_id in before[event.team_id]
-                ):
-                    raise V3DecodeError(
-                        "Substitution contradicts current lineup at event {}".format(
-                            event.event_num
-                        )
-                    )
-                if (
-                    event.event_num in recorded_outgoing
-                    and recorded_outgoing[event.event_num] in before[event.team_id]
-                ):
-                    raise V3DecodeError(
-                        "Event substitution-outgoing override does not fit the recorded event"
-                    )
-            for team, players in event.current_players.items():
-                if len(players) != 5 or len(set(players)) != 5:
-                    raise V3DecodeError(
-                        "Invalid five-player lineup at event {}".format(event.event_num)
-                    )
-                if any(
-                    player not in self.decoded.context.roster
-                    or self.decoded.context.roster[player]["team_id"] != team
-                    for player in players
-                ):
-                    raise V3DecodeError("Lineup contradicts roster")
-
-    @property
-    def counts_by_team(self):
-        return dict(
-            Counter(
-                p.offense_team_id
-                for p in self.items
-                if p.events[-1].count_as_possession
-            )
-        )
-
-    @property
-    def base_stats(self):
-        return [stat for event in self.events for stat in event.base_stats]
-
-    @property
-    def event_stats(self):
-        raise V3DecodeError(
-            "Detailed statistics are unavailable until attribution completeness is verified"
-        )

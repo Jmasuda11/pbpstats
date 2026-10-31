@@ -121,7 +121,7 @@ def test_order_repairs_record_each_period_starter_recovery_once():
         facts["source"],
         digest(source),
     )
-    diagnostics = StatsNbaV3PossessionLoader(source, context).diagnostics
+    diagnostics = StatsNbaV3PossessionLoader.from_context(source, context).diagnostics
     assert [d["code"] for d in diagnostics].count("legacy_order_repair") == 1
     periods = [d["period"] for d in diagnostics if d["code"] == "starter_recovery"]
     assert periods == [1, 2, 3, 4, 5]

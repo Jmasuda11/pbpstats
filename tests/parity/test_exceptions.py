@@ -170,7 +170,7 @@ def test_invalid_override_evidence_is_rejected(mutation):
         }[mutation]
         files[BAD] = json.dumps(bad).encode()
     with pytest.raises(V3DecodeError):
-        StatsNbaV3PossessionLoader(
+        StatsNbaV3PossessionLoader.from_context(
             raw, context, overrides=V3Overrides(files, source, bound)
         )
 
@@ -180,7 +180,7 @@ def test_override_inputs_are_auditable_and_detached_from_the_caller():
     raw, context = v3_inputs(case)
     files = override_bytes(case)
     before = dict(files)
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         raw,
         context,
         overrides=V3Overrides(files, "Reviewed correction", context.pbp_sha256),
@@ -231,7 +231,7 @@ def test_invalid_provider_order_evidence_is_rejected(mutation):
         payload["g"]["pd"][0]["pla"][0]["evt"] = True
     evidence = b"{" if mutation == "invalid_json" else json.dumps(payload).encode()
     with pytest.raises(V3DecodeError):
-        StatsNbaV3PossessionLoader(
+        StatsNbaV3PossessionLoader.from_context(
             raw, context, event_order=V3EventOrder(evidence, source, bound)
         )
 
@@ -242,10 +242,10 @@ def test_provider_order_is_used_only_after_common_repairs_fail():
     with pytest.raises(
         V3DecodeError, match="additional recorded provider evidence"
     ) as error:
-        StatsNbaV3PossessionLoader(raw, context)
+        StatsNbaV3PossessionLoader.from_context(raw, context)
     assert type(error.value.__context__).__name__ == "EventOrderError"
     evidence = json.dumps(provider_payload(case)).encode()
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         raw,
         context,
         event_order=V3EventOrder(evidence, "Recorded order", context.pbp_sha256),
@@ -263,7 +263,7 @@ def test_unused_provider_order_does_not_reorder_valid_events():
     evidence = json.dumps(
         provider_payload({"provider_order": list(reversed(numbers))})
     ).encode()
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         raw,
         context,
         event_order=V3EventOrder(evidence, "Unused order", context.pbp_sha256),

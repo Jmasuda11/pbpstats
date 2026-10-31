@@ -387,7 +387,7 @@ def load_v3(folder, game_id, mode, live=None):
         if path and path.exists()
         else None
     )
-    return StatsNbaV3PossessionLoader(source, context, jump_balls=evidence)
+    return StatsNbaV3PossessionLoader.from_context(source, context, jump_balls=evidence)
 
 
 def install_held_ball():

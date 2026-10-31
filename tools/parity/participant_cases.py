@@ -78,6 +78,6 @@ def load_v3(rows, roster):
         "Independent synthetic starter/name facts",
         digest(source),
     )
-    return StatsNbaV3PossessionLoader(
+    return StatsNbaV3PossessionLoader.from_context(
         source, context, validate_source_order=False, validate_possessions=False
     )

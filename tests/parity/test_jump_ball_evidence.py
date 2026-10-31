@@ -164,7 +164,7 @@ def test_live_evidence_is_never_read_where_v3_decides():
     context = web.context_from_boxscore("0022500089", pbp, box, "recorded")
     plain = web.parse_possessions(pbp, context)
     empty = json.dumps({"game": {"gameId": "0022500089", "actions": []}}).encode()
-    supplied = StatsNbaV3PossessionLoader(
+    supplied = StatsNbaV3PossessionLoader.from_context(
         pbp, context, jump_balls=V3JumpBallEvidence(empty, "recorded", context.pbp_sha256)
     )
 

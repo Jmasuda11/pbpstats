@@ -101,7 +101,7 @@ def audit_game(root, game):
         stage = "adapter"
         output = io.StringIO()
         with redirect_stdout(output):
-            loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+            loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
         result.update(
             adapter_completed=True,
             capabilities=loaded.capabilities,

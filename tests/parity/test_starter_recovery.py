@@ -90,7 +90,7 @@ def test_stale_or_wrong_request_evidence_cannot_supply_starters(mutation):
     else:
         period = 2
     with pytest.raises(V3DecodeError):
-        StatsNbaV3PossessionLoader(
+        StatsNbaV3PossessionLoader.from_context(
             raw, context, starter_boxscores={period: V3StarterBoxscore(**fields)}
         )
 
@@ -100,7 +100,7 @@ def test_missing_recording_preserves_original_inference_failure_as_context():
     with pytest.raises(
         V3DecodeError, match="recorded boxscore evidence for period 1"
     ) as error:
-        StatsNbaV3PossessionLoader(raw, context)
+        StatsNbaV3PossessionLoader.from_context(raw, context)
     assert isinstance(error.value.__context__, InvalidNumberOfStartersException)
     assert "TeamId: {}".format(HOME) in str(error.value.__context__)
     assert context.period_starters == {}
@@ -111,7 +111,7 @@ def test_recovered_starters_are_auditable_without_changing_input_context():
     raw, context = inputs(case)
     before = deepcopy(context)
     fields = evidence(case, raw, context)
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         raw,
         context,
         overrides=V3Overrides(
@@ -152,7 +152,7 @@ def test_invalid_explicit_starters_are_not_silently_replaced_by_recovery(changes
     context.period_starters = {1: dict(STARTERS, **{})}
     context.period_starters[1].update(changes)
     with pytest.raises(V3DecodeError):
-        StatsNbaV3PossessionLoader(
+        StatsNbaV3PossessionLoader.from_context(
             raw,
             context,
             starter_boxscores={1: V3StarterBoxscore(**evidence(case, raw, context))},
@@ -166,7 +166,7 @@ def test_partial_context_recovers_only_the_missing_period():
     raw, context = inputs(case)
     context.period_starters = {1: deepcopy(STARTERS)}
     fields = evidence(case, raw, context)
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         raw, context, starter_boxscores={2: V3StarterBoxscore(**fields)}
     )
     assert {
@@ -196,4 +196,4 @@ def test_malformed_starter_override_shape_is_rejected(values):
         {FILE: json.dumps(values).encode()}, "Correction fixture", context.pbp_sha256
     )
     with pytest.raises(V3DecodeError):
-        StatsNbaV3PossessionLoader(raw, context, overrides=overrides)
+        StatsNbaV3PossessionLoader.from_context(raw, context, overrides=overrides)

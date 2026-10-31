@@ -32,3 +32,11 @@ stats.nba.com Boxscore Item
    :members:
    :undoc-members:
    :show-inheritance:
+
+stats.nba.com Play-by-Play V3 Boxscore Item
+-------------------------------------------
+
+.. automodule:: pbpstats.resources.boxscore.stats_nba_v3_boxscore_item
+   :members:
+   :undoc-members:
+   :show-inheritance:

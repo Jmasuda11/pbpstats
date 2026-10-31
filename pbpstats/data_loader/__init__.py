@@ -57,6 +57,30 @@ from pbpstats.data_loader.stats_nba.scoreboard.web import StatsNbaScoreboardWebL
 from pbpstats.data_loader.stats_nba.shots.file import StatsNbaShotsFileLoader
 from pbpstats.data_loader.stats_nba.shots.loader import StatsNbaShotsLoader
 from pbpstats.data_loader.stats_nba.shots.web import StatsNbaShotsWebLoader
+from pbpstats.data_loader.stats_nba_v3.boxscore.file import StatsNbaV3BoxscoreFileLoader
+from pbpstats.data_loader.stats_nba_v3.boxscore.loader import StatsNbaV3BoxscoreLoader
+from pbpstats.data_loader.stats_nba_v3.boxscore.web import StatsNbaV3BoxscoreWebLoader
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.file import (
+    StatsNbaV3EnhancedPbpFileLoader,
+)
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import (
+    StatsNbaV3EnhancedPbpLoader,
+)
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.web import (
+    StatsNbaV3EnhancedPbpWebLoader,
+)
+from pbpstats.data_loader.stats_nba_v3.pbp.file import StatsNbaV3PbpFileLoader
+from pbpstats.data_loader.stats_nba_v3.pbp.loader import StatsNbaV3PbpLoader
+from pbpstats.data_loader.stats_nba_v3.pbp.web import StatsNbaV3PbpWebLoader
+from pbpstats.data_loader.stats_nba_v3.possessions.file import (
+    StatsNbaV3PossessionFileLoader,
+)
+from pbpstats.data_loader.stats_nba_v3.possessions.loader import (
+    StatsNbaV3PossessionLoader,
+)
+from pbpstats.data_loader.stats_nba_v3.possessions.web import (
+    StatsNbaV3PossessionWebLoader,
+)
 
 __all__ = [
     "DataNbaBoxscoreFileLoader",
@@ -110,4 +134,16 @@ __all__ = [
     "StatsNbaShotsFileLoader",
     "StatsNbaShotsLoader",
     "StatsNbaShotsWebLoader",
+    "StatsNbaV3BoxscoreFileLoader",
+    "StatsNbaV3BoxscoreLoader",
+    "StatsNbaV3BoxscoreWebLoader",
+    "StatsNbaV3EnhancedPbpFileLoader",
+    "StatsNbaV3EnhancedPbpLoader",
+    "StatsNbaV3EnhancedPbpWebLoader",
+    "StatsNbaV3PbpFileLoader",
+    "StatsNbaV3PbpLoader",
+    "StatsNbaV3PbpWebLoader",
+    "StatsNbaV3PossessionFileLoader",
+    "StatsNbaV3PossessionLoader",
+    "StatsNbaV3PossessionWebLoader",
 ]

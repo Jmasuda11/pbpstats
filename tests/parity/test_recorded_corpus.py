@@ -180,7 +180,7 @@ def test_independent_starters_and_individual_minutes():
     assert prepared.context.period_starters == {
         p: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]} for p in range(1, 5)
     }
-    loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+    loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
     result = reconcile(loaded, prepared)
     minutes = {r["player_id"]: r for r in result["player_minutes"]}
     assert minutes[1]["raw_seconds"] == "2520"
@@ -341,7 +341,7 @@ def test_independent_lineup_resolves_only_one_on_court_namesake():
     assert decision["candidates"] == [6, 12]
     assert decision["player_id"] == 12
     assert decision["on_court"] == [1, 2, 3, 4, 5, 11, 12, 13, 14, 15]
-    loaded = StatsNbaV3PossessionLoader(
+    loaded = StatsNbaV3PossessionLoader.from_context(
         prepared.source, prepared.context, validate_possessions=False
     )
     assert loaded.decoded.participant_resolutions[0]["player_id"] == 12
@@ -416,7 +416,7 @@ def test_failed_adapter_reports_exact_raw_context_and_prior_transition(tmp_path)
 
 def test_player_minute_drift_fails_even_when_team_totals_match():
     prepared = prepare_recorded(GAME, recording())
-    loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+    loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
     prepared.box["homeTeam"]["players"][0]["statistics"]["minutes"] = "41:58"
     prepared.box["homeTeam"]["players"][5]["statistics"]["minutes"] = "6:02"
     with pytest.raises(EvidenceError) as error:
@@ -426,7 +426,7 @@ def test_player_minute_drift_fails_even_when_team_totals_match():
 
 def test_official_score_disagreement_fails_reconciliation():
     prepared = prepare_recorded(GAME, recording())
-    loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+    loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
     prepared.box["homeTeam"]["statistics"]["points"] += 1
     with pytest.raises(EvidenceError) as error:
         reconcile(loaded, prepared)
@@ -435,7 +435,7 @@ def test_official_score_disagreement_fails_reconciliation():
 
 def test_rounded_official_minute_of_sixty_seconds_is_one_more_minute():
     prepared = prepare_recorded(GAME, recording())
-    loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+    loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
     assert prepared.box["homeTeam"]["players"][0]["statistics"]["minutes"] == "42:00"
     prepared.box["homeTeam"]["players"][0]["statistics"]["minutes"] = "41:60"
     rows = reconcile(loaded, prepared)["player_minutes"]
@@ -444,7 +444,7 @@ def test_rounded_official_minute_of_sixty_seconds_is_one_more_minute():
 
 def test_invalid_official_minute_seconds_preserve_raw_value_in_diagnostic():
     prepared = prepare_recorded(GAME, recording())
-    loaded = StatsNbaV3PossessionLoader(prepared.source, prepared.context)
+    loaded = StatsNbaV3PossessionLoader.from_context(prepared.source, prepared.context)
     prepared.box["homeTeam"]["players"][0]["statistics"]["minutes"] = "41:61"
     with pytest.raises(EvidenceError) as error:
         reconcile(loaded, prepared)

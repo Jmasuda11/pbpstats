@@ -26,7 +26,7 @@ def load_synthetic_rows(rows):
         "Independent synthetic roster/starters",
         hashlib.sha256(source).hexdigest(),
     )
-    return StatsNbaV3PossessionLoader(
+    return StatsNbaV3PossessionLoader.from_context(
         source, context, validate_possessions=False, validate_source_order=False
     )
 
@@ -69,4 +69,4 @@ def load_paired(data):
         "Reviewed NBA.com roster and per-period starters; explicit ID-bound V3 names",
         hashlib.sha256(source).hexdigest(),
     )
-    return StatsNbaV3PossessionLoader(source, context)
+    return StatsNbaV3PossessionLoader.from_context(source, context)

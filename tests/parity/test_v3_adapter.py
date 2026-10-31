@@ -17,7 +17,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     TECHNICAL_FOULS,
     DecodedV3,
 )
-from pbpstats.data_loader.stats_nba_v3.possessions import TEAM_IDS_GUARD, V3Possession
+from pbpstats.data_loader.stats_nba_v3.possessions.loader import TEAM_IDS_GUARD, V3Possession
 from pbpstats.resources.possessions.possession import Possession
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
@@ -381,7 +381,7 @@ def test_explicit_three_point_value_preserves_raw_description():
     payload, context = inputs(wrap([e("make", value=3), e("turnover", 580, AWAY, 11)]))
     decoded = decode(payload, context)
     assert "3PT" not in decoded.raw_rows[1]["description"]
-    loaded = StatsNbaV3PossessionLoader(decoded.source_bytes, context)
+    loaded = StatsNbaV3PossessionLoader.from_context(decoded.source_bytes, context)
     assert loaded.events[1].shot_value == 3
     assert loaded.events[1].v3_source_row == payload["game"]["actions"][1]
 
@@ -396,7 +396,7 @@ def test_original_technical_before_start_repair_preserves_raw_order():
     ]
     payload, context = inputs(events)
     decoded = decode(payload, context)
-    loaded = StatsNbaV3PossessionLoader(decoded.source_bytes, context)
+    loaded = StatsNbaV3PossessionLoader.from_context(decoded.source_bytes, context)
     assert [event.event_num for event in loaded.events][:3] == [3, 1, 2]
     assert loaded.decoded.raw_rows == payload["game"]["actions"]
     assert loaded.events[0].v3_source_indices == (2,)

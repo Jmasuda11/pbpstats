@@ -9,6 +9,7 @@ The data loader modules are used to load data for a specific resource either fro
    pbpstats.data_loader.data_nba
    pbpstats.data_loader.live
    pbpstats.data_loader.stats_nba
+   pbpstats.data_loader.stats_nba_v3
 
 Data Loader Factory
 ------------------------------------

@@ -90,7 +90,7 @@ def load_v3(rows, game_id=GAME):
         {rows[0]["period"]: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]}},
         "Independent controlled team-heave context", hashlib.sha256(source).hexdigest(),
     )
-    return StatsNbaV3PossessionLoader(source, context)
+    return StatsNbaV3PossessionLoader.from_context(source, context)
 
 
 def behavior_snapshot(loaded):

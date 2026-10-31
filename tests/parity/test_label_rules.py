@@ -19,7 +19,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     VOIDED_SECOND_FREE_THROW_VERSION,
     V3DecodeError,
 )
-from pbpstats.data_loader.stats_nba_v3.possessions import AND_ONE_CLOCK_VERSION
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import AND_ONE_CLOCK_VERSION
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 
@@ -47,7 +47,7 @@ def load(rows, game="0022600001", validate_possessions=True):
         {1: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]}},
         "Controlled label-rule context", hashlib.sha256(source).hexdigest(),
     )
-    return StatsNbaV3PossessionLoader(source, context, validate_possessions=validate_possessions)
+    return StatsNbaV3PossessionLoader.from_context(source, context, validate_possessions=validate_possessions)
 
 
 def number(rows, kind):

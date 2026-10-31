@@ -26,7 +26,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     V2_JUMP_BALL_FIELDS,
     DecodedV3,
 )
-from pbpstats.data_loader.stats_nba_v3.possessions import AND_ONE_CLOCK_VERSION
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import AND_ONE_CLOCK_VERSION
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
@@ -123,7 +123,7 @@ def load(rows, moves=None, files=None, game=GAME):
         V3Overrides(files, "Controlled review", hashlib.sha256(source).hexdigest())
         if files is not None else None
     )
-    return StatsNbaV3PossessionLoader(source, context, overrides=overrides)
+    return StatsNbaV3PossessionLoader.from_context(source, context, overrides=overrides)
 
 
 def offenses(loaded):

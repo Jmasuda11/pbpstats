@@ -451,7 +451,7 @@ def observe(case, provider, folder):
             if "provider_order" in case
             else None
         )
-        loaded = StatsNbaV3PossessionLoader(
+        loaded = StatsNbaV3PossessionLoader.from_context(
             raw, context, overrides=overrides, event_order=ordering
         )
         if (

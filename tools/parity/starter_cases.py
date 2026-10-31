@@ -270,7 +270,7 @@ def candidate(case):
         )
         for period, record in case["responses"].items()
     }
-    return StatsNbaV3PossessionLoader(
+    return StatsNbaV3PossessionLoader.from_context(
         raw,
         context,
         overrides=V3Overrides(

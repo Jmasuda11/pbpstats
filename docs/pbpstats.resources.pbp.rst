@@ -32,3 +32,11 @@ stats.nba.com PBP Item
    :members:
    :undoc-members:
    :show-inheritance:
+
+stats.nba.com Play-by-Play V3 PBP Item
+--------------------------------------
+
+.. automodule:: pbpstats.resources.pbp.stats_nba_v3_pbp_item
+   :members:
+   :undoc-members:
+   :show-inheritance:

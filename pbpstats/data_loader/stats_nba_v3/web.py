@@ -1,12 +1,15 @@
 """Fetch one NBA or WNBA game from the stats API, parse possessions, save JSON.
 
-The adapter never touches the network. This module requests the V3
-play-by-play and box score, binds the adapter's context to those exact bytes,
-and records any period-start box score that the original's starter recovery
-asks for. A jump ball V3 leaves undecided is completed from the league's live
-play-by-play, also recorded. Reviewed corrections reach the adapter as
-V3Overrides, only for the exact bytes they were reviewed against. Possessions
-come from the unchanged original engine.
+The V3 loaders take a game ID and a source loader, as the original's do; their
+file and web sources supply the play-by-play, the box score and, only when the
+parse asks for it, recorded evidence. This module parses a game from responses
+already in hand through the same loaders. ``load_game`` binds the context to
+the exact play-by-play and box score bytes, and records any period-start box
+score that the original's starter recovery asks for. A jump ball V3 leaves
+undecided is completed from the league's live play-by-play, also recorded.
+Reviewed corrections reach the parse as V3Overrides, only for the exact bytes
+they were reviewed against. Possessions come from the unchanged original
+engine.
 
     python -m pbpstats.data_loader.stats_nba_v3.web 0022500001 -o game.json
 """
@@ -20,73 +23,56 @@ import requests
 
 from pbpstats import REQUEST_TIMEOUT
 
-from .decoder import V3Context, V3DecodeError, V3JumpBallEvidenceRequired
-from .jump_balls import V3JumpBallEvidence
-from .names import add_actor_aliases, add_unaccented_names, require
-from .overrides import V3Overrides
-from .possessions import StatsNbaV3PossessionLoader
-from .starters import V3EvidenceRequired, V3StarterBoxscore
-
-# The original's own league hosts, keyed by game ID prefix.
-STATS_URLS = {"00": "https://stats.nba.com/stats/", "10": "https://stats.wnba.com/stats/"}
-# The stats API rejects pbpstats' older default headers; these follow nba_api.
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate",
-    "Connection": "keep-alive",
-    "Referer": "https://www.nba.com/",
-    "Pragma": "no-cache",
-    "Cache-Control": "no-cache",
-    "Sec-Ch-Ua": '"Not:A-Brand";v="99", "Google Chrome";v="145", "Chromium";v="145"',
-    "Sec-Ch-Ua-Mobile": "?0",
-    "Sec-Fetch-Dest": "empty",
-}
-# Reviewed corrections for games whose play-by-play the original cannot parse
-# as recorded: the original's override files, plus edits to recorded events
-# (see overrides). Each is bound to the play-by-play bytes it was reviewed
-# against and says what the review found; the recordings are kept with the
-# parity tests.
-REVIEWED_CORRECTIONS = json.loads(
-    Path(__file__).with_name("reviewed_corrections.json").read_text(encoding="utf-8")
-)
+from .enhanced_pbp.loader import boxscore_context, load_boxscore, with_evidence
+from .file_loader import SavedResponse
+from .overrides import REVIEWED_CORRECTIONS, reviewed_overrides
+from .possessions.loader import StatsNbaV3PossessionLoader
+from .web_loader import HEADERS, get, stats_url
 
 
-def get(url, params, session=None):
-    """One stats.nba.com request; the caller decides how to treat its status."""
-    return (session or requests).get(
-        url, params=sorted(params.items()), headers=HEADERS, timeout=REQUEST_TIMEOUT
-    )
+class RecordedResponse:
+    """A response already in hand, as a source loader."""
+
+    file_directory = None
+
+    def __init__(self, content):
+        self.content = content
+
+    def load_data(self, game_id):
+        return self.content
 
 
-def reviewed_overrides(game_id, pbp_bytes, corrections=REVIEWED_CORRECTIONS):
-    """V3Overrides for a game's reviewed correction, or None when it has none.
+class RecordedGame(RecordedResponse):
+    """A game's responses already in hand, as the source loader of
+    StatsNbaV3PossessionLoader and StatsNbaV3EnhancedPbpLoader (see load_game).
 
-    A correction applies only to the play-by-play bytes it was reviewed
-    against; other bytes for the same game are refused rather than guessed.
+    ``fetch_boxscore`` and ``fetch_live`` supply recorded evidence; None means
+    the parse rejects a game that needs it.
     """
-    entry = corrections.get(game_id)
-    if entry is None:
-        return None
-    if hashlib.sha256(pbp_bytes).hexdigest() != entry["pbp_sha256"]:
-        raise V3DecodeError(
-            "The reviewed correction for {} covers different play-by-play bytes; "
-            "review it again".format(game_id)
-        )
-    files = {
-        name: json.dumps({game_id: values}).encode()
-        for name, values in entry["files"].items()
-    }
-    return V3Overrides(files, entry["source"], entry["pbp_sha256"])
 
+    def __init__(
+        self,
+        pbp_bytes,
+        box_bytes,
+        source,
+        fetch_boxscore=None,
+        aliases=None,
+        overrides=None,
+        fetch_live=None,
+    ):
+        super().__init__(pbp_bytes)
+        self.source = source
+        self.boxscore_source_loader = RecordedResponse(box_bytes)
+        self.enhanced_pbp_source_loader = self
+        self.load_starter_boxscore = fetch_boxscore
+        self.load_live = fetch_live
+        self.aliases, self.overrides = aliases, overrides
 
-def stats_url(game_id):
-    """Stats API base URL for a supported league; nothing is requested otherwise."""
-    if not isinstance(game_id, str) or game_id[:2] not in STATS_URLS:
-        raise V3DecodeError("Only NBA and WNBA game IDs are supported")
-    return STATS_URLS[game_id[:2]]
+    def load_overrides(self, game_id, pbp_bytes):
+        return self.overrides
+
+    def load_aliases(self, boxscore):
+        return self.aliases
 
 
 def fetch_game(game_id, session=None):
@@ -117,113 +103,40 @@ def fetch_game(game_id, session=None):
 
 
 def context_from_boxscore(game_id, pbp_bytes, box_bytes, source, aliases=None):
-    """Teams and the named roster from the official box score, bound to the PBP.
+    """The context StatsNbaV3EnhancedPbpLoader takes from a box score response.
 
-    Names come from the box score, the play-by-play's own ID-bound actor
-    names and descriptions, and unaccented variants; nobody is guessed from a
-    name. ``aliases`` maps a box-score person ID to reviewed extra names, for
-    descriptions that use a name the box score does not (for example a given
-    name). Period starters are left to the original's inference.
+    Teams and the named roster from the official box score, bound to the PBP;
+    see boxscore_context.
     """
-    try:
-        box = json.loads(box_bytes)["boxScoreTraditional"]
-        rows = json.loads(pbp_bytes)["game"]["actions"]
-        teams = (box["homeTeamId"], box["awayTeamId"])
-        players = [
-            (team, p)
-            for side, team in zip(("homeTeam", "awayTeam"), teams)
-            for p in box[side]["players"]
-        ]
-    except (ValueError, KeyError, TypeError) as error:
-        raise V3DecodeError("Unexpected box score or play-by-play response") from error
-    roster = {}
-    for team, player in players:
-        names = [player.get("familyName"), player.get("nameI")]
-        if player.get("firstName") and player.get("familyName"):
-            names.append(player["firstName"] + " " + player["familyName"])
-        roster[player["personId"]] = {
-            "team_id": team,
-            "names": sorted({n for n in names if n}),
-        }
-    for row in rows:
-        facts = roster.get(row.get("personId"))
-        if facts is None:
-            continue
-        require(
-            row.get("teamId") in (0, facts["team_id"]),
-            "roster_identity",
-            "Play-by-play actor contradicts the box score team",
-        )
-        for key in ("playerName", "playerNameI"):
-            name = row.get(key)
-            if isinstance(name, str) and name.strip() and name not in facts["names"]:
-                facts["names"].append(name)
-    for identity, names in (aliases or {}).items():
-        require(identity in roster, "alias", "Alias for a player not in the box score")
-        roster[identity]["names"] += [
-            n for n in names if n not in roster[identity]["names"]
-        ]
-    add_actor_aliases(rows, roster)
-    add_unaccented_names(roster)
-    return V3Context(
-        game_id, teams, roster, {}, source, hashlib.sha256(pbp_bytes).hexdigest()
-    )
-
-
-def boxscore_starters(box_bytes):
-    """First-period starters marked in the box score, when each team has five."""
-    box = json.loads(box_bytes)["boxScoreTraditional"]
-    starters = {
-        box[side]["teamId"]: [
-            p["personId"] for p in box[side]["players"] if p.get("position")
-        ]
-        for side in ("homeTeam", "awayTeam")
-    }
-    return starters if all(len(p) == 5 for p in starters.values()) else None
+    boxscore = load_boxscore(game_id, RecordedResponse(box_bytes))
+    return boxscore_context(game_id, pbp_bytes, boxscore, source, aliases)
 
 
 def parse_possessions(
     pbp_bytes, context, fetch_boxscore=None, overrides=None, fetch_live=None
 ):
-    """Parse V3 bytes into possessions with the original engine.
+    """Parse V3 bytes into possessions with the original engine, for a given context.
 
     When the original's starter inference falls back to its period-start box
     score request, ``fetch_boxscore(period, url, params)`` must return that
     response; it is recorded as V3StarterBoxscore evidence. Without it, the
-    adapter's V3EvidenceRequired error names the exact request instead. A jump
-    ball V3 leaves undecided likewise needs ``fetch_live(url)`` to return the
-    live play-by-play, recorded as V3JumpBallEvidence.
+    V3EvidenceRequired error names the exact request instead. A jump ball V3
+    leaves undecided likewise needs ``fetch_live(url)`` to return the live
+    play-by-play, recorded as V3JumpBallEvidence.
     ``overrides`` supplies reviewed corrections (see reviewed_overrides).
     """
-    boxscores, jump_balls = {}, None
-    while True:
-        try:
-            return StatsNbaV3PossessionLoader(
-                pbp_bytes,
-                context,
-                overrides=overrides,
-                starter_boxscores=boxscores,
-                jump_balls=jump_balls,
-            )
-        except V3JumpBallEvidenceRequired as needed:
-            if fetch_live is None or jump_balls is not None:
-                raise
-            response = fetch_live(needed.url)
-            jump_balls = V3JumpBallEvidence(
-                response.content, response.url, context.pbp_sha256
-            )
-        except V3EvidenceRequired as needed:
-            if fetch_boxscore is None or needed.period in boxscores:
-                raise
-            response = fetch_boxscore(needed.period, needed.url, needed.params)
-            boxscores[needed.period] = V3StarterBoxscore(
-                response.content,
-                response.url,
-                context.pbp_sha256,
-                needed.params,
-                response.status_code,
-                response.reason or "",
-            )
+    return with_evidence(
+        lambda boxscores, jump_balls: StatsNbaV3PossessionLoader.from_context(
+            pbp_bytes,
+            context,
+            overrides=overrides,
+            starter_boxscores=boxscores,
+            jump_balls=jump_balls,
+        ),
+        context,
+        fetch_boxscore,
+        fetch_live,
+    )
 
 
 def load_game(
@@ -236,35 +149,23 @@ def load_game(
     overrides=None,
     fetch_live=None,
 ):
-    """Context from the box score, then possessions from the original engine.
+    """Possessions from a game's play-by-play and box score responses.
 
-    Starters come from the original's own inference. Only if a name is
-    ambiguous, such as a tip to one of two same-named players, are the box
-    score's first-period starter markers supplied as recorded on-court
-    evidence; the adapter checks each such resolution against the original's
-    lineup. The loader's context then lists those starters. A jump ball that
-    stays undecided, including a team-won one, is completed from the live
+    StatsNbaV3PossessionLoader reads them as its source loader's. Starters
+    come from the original's own inference. Only if a name is ambiguous, such
+    as a tip to one of two same-named players, are the box score's
+    first-period starter markers supplied as recorded on-court evidence; the
+    loader checks each such resolution against the original's lineup. The
+    loader's context then lists those starters. A jump ball that stays
+    undecided, including a team-won one, is completed from the live
     play-by-play that ``fetch_live(url)`` returns.
     """
-    context = context_from_boxscore(game_id, pbp_bytes, box_bytes, source, aliases)
-
-    def parse(live=None):
-        return parse_possessions(pbp_bytes, context, fetch_boxscore, overrides, live)
-
-    try:
-        return parse()
-    except V3DecodeError as error:
-        starters = boxscore_starters(box_bytes)
-        if "is unresolved or ambiguous" in str(error) and starters is not None:
-            context.period_starters = {1: starters}
-            try:
-                return parse()
-            except V3JumpBallEvidenceRequired:
-                if fetch_live is None:
-                    raise
-        elif fetch_live is None or not isinstance(error, V3JumpBallEvidenceRequired):
-            raise
-        return parse(fetch_live)
+    return StatsNbaV3PossessionLoader(
+        game_id,
+        RecordedGame(
+            pbp_bytes, box_bytes, source, fetch_boxscore, aliases, overrides, fetch_live
+        ),
+    )
 
 
 def _event(event, teams):
@@ -333,13 +234,6 @@ def possessions_json(loader, sources=None):
         sources=sources or {},
         possessions=[_possession(p, teams) for p in loader.items],
     )
-
-
-class SavedResponse:
-    """A recorded response read back from disk, in the shape fetch_live returns."""
-
-    def __init__(self, content, url):
-        self.content, self.url = content, url
 
 
 def boxscore_players(box_bytes):

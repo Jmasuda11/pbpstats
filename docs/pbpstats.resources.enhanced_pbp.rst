@@ -7,6 +7,7 @@ Enhanced PBP
    pbpstats.resources.enhanced_pbp.data_nba
    pbpstats.resources.enhanced_pbp.live
    pbpstats.resources.enhanced_pbp.stats_nba
+   pbpstats.resources.enhanced_pbp.stats_nba_v3
 
 Ejection
 ---------

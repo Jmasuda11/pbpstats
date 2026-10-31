@@ -16,7 +16,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
     web,
 )
 from pbpstats.data_loader.stats_nba_v3.held_ball import HELD_BALL_VERSION
-from pbpstats.data_loader.stats_nba_v3.possessions import V3HeldBallJumpBall
+from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import V3HeldBallJumpBall
 from pbpstats.resources.enhanced_pbp import JumpBall, Substitution, Turnover
 from pbpstats.data_loader.stats_nba_v3.overrides import CHANGE_EVENTS, KEEP_EVENTS
 from tools.parity.reference import ROOT
@@ -24,7 +24,7 @@ from tools.parity.scenarios import AWAY, HOME, e, encode_v3, wrap
 
 GAME = "0022500001"
 DATA = ROOT / "tests/parity/data/recorded_evidence"
-DISABLED = "pbpstats.data_loader.stats_nba_v3.possessions.is_candidate_at"
+DISABLED = "pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader.is_candidate_at"
 ORIGINAL = lambda items, index: False
 
 
@@ -77,7 +77,7 @@ def load(rows, overrides=None):
             {name: json.dumps({GAME: numbers}).encode() for name, numbers in overrides.items()},
             "Controlled review", hashlib.sha256(source).hexdigest(),
         )
-    return StatsNbaV3PossessionLoader(source, context, overrides=overrides)
+    return StatsNbaV3PossessionLoader.from_context(source, context, overrides=overrides)
 
 
 def outcome(rows):

@@ -37,7 +37,7 @@ def load(rows, game="0022500001"):
         {1: {HOME: [1, 2, 3, 4, 5], AWAY: [11, 12, 13, 14, 15]}},
         "Controlled team-technical context", hashlib.sha256(source).hexdigest(),
     )
-    return StatsNbaV3PossessionLoader(source, context)
+    return StatsNbaV3PossessionLoader.from_context(source, context)
 
 
 def delay_technical(violation=None, shooters=(AWAY,), subtype="Delay Technical"):

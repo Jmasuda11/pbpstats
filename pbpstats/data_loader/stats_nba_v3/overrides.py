@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import hashlib
 import json
+from pathlib import Path
 
 from pbpstats.overrides import IntDecoder
 
@@ -286,3 +287,53 @@ class V3Overrides:
                 )
             )
         return decoded, diagnostics
+
+
+# Reviewed corrections for games whose play-by-play the original cannot parse
+# as recorded: the original's override files, plus edits to recorded events
+# (see above). Each is bound to the play-by-play bytes it was reviewed against
+# and says what the review found; the recordings are kept with the parity tests.
+REVIEWED_CORRECTIONS = json.loads(
+    Path(__file__).with_name("reviewed_corrections.json").read_text(encoding="utf-8")
+)
+
+
+def reviewed_overrides(game_id, pbp_bytes, corrections=REVIEWED_CORRECTIONS):
+    """V3Overrides for a game's reviewed correction, or None when it has none.
+
+    A correction applies only to the play-by-play bytes it was reviewed
+    against; other bytes for the same game are refused rather than guessed.
+    """
+    entry = corrections.get(game_id)
+    if entry is None:
+        return None
+    if hashlib.sha256(pbp_bytes).hexdigest() != entry["pbp_sha256"]:
+        raise V3DecodeError(
+            "The reviewed correction for {} covers different play-by-play bytes; "
+            "review it again".format(game_id)
+        )
+    files = {
+        name: json.dumps({game_id: values}).encode()
+        for name, values in entry["files"].items()
+    }
+    return V3Overrides(files, entry["source"], entry["pbp_sha256"])
+
+
+def reviewed_aliases(file_directory, boxscore):
+    """Reviewed extra names for the box score's players, {personId: [names]}.
+
+    They are read from ``player_aliases.json`` in the data directory's
+    ``overrides`` subdirectory, for descriptions that use a name the box score
+    does not. As an import applies them, an alias for anyone outside this box
+    score is left out.
+    """
+    if file_directory is None:
+        return {}
+    path = Path(file_directory, "overrides", "player_aliases.json")
+    if not path.is_file():
+        return {}
+    players = {item.player_id for item in boxscore.items if hasattr(item, "player_id")}
+    aliases = json.loads(path.read_text(encoding="utf-8"))
+    return {
+        int(person): names for person, names in aliases.items() if int(person) in players
+    }
