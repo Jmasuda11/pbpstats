@@ -1428,6 +1428,15 @@
       }
     }
   },
+  "0022400303": {
+    "pbp_sha256": "cfaea5ea48de4f3a940ca875c6d51f18d1d72071a9e6e4682d89ff0b38d11509",
+    "source": "Reviewed 2026-11-01: at Q3 0:55 Kuminga fouled Allen with Golden State in the penalty (481; the live play-by-play reads \"(Allen 2 FT)\"), but play went on without free throws, and Allen shot the two free throws (502, 503) after the quarter, at Q4 12:00. V3, V2 and the live play-by-play record no foul at that clock, and the box score counts no other Golden State foul, so the original finds no foul for the first free throw and cannot give its type. It is typed Penalty, as the original's own override types the free throws of 0022301195, shot after their penalty foul for the same reason.",
+    "files": {
+      "event_penalty_free_throws.json": [
+        502
+      ]
+    }
+  },
   "0022400313": {
     "pbp_sha256": "13355209b2b170d26966e83b83dc0ffdeb1fd9bffa3642c0b8a74314aa1a8d93",
     "source": "Video review 2026-10-09: at Q4 11:25 I. Jones' foul just after Sacramento's offensive rebound was an offensive foul, a turnover that ended Sacramento's possession. V3 leaves the turnover subtype blank, which the original reads as no turnover.",

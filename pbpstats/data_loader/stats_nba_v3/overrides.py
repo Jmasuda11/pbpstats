@@ -51,6 +51,9 @@ STARTERS = "missing_period_starters.json"
 # A substitution-outgoing entry, {event: person}, names the teammate a
 # substitution took off the floor when V3 names a player already off it, as a
 # scorer does from a lineup that lacks an earlier substitution.
+# A penalty-free-throw entry, [event, ...], names the first of penalty free
+# throws shot after play went on, with no foul at their clock; its free throw
+# type is Penalty, as the original's own override gives 0022301195's.
 EVENT_V2_JUMP_BALLS = "event_v2_jump_balls.json"
 EVENT_FREE_THROW_SUBTYPES = "event_free_throw_subtypes.json"
 V2_TEXT_FIELDS = (
@@ -72,6 +75,7 @@ EVENT_TEAMS = "event_teams.json"
 EVENT_FOUL_OPPONENTS = "event_foul_opponents.json"
 EVENT_BLOCK_REMOVALS = "event_block_removals.json"
 EVENT_SUBSTITUTION_OUTGOING = "event_substitution_outgoing.json"
+EVENT_PENALTY_FREE_THROWS = "event_penalty_free_throws.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
@@ -86,6 +90,7 @@ SUPPORTED = {
     EVENT_LOCATIONS,
     EVENT_MOVES,
     EVENT_ORDER,
+    EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
@@ -207,11 +212,14 @@ class V3Overrides:
                     ):
                         raise V3DecodeError("Invalid event turnover override")
                     continue
-                if name == EVENT_BLOCK_REMOVALS:
+                if name in (EVENT_BLOCK_REMOVALS, EVENT_PENALTY_FREE_THROWS):
                     if not isinstance(entries, list) or not entries or any(
                         type(event) is not int or event < 0 for event in entries
                     ) or len(set(entries)) != len(entries):
-                        raise V3DecodeError("Invalid event block-removal override")
+                        raise V3DecodeError("Invalid event {} override".format({
+                            EVENT_BLOCK_REMOVALS: "block-removal",
+                            EVENT_PENALTY_FREE_THROWS: "penalty-free-throw",
+                        }[name]))
                     continue
                 if name == EVENT_V2_JUMP_BALLS:
                     # The export's values as read back: numbers for its numeric

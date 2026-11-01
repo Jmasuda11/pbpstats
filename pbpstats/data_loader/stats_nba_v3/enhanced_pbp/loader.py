@@ -57,6 +57,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_LOCATIONS,
     EVENT_MOVES,
     EVENT_ORDER,
+    EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
@@ -73,7 +74,7 @@ from pbpstats.data_loader.stats_nba_v3.starters import (
     V3EvidenceRequired,
     V3StarterBoxscore,
 )
-from pbpstats.resources.enhanced_pbp import FieldGoal
+from pbpstats.resources.enhanced_pbp import FieldGoal, FreeThrow
 from pbpstats.resources.enhanced_pbp.rebound import EventOrderError
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
@@ -428,6 +429,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
                 )))
             event.v3_source_indices = indices
             event.v3_source_row = deepcopy(group["primary"])
+        self._apply_reviewed_penalty_free_throws()
 
     def _make_events(self):
         # The original's _make_pbp_items, on the corrected rows.
@@ -579,6 +581,24 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
 
     def _reviewed_entries(self, name, empty):
         return reviewed_entries(self.overrides, name, self.game_id, empty)
+
+    def _apply_reviewed_penalty_free_throws(self):
+        # The original reads a free throw's type from the foul at its clock;
+        # for penalty free throws shot after play went on there is none, and
+        # the reviewed first free throw is typed Penalty instead.
+        events = {event.event_num: event for event in self.items}
+        for number in self._reviewed_entries(EVENT_PENALTY_FREE_THROWS, []):
+            event = events.get(number)
+            if (
+                not isinstance(event, FreeThrow)
+                or event.is_technical_ft
+                or event.foul_that_led_to_ft is not None
+            ):
+                raise V3DecodeError(
+                    "Event penalty-free-throw override does not fit the recorded event"
+                )
+            event.reviewed_penalty_free_throw = True
+            self.repairs.append(dict(code="reviewed_penalty_free_throw", event_num=number))
 
     def _apply_reviewed_duplicates(self):
         # Drops an event recorded twice, as editing the play-by-play file would,

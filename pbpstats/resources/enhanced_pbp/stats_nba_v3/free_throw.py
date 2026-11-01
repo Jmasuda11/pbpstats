@@ -23,6 +23,14 @@ class StatsNbaV3FreeThrow(FreeThrow, StatsNbaV3EnhancedPbpItem):
         return self.team_id
 
     @property
+    def free_throw_type(self):
+        # A reviewed penalty free throw shot after play went on, with no foul at
+        # its clock, as the original's own override types 0022301195's.
+        if getattr(self, "reviewed_penalty_free_throw", False):
+            return "Penalty"
+        return super().free_throw_type
+
+    @property
     def is_ft_1_of_1(self):
         return self.sub_type in ["Free Throw 1 of 1", "Free Throw Flagrant 1 of 1"]
 

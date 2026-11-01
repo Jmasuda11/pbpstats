@@ -39,6 +39,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_LOCATIONS,
     EVENT_MOVES,
     EVENT_ORDER,
+    EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
@@ -412,6 +413,46 @@ def test_block_removal_edits_are_validated(blocked, values, message):
     values = [n.get(value, value) for value in values]
     with pytest.raises(V3DecodeError, match=message):
         load(rows, files={EVENT_BLOCK_REMOVALS: json.dumps({GAME: values}).encode()})
+
+
+def penalty_free_throws_shot_later(foul=False):
+    """HOME's two penalty free throws come with no foul at their clock, as when
+    play went on after the foul and they were shot later."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        *([e("foul", 590, AWAY, 12, subtype="Personal")] if foul else []),
+        e("ft", 590, HOME, 1, attempt=1, total=2, made=True),
+        e("ft", 590, HOME, 1, attempt=2, total=2, made=True),
+        e("make", 570, AWAY, 13),
+    ]))
+    return rows, dict(first=numbered(rows, "Free Throw", "Free Throw 1 of 2"),
+                      make=numbered(rows, "Made Shot"))
+
+
+def test_penalty_free_throw_edit_types_free_throws_shot_after_their_foul():
+    rows, n = penalty_free_throws_shot_later()
+    with pytest.raises(AttributeError):
+        next(x for x in load(rows).events if x.event_num == n["first"]).free_throw_type
+    loaded = load(rows, files={EVENT_PENALTY_FREE_THROWS: json.dumps({GAME: [n["first"]]}).encode()})
+    assert next(x for x in loaded.events if x.event_num == n["first"]).free_throw_type == "Penalty"
+    assert dict(code="reviewed_penalty_free_throw", event_num=n["first"]) in loaded.diagnostics
+    assert "Penalty Free Throw Trips" in {
+        r["stat_key"] for p in loaded.items for r in p.possession_stats
+    }
+
+
+@pytest.mark.parametrize("foul, values, message", [
+    (True, ["first"], "penalty-free-throw override does not fit"),
+    (False, ["make"], "penalty-free-throw override does not fit"),
+    (False, [999], "penalty-free-throw override does not fit"),
+    (False, [], "Invalid event penalty-free-throw override"),
+    (False, ["first", "first"], "Invalid event penalty-free-throw override"),
+], ids=["foul_at_its_clock", "made_shot", "unknown_event", "empty", "repeated"])
+def test_penalty_free_throw_edits_are_validated(foul, values, message):
+    rows, n = penalty_free_throws_shot_later(foul)
+    values = [n.get(value, value) for value in values]
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files={EVENT_PENALTY_FREE_THROWS: json.dumps({GAME: values}).encode()})
 
 
 def tipped_to_opponent():
@@ -1262,6 +1303,31 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     assert loader.counts_by_team == counts
     rows = json.loads(pbp)["game"]["actions"]
     assert sorted(i for x in loader.events for i in x.v3_source_indices) == list(range(len(rows)))
+
+
+def test_recorded_penalty_free_throws_from_2024_25_review():
+    # 0022400303 Q3 0:55: Kuminga fouled Allen in the penalty, play went on, and
+    # Allen shot the two free throws after the quarter, at Q4 12:00, where no
+    # foul is recorded. The game parses as recorded; only the first free
+    # throw's type, which the original reads from its foul, needs the review.
+    game = "0022400303"
+    pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
+    box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
+    recorded = web.load_game(game, pbp, box, "recorded")
+    with pytest.raises(AttributeError):
+        next(x for x in recorded.events if x.event_num == 502).free_throw_type
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    assert next(x for x in loader.events if x.event_num == 502).free_throw_type == "Penalty"
+    assert dict(code="reviewed_penalty_free_throw", event_num=502) in loader.diagnostics
+    possession = next(p for p in loader.items if any(x.event_num == 502 for x in p.events))
+    assert [x.event_num for x in possession.events] == [504, 502, 503]
+    assert possession.offense_team_id == 1610612756
+    trips = [r for r in possession.possession_stats if r["stat_key"] == "Penalty Free Throw Trips"]
+    assert [(r["player_id"], r["stat_value"]) for r in trips] == [(1628960, 1)]
+    assert [(p.offense_team_id, p.start_time, p.end_time) for p in loader.items] == [
+        (p.offense_team_id, p.start_time, p.end_time) for p in recorded.items
+    ]
+    assert loader.counts_by_team == {1610612744: 98, 1610612756: 99}
 
 
 @pytest.mark.parametrize("game, recorded, trip, offense, counts", [
