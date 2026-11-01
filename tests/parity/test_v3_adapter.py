@@ -6,7 +6,10 @@ import hashlib
 import json
 
 import pytest
+import responses
+from responses import matchers
 
+from pbpstats import VIDEO_EVENT_ASSET_BASE_URL
 from pbpstats.data_loader.stats_nba_v3 import (
     StatsNbaV3PossessionLoader,
     V3Context,
@@ -169,6 +172,27 @@ def test_recorded_non_unsportsmanlike_technicals_outside_the_roster(game, event,
     assert foul.sub_type == "Non-Unsportsmanlike Technical" and foul.is_technical
     assert dict(code="non_roster_actor", event_num=event, person_id=person, team_id=team,
                 basis="recorded_personId_and_teamId_as_in_v2") in loader.diagnostics
+
+
+@responses.activate
+def test_video_url_reads_the_recorded_video_flag_as_the_original_does():
+    # 0022500089: the opening jump ball, event 4, has video; event 74's
+    # rebound has none, so the original asks stats.nba.com only for event 4.
+    data = ROOT / "tests/parity/data/recorded_evidence"
+    pbp = (data / "stats_v3_0022500089.json").read_bytes()
+    box = (data / "stats_v3_boxscore_0022500089.json").read_bytes()
+    loader = web.load_game("0022500089", pbp, box, "recorded")
+    events = {x.event_num: x for x in loader.events}
+    video = "https://videos.nba.com/0022500089/4.mp4"
+    responses.add(
+        responses.GET,
+        VIDEO_EVENT_ASSET_BASE_URL,
+        match=[matchers.query_param_matcher({"GameEventID": "4", "GameID": "0022500089"})],
+        json={"resultSets": {"Meta": {"videoUrls": [{"murl": video}]}}},
+    )
+    assert (events[4].video_available, events[4].video_url) == (1, video)
+    assert (events[74].video_available, events[74].video_url) == (0, None)
+    assert len(responses.calls) == 1
 
 
 def double_foul_rows(description):

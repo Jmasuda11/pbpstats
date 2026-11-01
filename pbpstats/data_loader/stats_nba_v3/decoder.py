@@ -696,6 +696,9 @@ class DecodedV3:
             player1_id=player,
             player2_id=None,
             player3_id=None,
+            # 1 when stats.nba.com has video of the event, as the original's
+            # VIDEO_AVAILABLE_FLAG.
+            video_available=row.get("videoAvailable"),
         )
         roles = {}
         for _, secondary in group:

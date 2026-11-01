@@ -602,12 +602,17 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
 
     def _apply_reviewed_duplicates(self):
         # Drops an event recorded twice, as editing the play-by-play file would,
-        # only when every projected fact but its number matches the copy kept.
+        # only when every projected fact but its number and video flag matches
+        # the copy kept.
         duplicates = self._reviewed_entries(EVENT_DUPLICATES, {})
         by_number = {row["event_num"]: row for row in self.data}
 
         def facts(row):
-            return {key: value for key, value in row.items() if key != "event_num"}
+            return {
+                key: value
+                for key, value in row.items()
+                if key not in ("event_num", "video_available")
+            }
 
         for event, kept in sorted(duplicates.items()):
             if event not in by_number or kept not in by_number or kept in duplicates:

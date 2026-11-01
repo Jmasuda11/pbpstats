@@ -29,6 +29,7 @@ class StatsNbaV3EnhancedPbpItem(StatsEnhancedPbpItem):
         self.description = event["description"]
         self.action_type = event["action_type"]
         self.sub_type = event["sub_type"]
+        self.video_available = event.get("video_available")
         self.player1_id = event["player1_id"]
         # The original decides from who is there: an event without a team, a
         # replay's, has no team_id, and one without a second or third person
