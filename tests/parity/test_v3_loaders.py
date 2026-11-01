@@ -35,6 +35,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
 )
 from pbpstats.data_loader.stats_nba_v3.base import StatsNbaV3LoaderBase
 from pbpstats.data_loader.stats_nba_v3.decoder import live_play_by_play_url
+from pbpstats.objects.game import Game
 from pbpstats.resources.boxscore.boxscore import Boxscore
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
     StatsNbaV3EnhancedPbpFactory,
@@ -220,7 +221,22 @@ def test_a_box_score_for_another_game_is_rejected(tmp_path):
         StatsNbaV3PossessionLoader(PLAIN, StatsNbaV3PossessionFileLoader(str(directory)))
 
 
-def test_client_loads_every_v3_resource(tmp_path):
+@pytest.fixture
+def game_class():
+    """Client sets its loaders on the shared Game class, as the original's does;
+    the test starts from a bare class, and the class is put back after so
+    neither earlier nor later tests' clients load the other's resources."""
+    saved = {k: v for k, v in vars(Game).items() if not k.startswith("__")}
+    for name in saved:
+        delattr(Game, name)
+    yield
+    for name in [k for k in vars(Game) if not k.startswith("__")]:
+        delattr(Game, name)
+    for name, value in saved.items():
+        setattr(Game, name, value)
+
+
+def test_client_loads_every_v3_resource(tmp_path, game_class):
     directory = str(data_directory(tmp_path, PLAIN))
     resources = ("Pbp", "Boxscore", "EnhancedPbp", "Possessions")
     for resource in resources:
@@ -241,7 +257,7 @@ def test_client_loads_every_v3_resource(tmp_path):
     ) - 2
 
 
-def test_client_keeps_detailed_statistics_gated(tmp_path):
+def test_client_keeps_detailed_statistics_gated(tmp_path, game_class):
     directory = str(data_directory(tmp_path, PLAIN))
     client = Client(dict(
         dir=directory, Possessions={"source": "file", "data_provider": "stats_nba_v3"}
