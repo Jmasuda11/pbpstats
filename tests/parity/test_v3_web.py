@@ -136,6 +136,7 @@ def test_ambiguous_tip_falls_back_to_box_score_starters():
     box = json.dumps(
         {
             "boxScoreTraditional": dict(
+                gameId=GAME,
                 homeTeamId=HOME,
                 awayTeamId=AWAY,
                 homeTeam=team(HOME, 1),

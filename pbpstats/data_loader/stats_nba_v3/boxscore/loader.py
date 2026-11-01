@@ -14,6 +14,7 @@ The following code will load boxscore data for game id "0022500001" from a file 
 import json
 
 from pbpstats.data_loader.stats_nba_v3.base import StatsNbaV3LoaderBase
+from pbpstats.data_loader.stats_nba_v3.decoder import V3DecodeError
 from pbpstats.resources.boxscore.stats_nba_v3_boxscore_item import (
     StatsNbaV3BoxscoreItem,
 )
@@ -27,6 +28,8 @@ class StatsNbaV3BoxscoreLoader(StatsNbaV3LoaderBase):
 
     :param str game_id: NBA Stats Game Id
     :param source_loader: :obj:`~pbpstats.data_loader.stats_nba_v3.boxscore.file.StatsNbaV3BoxscoreFileLoader` or :obj:`~pbpstats.data_loader.stats_nba_v3.boxscore.web.StatsNbaV3BoxscoreWebLoader` object
+    :raises: :obj:`~pbpstats.data_loader.stats_nba_v3.decoder.V3DecodeError`:
+        If the box score is for another game.
     """
 
     data_provider = "stats_nba_v3"
@@ -43,6 +46,8 @@ class StatsNbaV3BoxscoreLoader(StatsNbaV3LoaderBase):
         makes :obj:`~pbpstats.resources.boxscore.stats_nba_v3_boxscore_item.StatsNbaV3BoxscoreItem` items for each player/team
         """
         box = self.data
+        if box["gameId"] != self.game_id:
+            raise V3DecodeError("Box score is for another game")
         # A side's players belong to the team the box score names for that side.
         sides = [
             (box["homeTeamId"], box["homeTeam"]),

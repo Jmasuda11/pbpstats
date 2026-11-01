@@ -208,6 +208,18 @@ def test_pbp_and_boxscore_resources_keep_the_recorded_rows(tmp_path):
     assert totals["team_abbreviation"] == home["teamTricode"]
 
 
+def test_a_box_score_for_another_game_is_rejected(tmp_path):
+    directory = data_directory(tmp_path, PLAIN)
+    path = directory / "game_details" / f"stats_v3_boxscore_{PLAIN}.json"
+    box = json.loads(path.read_bytes())
+    box["boxScoreTraditional"]["gameId"] = "0022500001"
+    path.write_text(json.dumps(box), encoding="utf-8")
+    with pytest.raises(V3DecodeError, match="Box score is for another game"):
+        StatsNbaV3BoxscoreLoader(PLAIN, StatsNbaV3BoxscoreFileLoader(str(directory)))
+    with pytest.raises(V3DecodeError, match="Box score is for another game"):
+        StatsNbaV3PossessionLoader(PLAIN, StatsNbaV3PossessionFileLoader(str(directory)))
+
+
 def test_client_loads_every_v3_resource(tmp_path):
     directory = str(data_directory(tmp_path, PLAIN))
     resources = ("Pbp", "Boxscore", "EnhancedPbp", "Possessions")
