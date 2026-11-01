@@ -1040,10 +1040,12 @@ def test_move_edit_stays_within_one_period():
         load(rows, files=edits(EVENT_MOVES, {str(n["late"]): end["actionNumber"]}))
 
 
-def team_heave(side=""):
-    """HOME's period-ending team heave, rebounded by HOME, with the side V3 gives it."""
+def team_heave(side="", blocked=False):
+    """HOME's period-ending team heave, rebounded by HOME, with the side V3 gives
+    it; a blocked heave's blocker row names its blocker only in its text."""
     case = next(c for c in heave_cases() if c["period"] == 1 and c["start"] == "5"
-                and c["rebound"] == "offensive" and not c["blocked"] and not c["substitute"])
+                and c["rebound"] == "offensive" and c["blocked"] == blocked
+                and not c["substitute"])
     rows = heave_rows(case)
     heave = next(r for r in rows if r["actionType"] == "Heave")
     heave["location"] = side
@@ -1064,6 +1066,17 @@ def test_location_and_block_edits_complete_a_team_heave():
     recorded = next(d for d in loaded.diagnostics if d["code"] == TEAM_HEAVE_VERSION)
     assert (recorded["location"], recorded["basis"]) == ("h", "reviewed_location")
     assert loaded.decoded.raw_rows == rows
+
+
+def test_location_edit_sides_a_name_only_heave_blocker():
+    rows, n = team_heave(blocked=True)
+    files = edits(EVENT_LOCATIONS, {str(n["heave"]): "h"})
+    heave = next(x for x in load(rows, files=files).events if x.event_num == n["heave"])
+    assert isinstance(heave, V3TeamHeave) and heave.team_id == HOME
+    assert heave.is_blocked and heave.player3_id == 11
+    next(r for r in rows if "BLOCK" in r["description"])["location"] = "h"
+    with pytest.raises(V3DecodeError, match="blocker location contradicts"):
+        load(rows, files=files)
 
 
 @pytest.mark.parametrize("side, values, message", [

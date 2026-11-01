@@ -734,7 +734,8 @@ class DecodedV3:
                 opposing = next(t for t in self.context.team_ids if t != team)
                 name = re.fullmatch(r"(.+) BLOCK \(\d+ BLK\)", secondary["description"])[1]
                 identity = self._resolve(name, opposing)
-                if secondary.get("location") not in ("", {"h": "v", "v": "h"}[row["location"]]):
+                side = self.team_heaves[row["actionNumber"]]["location"]
+                if secondary.get("location") not in ("", {"h": "v", "v": "h"}[side]):
                     raise V3DecodeError("Team-heave blocker location contradicts opposing team")
                 self.team_heaves[row["actionNumber"]]["blocker"] = dict(
                     source_index=next(i for i, r in group if r is secondary),

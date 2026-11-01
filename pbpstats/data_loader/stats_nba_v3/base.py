@@ -6,6 +6,7 @@ from pbpstats import (
     WNBA_GAME_ID_PREFIX,
     WNBA_STRING,
 )
+from pbpstats.data_loader.stats_nba.base import StatsNbaLoaderBase
 
 
 class StatsNbaV3LoaderBase(object):
@@ -27,3 +28,7 @@ class StatsNbaV3LoaderBase(object):
             G_LEAGUE_GAME_ID_PREFIX: G_LEAGUE_STRING,
             WNBA_GAME_ID_PREFIX: WNBA_STRING,
         }.get(self.game_id[:2])
+
+    # The original's season and season type, which it also reads from the game id.
+    season = StatsNbaLoaderBase.season
+    season_type = StatsNbaLoaderBase.season_type

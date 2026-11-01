@@ -24,6 +24,7 @@ from pbpstats.data_loader import (
     StatsNbaV3PossessionWebLoader,
 )
 from pbpstats.data_loader.factory import DataLoaderFactory
+from pbpstats.data_loader.stats_nba.base import StatsNbaLoaderBase
 from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
 from pbpstats.data_loader.stats_nba.pbp.loader import StatsNbaPbpLoader
 from pbpstats.data_loader.stats_nba_v3 import (
@@ -32,6 +33,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3JumpBallEvidenceRequired,
     web,
 )
+from pbpstats.data_loader.stats_nba_v3.base import StatsNbaV3LoaderBase
 from pbpstats.data_loader.stats_nba_v3.decoder import live_play_by_play_url
 from pbpstats.resources.boxscore.boxscore import Boxscore
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.enhanced_pbp_factory import (
@@ -248,3 +250,21 @@ def test_enhanced_loader_is_built_on_the_pbp_loader_as_the_originals_is(tmp_path
     # The factory gives every class from its row, a team heave's too.
     row = {"action_type": "Heave", "sub_type": "Team Field Goal Attempt"}
     assert StatsNbaV3EnhancedPbpFactory().get_event_class(row) is V3TeamHeave
+
+
+def test_loaders_read_league_season_and_season_type_as_the_originals_do(tmp_path):
+    directory = str(data_directory(tmp_path, PLAIN))
+    loaders = (
+        StatsNbaV3PbpLoader(PLAIN, StatsNbaV3PbpFileLoader(directory)),
+        StatsNbaV3EnhancedPbpLoader(PLAIN, StatsNbaV3EnhancedPbpFileLoader(directory)),
+        StatsNbaV3BoxscoreLoader(PLAIN, StatsNbaV3BoxscoreFileLoader(directory)),
+    )
+    for loader in loaders:
+        assert (loader.league, loader.season, loader.season_type) == ("nba", "2025-26", "Regular Season")
+    # Playoffs, play-in, the WNBA and the turn of a decade and of the century too.
+    for game_id in (PLAIN, "0042400101", "0052400101", "1022600001", "0020900001", "0029900001"):
+        original, v3 = StatsNbaLoaderBase(), StatsNbaV3LoaderBase()
+        original.game_id = v3.game_id = game_id
+        assert (v3.league, v3.season, v3.season_type) == (
+            original.league, original.season, original.season_type
+        )
