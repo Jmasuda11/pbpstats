@@ -1,5 +1,6 @@
 """Fetch, parse and save one game: context from the box score, JSON output."""
 
+from collections import Counter
 import json
 
 import pytest
@@ -41,6 +42,25 @@ def test_recorded_game_is_saved_with_every_source_row_once():
         assert set(possession["credited_lineups"]) == (
             teams if possession["counted"] else set()
         )
+
+
+def test_each_possession_has_the_original_possession_stats():
+    pbp, box = recorded("0022500089")
+    loader = web.load_game("0022500089", pbp, box, "recorded")
+    data = json.loads(json.dumps(web.possessions_json(loader)))
+    offense, assists = Counter(), Counter()
+    for possession in data["possessions"]:
+        for row in possession["possession_stats"]:
+            if row["stat_key"] == "OffPoss":
+                offense[str(row["team_id"])] += row["stat_value"]
+            elif ":AssistsTo:" in row["stat_key"]:
+                assists[str(row["team_id"])] += row["stat_value"]
+    # Each credited possession counts once for each of the offense's five players.
+    assert {team: n / 5 for team, n in offense.items()} == data["credited_possessions"]
+    # The box score's assists.
+    assert assists == {"1610612757": 25, "1610612750": 21}
+    # Fouls whose fouled player V3 does not record.
+    assert Counter(u["role"] for u in data["unknown_attribution"]) == {"foul_drawn": 46}
 
 
 def test_reviewed_alias_resolves_a_name_the_box_score_lacks():

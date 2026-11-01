@@ -212,11 +212,18 @@ def _possession(possession, teams):
             if row["stat_key"] in ("OffPoss", "DefPoss")
         },
         events=[_event(event, teams) for event in possession.events],
+        # The original's statistics for this possession. A foul in
+        # unknown_attribution has no drawn statistics.
+        possession_stats=possession.possession_stats,
     )
 
 
 def possessions_json(loader, sources=None):
-    """Possessions as plain JSON data; detailed statistics stay gated."""
+    """Possessions as plain JSON data, each with the original's possession_stats.
+
+    The game-level aggregates stay gated; ``unknown_attribution`` lists the
+    events whose other party V3 does not record, such as a fouled player.
+    """
     teams = loader.decoded.context.team_ids
     return dict(
         game_id=loader.game_id,
@@ -226,6 +233,7 @@ def possessions_json(loader, sources=None):
         credited_possessions={str(t): n for t, n in loader.counts_by_team.items()},
         capabilities=loader.capabilities,
         diagnostics=loader.diagnostics,
+        unknown_attribution=loader.decoded.unknown_attribution,
         # Starters supplied as recorded evidence; all others were inferred.
         supplied_period_starters={
             str(period): {str(t): players for t, players in by_team.items()}
