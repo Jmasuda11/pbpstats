@@ -414,6 +414,7 @@ class DecodedV3:
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
         v2_jump_balls=None, free_throw_subtypes=None, substitution_outgoing=None,
+        blank_rows=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -431,8 +432,9 @@ class DecodedV3:
         # a double foul whose text names nobody, a missed shot's recorded
         # block that did not happen, the V2 export row of a jump ball V3
         # leaves undecided when no live play-by-play records the game, the
-        # subtype of a free throw V3 records with none, and the player a
-        # substitution took off when V3 names one already off. The recorded rows stay
+        # subtype of a free throw V3 records with none, the player a
+        # substitution took off when V3 names one already off, and the event a
+        # row that records nothing belongs to. The recorded rows stay
         # unchanged; each fact must be used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
@@ -442,6 +444,7 @@ class DecodedV3:
         self.reviewed_v2_jump_balls = dict(v2_jump_balls or {})
         self.reviewed_free_throw_subtypes = dict(free_throw_subtypes or {})
         self.reviewed_substitution_outgoing = dict(substitution_outgoing or {})
+        self.reviewed_blank_rows = dict(blank_rows or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
@@ -451,6 +454,7 @@ class DecodedV3:
             "v2-jump-ball": set(self.reviewed_v2_jump_balls),
             "free-throw-subtype": set(self.reviewed_free_throw_subtypes),
             "substitution-outgoing": set(self.reviewed_substitution_outgoing),
+            "blank-row": set(self.reviewed_blank_rows),
         }
         self.team_technicals = []
         self.label_rules = []
@@ -508,10 +512,24 @@ class DecodedV3:
                 for key in ("actionType", "subType", "description")
             ):
                 raise V3DecodeError("Invalid event text at row {}".format(index))
-            candidates[row["actionNumber"]].append((index, row))
+            number = row["actionNumber"]
+            if number in self.reviewed_blank_rows:
+                # A row that records nothing joins the reviewed event's group,
+                # which must be at its period and clock, as a row decoded with it.
+                if row["teamId"] or row["personId"] or row["subType"] or row["description"].strip():
+                    raise V3DecodeError("Event blank-row override does not fit the recorded event")
+                self._unused_reviewed["blank-row"].discard(number)
+                number = self.reviewed_blank_rows[number]
+                self.reviewed_inputs.append(
+                    dict(code="reviewed_blank_row", event_num=row["actionNumber"], kept=number)
+                )
+            candidates[number].append((index, row))
         groups = []
         for number, rows in candidates.items():
-            primary = [(i, row) for i, row in rows if row["actionType"]]
+            primary = [
+                (i, row) for i, row in rows
+                if row["actionType"] and row["actionNumber"] == number
+            ]
             if (
                 len(primary) != 1
                 or len({(row["period"], clock_text(row["clock"])) for _, row in rows})
@@ -702,7 +720,7 @@ class DecodedV3:
         )
         roles = {}
         for _, secondary in group:
-            if secondary is row:
+            if secondary is row or secondary["actionNumber"] in self.reviewed_blank_rows:
                 continue
             role = (
                 "stealer"

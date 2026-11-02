@@ -46,6 +46,7 @@ from pbpstats.data_loader.stats_nba_v3.names import (
 )
 from pbpstats.data_loader.stats_nba_v3.overrides import (
     CHANGE_EVENTS,
+    EVENT_BLANK_ROWS,
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
@@ -362,6 +363,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
             substitution_outgoing=reviewed_entries(
                 self.overrides, EVENT_SUBSTITUTION_OUTGOING, context.game_id, {}
             ),
+            blank_rows=reviewed_entries(self.overrides, EVENT_BLANK_ROWS, context.game_id, {}),
         )
         self.decoded = decoded
         self.game_id = context.game_id

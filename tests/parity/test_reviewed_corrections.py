@@ -28,6 +28,7 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
 )
 from pbpstats.data_loader.stats_nba_v3.enhanced_pbp.loader import AND_ONE_CLOCK_VERSION
 from pbpstats.data_loader.stats_nba_v3.overrides import (
+    EVENT_BLANK_ROWS,
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
@@ -802,6 +803,7 @@ def test_substitution_outgoing_edit_needs_the_recorded_player_off_the_floor():
     (EVENT_SUBSTITUTION_OUTGOING, True),
     (EVENT_TEAMS, True),
     (EVENT_TIP_RECIPIENTS, True),
+    (EVENT_BLANK_ROWS, False),
     (EVENT_DUPLICATES, False),
     (EVENT_LIVE_NUMBERS, False),
     (EVENT_MOVES, False),
@@ -819,6 +821,58 @@ def test_only_an_action_number_cannot_be_the_events_own(name, accepted):
     else:
         with pytest.raises(V3DecodeError, match="Invalid event"):
             overrides.decode(source)
+
+
+def blank_row_after_a_lane_violation():
+    """HOME's lane violation on its second free throw is recorded as a turnover,
+    and a Violation row with no team, person, subtype or description follows it,
+    as a scorer leaves an entry abandoned for the turnover."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("foul", 590, AWAY, 11, subtype="Shooting"),
+        e("ft", 590, HOME, 1, attempt=1, total=2, made=True),
+        e("turnover", 590, HOME, 2, subtype="Lane Violation"),
+        e("make", 570, AWAY, 13),
+    ]))
+    turnover = numbered(rows, "Turnover")
+    index = next(i for i, r in enumerate(rows) if r["actionNumber"] == turnover)
+    blank = dict(
+        rows[index], actionNumber=max(r["actionNumber"] for r in rows) + 1,
+        actionId=max(r["actionId"] for r in rows) + 1, actionType="Violation",
+        subType="", description=" ", teamId=0, personId=0,
+    )
+    rows.insert(index + 1, blank)
+    return rows, dict(
+        blank=blank["actionNumber"], turnover=turnover, index=index,
+        make=numbered(rows, "Made Shot"),
+    )
+
+
+def test_blank_row_edit_keeps_the_row_with_its_event():
+    rows, n = blank_row_after_a_lane_violation()
+    with pytest.raises(V3DecodeError, match="Unsupported Violation subtype"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_BLANK_ROWS, {str(n["blank"]): n["turnover"]}))
+    assert n["blank"] not in [x.event_num for x in loaded.events]
+    turnover = next(x for x in loaded.events if x.event_num == n["turnover"])
+    assert turnover.v3_source_indices == (n["index"], n["index"] + 1)
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME]
+    assert dict(code="reviewed_blank_row", event_num=n["blank"], kept=n["turnover"]) in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"make": "turnover"}, "blank-row override does not fit"),
+    ({"blank": "turnover", "998": "turnover"}, "blank-row override does not fit"),
+    ({"blank": "make"}, "Ambiguous action group"),
+    ({"blank": 999}, "Ambiguous action group"),
+    ({"blank": 0}, "Invalid event blank-row override"),
+], ids=["not_blank", "not_recorded", "other_clock", "no_kept_event", "no_event"])
+def test_blank_row_edits_are_validated(values, message):
+    rows, n = blank_row_after_a_lane_violation()
+    values = {str(n.get(key, key)): n.get(value, value) for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_BLANK_ROWS, values))
 
 
 def double_technical_named_nobody():
@@ -1412,6 +1466,8 @@ def test_recorded_corrections_from_2023_24_review(game, recorded, trip, offense,
      [(8, "is_real_rebound", True), (8, "is_possession_ending_event", False)]),
     ("0022600142", V3DecodeError, [512, 514, 518, 519, 515], 1610612742,
      {1610612760: 98, 1610612742: 97}, [(519, "player1_id", 1631204), (519, "player2_id", 1628997)]),
+    ("0022600146", V3DecodeError, [483, 485, 488, 490], 1610612757,
+     {1610612757: 102, 1610612763: 100}, [(490, "v3_source_indices", (349, 350))]),
 ])
 def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense, counts, checks):
     # 0022600003 Q3 10:00: an offensive foul turnover left behind when
@@ -1431,7 +1487,8 @@ def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense,
     # 0022600138 Q1 11:35: VanVleet's airball out of bounds at the shot clock,
     # recorded as Milwaukee's team rebound and Houston's shot-clock turnover.
     # 0022600142 Q3 2:02: Martin replaced Sasser, recorded for Washington, whom a
-    # substitution added at the end of the quarter took off at 3:44.
+    # substitution added at the end of the quarter took off at 3:44. 0022600146
+    # Q3 4:52: Camara's lane violation turnover, followed by a blank violation row.
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value

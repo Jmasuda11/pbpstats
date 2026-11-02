@@ -50,7 +50,10 @@ STARTERS = "missing_period_starters.json"
 # throw V3 records with neither category nor numbering, in its subtype or text.
 # A substitution-outgoing entry, {event: person}, names the teammate a
 # substitution took off the floor when V3 names a player already off it, as a
-# scorer does from a lineup that lacks an earlier substitution.
+# scorer does from a lineup that lacks an earlier substitution. A blank-row
+# entry, {event: kept}, drops a row that records nothing (no team, person,
+# subtype or description), keeping its recorded row with an event at the same
+# period and clock.
 # A penalty-free-throw entry, [event, ...], names the first of penalty free
 # throws shot after play went on, with no foul at their clock; its free throw
 # type is Penalty, as the original's own override gives 0022301195's.
@@ -76,9 +79,11 @@ EVENT_FOUL_OPPONENTS = "event_foul_opponents.json"
 EVENT_BLOCK_REMOVALS = "event_block_removals.json"
 EVENT_SUBSTITUTION_OUTGOING = "event_substitution_outgoing.json"
 EVENT_PENALTY_FREE_THROWS = "event_penalty_free_throws.json"
+EVENT_BLANK_ROWS = "event_blank_rows.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
+    EVENT_BLANK_ROWS,
     EVENT_BLOCK_REMOVALS,
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
@@ -103,8 +108,9 @@ SUPPORTED = {
 }
 # Entries that map an event to a number: a kept event, a blocker, a live action,
 # a tip recipient, an event to follow, a team, a foul opponent or a substitution's
-# outgoing player.
+# outgoing player, or the event a blank row belongs to.
 NUMBERED = {
+    EVENT_BLANK_ROWS: "blank-row",
     EVENT_BLOCKS: "block",
     EVENT_DUPLICATES: "duplicate",
     EVENT_FOUL_OPPONENTS: "foul-opponent",
@@ -118,7 +124,13 @@ NUMBERED = {
 # The numbered entries whose number is an action's: a kept event, a live action
 # or an event to follow, never the event itself. The others name a person or a
 # team, whose ID may equal the event's number.
-ACTION_NUMBERED = {EVENT_DUPLICATES, EVENT_LIVE_NUMBERS, EVENT_MOVES, EVENT_REMOVALS}
+ACTION_NUMBERED = {
+    EVENT_BLANK_ROWS,
+    EVENT_DUPLICATES,
+    EVENT_LIVE_NUMBERS,
+    EVENT_MOVES,
+    EVENT_REMOVALS,
+}
 
 
 @dataclass(frozen=True)

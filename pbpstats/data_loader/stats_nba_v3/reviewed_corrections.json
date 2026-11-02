@@ -1756,6 +1756,15 @@
       }
     }
   },
+  "0022600146": {
+    "pbp_sha256": "e2d6b90292fa38c2b11f50ea50c397402dd7b86ab1af6dbc119ca48f13c2c8a5",
+    "source": "Reviewed 2026-10-30: in Q3 at 4:52, Camara's lane violation on Potter's second free throw gave Memphis the ball, recorded as a lane violation turnover (490). V3 also records at that clock a Violation row (489) with no team, person, subtype or description, numbered before the turnover, as a scorer leaves an entry abandoned for it; no other V3 game from 2019-20 on has one, and a lane violation turnover without a double lane comes with no violation row. The box score (Potter 1 of 1 free throws, Camara 2 turnovers) matches the turnover alone. The entry keeps the blank row with the turnover.",
+    "files": {
+      "event_blank_rows.json": {
+        "489": 490
+      }
+    }
+  },
   "1042600201": {
     "pbp_sha256": "145f3ae76dc699e87b85257e78d5397907e67fe237411de3a798afcd78ceeeae",
     "source": "Reviewed 2026-10-06: Atlanta's 4th-quarter starters. Atlanta made no 4th-quarter substitution; official minutes less Q1-Q3 floor time leave 10:00 for Bonner, Reese, Howard, Canada and Hillmon and none for others.",
