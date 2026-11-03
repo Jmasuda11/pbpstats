@@ -48,7 +48,11 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_TIP_RECIPIENTS,
     EVENT_TURNOVERS,
     EVENT_V2_JUMP_BALLS,
+    KEEP_EVENTS,
+    OVERRIDES_DIRECTORY,
+    REVIEWS,
     SUPPORTED,
+    read_games,
 )
 from pbpstats.resources.enhanced_pbp.stats_nba_v3.team_heave import TEAM_HEAVE_VERSION, V3TeamHeave
 from pbpstats.resources.enhanced_pbp import Turnover
@@ -61,6 +65,7 @@ GAME = "0022500001"
 # then fails as recorded.
 WNBA = "1022500001"
 DATA = ROOT / "tests/parity/data/recorded_evidence"
+OVERRIDES = ROOT / OVERRIDES_DIRECTORY
 
 
 def numbered(rows, kind, subtype=None):
@@ -673,7 +678,7 @@ def test_recorded_clock_reset_follows_the_live_entry_order():
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     with pytest.raises(V3DecodeError, match="additional recorded provider evidence"):
         web.load_game(game, pbp, box, "recorded")
-    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(ROOT, game, pbp))
     live = json.loads((DATA / f"live_{game}.json").read_bytes())["game"]["actions"]
     stretch = [458, 461, 462, 463, 464, 468, 469, 470, 471, 681, 473, 475, 476, 477, 478, 480, 481]
     entered = sorted((a for a in live if a["period"] == 3 and a["actionNumber"] in stretch),
@@ -1196,20 +1201,43 @@ def test_live_number_entries_name_another_action(values):
         overrides.decode(pbp)
 
 
-def test_reviewed_corrections_file_is_well_formed():
-    assert web.REVIEWED_CORRECTIONS, "the corrections file is empty"
-    for game_id, entry in web.REVIEWED_CORRECTIONS.items():
+def test_override_files_are_well_formed():
+    reviews = read_games(OVERRIDES / REVIEWS)
+    assert reviews, "the reviews file is empty"
+    names = {path.name for path in OVERRIDES.glob("*.json")} - {REVIEWS}
+    assert names <= SUPPORTED
+    assert {game for name in names for game in read_games(OVERRIDES / name)} == set(reviews)
+    for game_id, review in reviews.items():
         assert re.fullmatch(r"(00|10)\d{8}", game_id)
-        assert set(entry) == {"pbp_sha256", "source", "files"}
-        assert re.fullmatch(r"[0-9a-f]{64}", entry["pbp_sha256"])
-        assert entry["source"].strip() and set(entry["files"]) <= SUPPORTED
+        assert review.strip()
+
+
+def test_override_files_apply_as_the_originals_do(tmp_path):
+    game, other, pbp = "0022500001", "0022500002", b"play-by-play"
+    assert web.reviewed_overrides(None, game, pbp) is None
+    assert web.reviewed_overrides(tmp_path, game, pbp) is None
+    # The original's own folder is not read.
+    (tmp_path / "overrides").mkdir()
+    (tmp_path / "overrides" / KEEP_EVENTS).write_text(json.dumps({game: [5]}), encoding="utf-8")
+    assert web.reviewed_overrides(tmp_path, game, pbp) is None
+    folder = tmp_path / OVERRIDES_DIRECTORY
+    folder.mkdir()
+    (folder / KEEP_EVENTS).write_text(json.dumps({game: [5], other: [6]}), encoding="utf-8")
+    assert web.reviewed_overrides(tmp_path, "0022500003", pbp) is None
+    assert web.reviewed_overrides(tmp_path, game, pbp).decode(pbp)[0] == {KEEP_EVENTS: {game: [5]}}
+    # They apply by game ID, whatever the play-by-play's bytes, and a review's
+    # finding is their source.
+    (folder / REVIEWS).write_text(json.dumps({game: "Video review"}), encoding="utf-8")
+    changed = pbp + b" "
+    overrides = web.reviewed_overrides(tmp_path, game, changed)
+    assert overrides.source == "Video review"
+    assert overrides.decode(changed)[0] == {KEEP_EVENTS: {game: [5]}}
 
 
 def test_every_reviewed_correction_has_its_recording():
-    for game_id, entry in web.REVIEWED_CORRECTIONS.items():
+    for game_id in read_games(OVERRIDES / REVIEWS):
         folder = DATA if game_id.startswith("00") else ROOT / "tests/parity/data/wnba"
-        pbp = (folder / f"stats_v3_{game_id}.json").read_bytes()
-        assert hashlib.sha256(pbp).hexdigest() == entry["pbp_sha256"], game_id
+        assert (folder / f"stats_v3_{game_id}.json").is_file(), game_id
 
 
 def test_recorded_correction_moves_curry_technical_free_throw():
@@ -1223,7 +1251,7 @@ def test_recorded_correction_moves_curry_technical_free_throw():
     # credits the Warriors with Phoenix's 2:27-2:07 trip and raises.
     with pytest.raises(TeamHasBackToBackPossessionsException):
         web.load_game("0022500169", pbp, box, "recorded", fetch_live=fetch)
-    overrides = web.reviewed_overrides("0022500169", pbp)
+    overrides = web.reviewed_overrides(ROOT, "0022500169", pbp)
     loader = web.load_game("0022500169", pbp, box, "recorded", overrides=overrides,
                            fetch_live=fetch)
     trip = next(p for p in loader.items if any(x.event_num == 647 for x in p.events))
@@ -1236,8 +1264,6 @@ def test_recorded_correction_moves_curry_technical_free_throw():
     assert after.offense_team_id == warriors and after.start_time == "2:07"
     assert dict(code="reviewed_event_order", moves=[[648, 647]]) in loader.diagnostics
     assert loader.counts_by_team == {suns: 100, warriors: 98}
-    with pytest.raises(V3DecodeError, match="covers different play-by-play bytes"):
-        web.reviewed_overrides("0022500169", pbp + b" ")
 
 
 @pytest.mark.parametrize("game, trip, code", [
@@ -1256,7 +1282,7 @@ def test_recorded_corrections_from_video_review(game, trip, code):
     with pytest.raises(TeamHasBackToBackPossessionsException):
         web.load_game(game, pbp, box, "recorded")
     loader = web.load_game(game, pbp, box, "recorded",
-                           overrides=web.reviewed_overrides(game, pbp))
+                           overrides=web.reviewed_overrides(ROOT, game, pbp))
     possession = next(p for p in loader.items if any(x.event_num == trip[-1] for x in p.events))
     assert [x.event_num for x in possession.events][-len(trip):] == trip
     following = loader.items[loader.items.index(possession) + 1]
@@ -1275,7 +1301,7 @@ def test_recorded_and_one_keeps_its_reviewed_clock():
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     ruled = web.load_game(game, pbp, box, "recorded")
     reviewed = web.load_game(game, pbp, box, "recorded",
-                             overrides=web.reviewed_overrides(game, pbp))
+                             overrides=web.reviewed_overrides(ROOT, game, pbp))
     for loader, clock, rule in ((ruled, "0:19.3", True), (reviewed, "0:19.4", False)):
         possession = next(p for p in loader.items if any(x.event_num == 151 for x in p.events))
         assert [x.event_num for x in possession.events][-4:] == [151, 152, 154, 155]
@@ -1312,7 +1338,7 @@ def test_recorded_corrections_for_other_rejections(game, recorded, trip, offense
     with pytest.raises(V3DecodeError, match=recorded):
         web.load_game(game, pbp, box, "recorded", fetch_live=fetch)
     loader = web.load_game(game, pbp, box, "recorded",
-                           overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
+                           overrides=web.reviewed_overrides(ROOT, game, pbp), fetch_live=fetch)
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
     assert [x.event_num for x in possession.events] == trip
     assert possession.offense_team_id == offense
@@ -1363,7 +1389,7 @@ def test_recorded_corrections_from_2024_25_video_review(game, recorded, trip, of
     with pytest.raises(recorded):
         web.load_game(game, pbp, box, "recorded", aliases=aliases, fetch_live=fetch)
     loader = web.load_game(game, pbp, box, "recorded", aliases=aliases,
-                           overrides=web.reviewed_overrides(game, pbp), fetch_live=fetch)
+                           overrides=web.reviewed_overrides(ROOT, game, pbp), fetch_live=fetch)
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
     assert [x.event_num for x in possession.events] == trip
     assert possession.offense_team_id == offense
@@ -1383,7 +1409,7 @@ def test_recorded_penalty_free_throws_from_2024_25_review():
     recorded = web.load_game(game, pbp, box, "recorded")
     with pytest.raises(AttributeError):
         next(x for x in recorded.events if x.event_num == 502).free_throw_type
-    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(ROOT, game, pbp))
     assert next(x for x in loader.events if x.event_num == 502).free_throw_type == "Penalty"
     assert dict(code="reviewed_penalty_free_throw", event_num=502) in loader.diagnostics
     possession = next(p for p in loader.items if any(x.event_num == 502 for x in p.events))
@@ -1492,11 +1518,13 @@ def test_recorded_corrections_from_2026_27_review(game, recorded, trip, offense,
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
-    files = web.REVIEWED_CORRECTIONS[game]["files"]
-    dropped = {**files.get(EVENT_REMOVALS, {}), **files.get(EVENT_DUPLICATES, {})}
+    dropped = {
+        **read_games(OVERRIDES / EVENT_REMOVALS).get(game, {}),
+        **read_games(OVERRIDES / EVENT_DUPLICATES).get(game, {}),
+    }
     assert not {int(n) for n in dropped} & {x.event_num for x in loader.events}
     numbers = [x.event_num for x in loader.events]
-    for moved, after in files.get(EVENT_MOVES, {}).items():
+    for moved, after in read_games(OVERRIDES / EVENT_MOVES).get(game, {}).items():
         assert numbers.index(int(moved)) == numbers.index(after) + 1
 
 
@@ -1508,7 +1536,7 @@ def test_recorded_duplicate_period_end_from_2026_27_review():
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     recorded = web.load_game(game, pbp, box, "recorded")
     assert [x.event_num for x in recorded.items[-1].events] == [750, 753]
-    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(ROOT, game, pbp))
     assert [x.event_num for x in loader.items[-1].events] == [750]
     assert loader.counts_by_team == recorded.counts_by_team == {
         1610612756: 101, 1610612744: 99,
@@ -1533,7 +1561,7 @@ def check_recorded_correction(game, recorded, trip, offense, counts):
         with pytest.raises(recorded):
             web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live)
     loader = web.load_game(game, pbp, box, "recorded", fetch_boxscore=fetch, fetch_live=fetch_live,
-                           overrides=web.reviewed_overrides(game, pbp))
+                           overrides=web.reviewed_overrides(ROOT, game, pbp))
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))
     assert [x.event_num for x in possession.events] == trip
     assert possession.offense_team_id == offense
@@ -1588,7 +1616,7 @@ def test_recorded_corrections_from_2022_23_review(game, recorded, trip, offense,
     loader = check_recorded_correction(game, recorded, trip, offense, counts)
     for event, attribute, value in checks:
         assert getattr(next(x for x in loader.events if x.event_num == event), attribute) == value
-    removed = web.REVIEWED_CORRECTIONS[game]["files"].get(EVENT_REMOVALS, {})
+    removed = read_games(OVERRIDES / EVENT_REMOVALS).get(game, {})
     assert not {int(n) for n in removed} & {x.event_num for x in loader.events}
 
 
@@ -1673,7 +1701,7 @@ def test_recorded_clock_from_2021_22_review():
         return [(x.event_num, x.seconds_remaining) for x in possession.events]
 
     assert trip(web.load_game(game, pbp, box, "recorded")) == [(581, 104), (582, 102), (583, 103)]
-    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(game, pbp))
+    loader = web.load_game(game, pbp, box, "recorded", overrides=web.reviewed_overrides(ROOT, game, pbp))
     assert trip(loader) == [(581, 104), (582, 103), (583, 103)]
     assert loader.counts_by_team == {1610612749: 97, 1610612743: 95}
 
@@ -1832,20 +1860,15 @@ def test_v2_jump_ball_entries_are_their_pinned_export_rows():
     archive = V2_JUMP_BALLS["archive"]
     assert "/" + V2_JUMP_BALLS["revision"] + "/" in archive["raw_url"]
     assert archive["raw_url"].endswith("/datasets/" + archive["member"].replace(".csv", ".tar.xz"))
-    entries = {
-        game: entry["files"][EVENT_V2_JUMP_BALLS]
-        for game, entry in web.REVIEWED_CORRECTIONS.items()
-        if EVENT_V2_JUMP_BALLS in entry["files"]
-    }
+    entries = read_games(OVERRIDES / EVENT_V2_JUMP_BALLS)
+    reviews = read_games(OVERRIDES / REVIEWS)
     assert set(entries) == set(V2_JUMP_BALLS["rows"])
     for game, rows in V2_JUMP_BALLS["rows"].items():
         assert entries[game] == {
             event: {field: row[field] for field in V2_JUMP_BALL_FIELDS} for event, row in rows.items()
         }
         assert all(row["GAME_ID"] == game.lstrip("0") for row in rows.values())
-        assert V2_JUMP_BALLS["revision"] in web.REVIEWED_CORRECTIONS[game]["source"]
-        pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
-        assert hashlib.sha256(pbp).hexdigest() == web.REVIEWED_CORRECTIONS[game]["pbp_sha256"]
+        assert V2_JUMP_BALLS["revision"] in reviews[game]
 
 
 @pytest.mark.parametrize("game, trip, offense, counts, checks", [

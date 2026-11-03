@@ -24,7 +24,7 @@ class StatsNbaV3EnhancedPbpFileLoader(StatsNbaV3PbpFileLoader):
         `live_<game_id>.json`, in the `/pbp` subdirectory. The box score is
         `stats_v3_boxscore_<game_id>.json`, and any period-start box score the original requests
         `stats_boxscoretraditionalv2_<game_id>_period_<period>.json`, in the `/game_details` subdirectory.
-        Reviewed aliases, if any, are `player_aliases.json` in the `/overrides` subdirectory.
+        Override files, and any reviewed aliases `player_aliases.json`, are in the `/overrides_v3` subdirectory.
     """
 
     def __init__(self, file_directory):
@@ -32,7 +32,7 @@ class StatsNbaV3EnhancedPbpFileLoader(StatsNbaV3PbpFileLoader):
         self.boxscore_source_loader = StatsNbaV3BoxscoreFileLoader(file_directory)
 
     def load_overrides(self, game_id, pbp_bytes):
-        return reviewed_overrides(game_id, pbp_bytes)
+        return reviewed_overrides(self.file_directory, game_id, pbp_bytes)
 
     def load_aliases(self, boxscore):
         return reviewed_aliases(self.file_directory, boxscore)

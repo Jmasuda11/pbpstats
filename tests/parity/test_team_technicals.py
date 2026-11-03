@@ -180,7 +180,7 @@ def test_teamless_excess_timeout_rule_is_nba_only():
 def test_recorded_2019_20_team_technicals(game, technicals):
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
-    assert game not in web.REVIEWED_CORRECTIONS
+    assert web.reviewed_overrides(ROOT, game, pbp) is None
     loader = web.load_game(game, pbp, box, "recorded")
     for event, (team, violations) in technicals.items():
         technical = next(x for x in loader.events if x.event_num == event)

@@ -263,7 +263,7 @@ def test_reviewed_correction_recovers_1042600201():
     with pytest.raises(V3DecodeError, match="contradicts current lineup at event 452"):
         web.load_game("1042600201", pbp, box, "recorded", fetch_boxscore=fetch)
 
-    overrides = web.reviewed_overrides("1042600201", pbp)
+    overrides = web.reviewed_overrides(ROOT, "1042600201", pbp)
     loader = web.load_game(
         "1042600201", pbp, box, "recorded", fetch_boxscore=fetch, overrides=overrides
     )
@@ -292,8 +292,7 @@ def test_reviewed_correction_recovers_1042600201():
             assert abs(played[player["personId"]] - official_seconds) <= 1, player["personId"]
 
 
-def test_reviewed_corrections_refuse_other_play_by_play_bytes():
+def test_reviewed_corrections_apply_by_game_id():
     pbp = recording("stats_v3_1042600201.json")
-    assert web.reviewed_overrides("1022500001", pbp) is None
-    with pytest.raises(V3DecodeError, match="different play-by-play bytes"):
-        web.reviewed_overrides("1042600201", pbp + b" ")
+    assert web.reviewed_overrides(ROOT, "1022500001", pbp) is None
+    assert web.reviewed_overrides(ROOT, "1042600201", pbp + b" ") is not None

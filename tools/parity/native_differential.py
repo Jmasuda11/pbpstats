@@ -272,6 +272,12 @@ def parse(game):
     def fetch_live(url):
         return SimpleNamespace(content=Path(game["live"]).read_bytes(), url=url)
 
+    # The oracle's corrections are bundled with it; this checkout's are files.
+    overrides = (
+        web.reviewed_overrides(game["id"], pbp)
+        if hasattr(web, "REVIEWED_CORRECTIONS")
+        else web.reviewed_overrides(ROOT, game["id"], pbp)
+    )
     return web.load_game(
         game["id"],
         pbp,
@@ -279,7 +285,7 @@ def parse(game):
         game["pbp"],
         fetch_boxscore=fetch_boxscore,
         aliases=aliases,
-        overrides=web.reviewed_overrides(game["id"], pbp),
+        overrides=overrides,
         fetch_live=fetch_live if game["live"] else None,
     )
 

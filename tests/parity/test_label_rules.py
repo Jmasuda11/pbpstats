@@ -163,7 +163,7 @@ def test_recorded_2026_27_labels_decode_without_review():
     game = "0022600092"
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
-    assert game not in web.REVIEWED_CORRECTIONS
+    assert web.reviewed_overrides(ROOT, game, pbp) is None
     loader = web.load_game(game, pbp, box, "recorded")
     rules = [
         (d["code"], d["event_num"]) for d in loader.diagnostics
@@ -207,7 +207,7 @@ def test_recorded_2026_27_labels_decode_without_review():
 def test_recorded_2026_27_technical_free_throws_and_pre_2017_labels(game, rules, checks, counts):
     pbp = (DATA / f"stats_v3_{game}.json").read_bytes()
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
-    assert game not in web.REVIEWED_CORRECTIONS
+    assert web.reviewed_overrides(ROOT, game, pbp) is None
     loader = web.load_game(game, pbp, box, "recorded")
     assert [
         (d["code"], d["event_num"]) for d in loader.diagnostics
@@ -466,7 +466,7 @@ def test_recorded_games_decode_without_review(game, rules, trip, offense, counts
     box = (DATA / f"stats_v3_boxscore_{game}.json").read_bytes()
     live = DATA / f"live_{game}.json"
     fetch = (lambda url: web.SavedResponse(live.read_bytes(), url)) if live.exists() else None
-    assert game not in web.REVIEWED_CORRECTIONS
+    assert web.reviewed_overrides(ROOT, game, pbp) is None
     loader = web.load_game(game, pbp, box, "recorded", fetch_live=fetch)
     assert [(d["code"], d["event_num"]) for d in loader.diagnostics if d["code"] in RULES] == rules
     possession = next(p for p in loader.items if any(x.event_num == trip[0] for x in p.events))

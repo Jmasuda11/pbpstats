@@ -1,4 +1,4 @@
-"""Recorded legacy override files, bound to the exact V3 play-by-play bytes."""
+"""Override files for the V3 play-by-play, in the original's layout."""
 
 from dataclasses import dataclass
 import hashlib
@@ -137,9 +137,10 @@ ACTION_NUMBERED = {
 class V3Overrides:
     """Supply original JSON file contents explicitly; never discover local files.
 
-    ``source`` identifies the reviewed correction evidence. ``pbp_sha256`` binds
-    that review to one recording. Keys in ``files`` are legacy basenames and
-    values are immutable JSON bytes, using the original game/period schema.
+    ``source`` identifies where the entries come from. ``pbp_sha256`` names the
+    play-by-play they are parsed with, for the diagnostics. Keys in ``files`` are
+    legacy basenames and values are immutable JSON bytes, using the original
+    game/period schema.
     """
 
     files: dict
@@ -309,47 +310,51 @@ class V3Overrides:
         return decoded, diagnostics
 
 
-# Reviewed corrections for games whose play-by-play the original cannot parse
-# as recorded: the original's override files, plus edits to recorded events
-# (see above). Each is bound to the play-by-play bytes it was reviewed against
-# and says what the review found; the recordings are kept with the parity tests.
-REVIEWED_CORRECTIONS = json.loads(
-    Path(__file__).with_name("reviewed_corrections.json").read_text(encoding="utf-8")
-)
+# The data directory's subdirectory of V3 override files, apart from the
+# original's ``overrides``. As there, each file maps games to one kind of entry:
+# the original's override files, plus edits to recorded events (see above). The
+# repository's own, for games whose play-by-play the original cannot parse as
+# recorded, are in its ``overrides_v3``; the recordings are kept with the parity
+# tests. ``reviews.json`` says what each game's review found.
+OVERRIDES_DIRECTORY = "overrides_v3"
+REVIEWS = "reviews.json"
 
 
-def reviewed_overrides(game_id, pbp_bytes, corrections=REVIEWED_CORRECTIONS):
-    """V3Overrides for a game's reviewed correction, or None when it has none.
+def read_games(path):
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
 
-    A correction applies only to the play-by-play bytes it was reviewed
-    against; other bytes for the same game are refused rather than guessed.
+
+def reviewed_overrides(file_directory, game_id, pbp_bytes):
+    """V3Overrides for a game's entries in the data directory's override files,
+    or None when it has none, as with no data directory.
+
+    As in the original, they apply by game ID, whatever the play-by-play's bytes.
     """
-    entry = corrections.get(game_id)
-    if entry is None:
+    if file_directory is None:
         return None
-    if hashlib.sha256(pbp_bytes).hexdigest() != entry["pbp_sha256"]:
-        raise V3DecodeError(
-            "The reviewed correction for {} covers different play-by-play bytes; "
-            "review it again".format(game_id)
-        )
-    files = {
-        name: json.dumps({game_id: values}).encode()
-        for name, values in entry["files"].items()
-    }
-    return V3Overrides(files, entry["source"], entry["pbp_sha256"])
+    directory = Path(file_directory, OVERRIDES_DIRECTORY)
+    files = {}
+    for name in SUPPORTED:
+        games = read_games(directory / name)
+        if game_id in games:
+            files[name] = json.dumps({game_id: games[game_id]}).encode()
+    if not files:
+        return None
+    source = read_games(directory / REVIEWS).get(game_id, str(directory))
+    return V3Overrides(files, source, hashlib.sha256(pbp_bytes).hexdigest())
 
 
 def reviewed_aliases(file_directory, boxscore):
     """Reviewed extra names for the box score's players, {personId: [names]}.
 
     They are read from ``player_aliases.json`` in the data directory's
-    ``overrides`` subdirectory, for descriptions that use a name the box score
+    ``overrides_v3`` subdirectory, for descriptions that use a name the box score
     does not. As an import applies them, an alias for anyone outside this box
     score is left out.
     """
     if file_directory is None:
         return {}
-    path = Path(file_directory, "overrides", "player_aliases.json")
+    path = Path(file_directory, OVERRIDES_DIRECTORY, "player_aliases.json")
     if not path.is_file():
         return {}
     players = {item.player_id for item in boxscore.items if hasattr(item, "player_id")}

@@ -7,11 +7,10 @@ already in hand through the same loaders. ``load_game`` binds the context to
 the exact play-by-play and box score bytes, and records any period-start box
 score that the original's starter recovery asks for. A jump ball V3 leaves
 undecided is completed from the league's live play-by-play, also recorded.
-Reviewed corrections reach the parse as V3Overrides, only for the exact bytes
-they were reviewed against. Possessions come from the unchanged original
-engine.
+A data directory's override files reach the parse as V3Overrides. Possessions
+come from the unchanged original engine.
 
-    python -m pbpstats.data_loader.stats_nba_v3.web 0022500001 -o game.json
+    python -m pbpstats.data_loader.stats_nba_v3.web 0022500001 -o game.json --dir data
 """
 
 import argparse
@@ -25,7 +24,7 @@ from pbpstats import REQUEST_TIMEOUT
 
 from .enhanced_pbp.loader import boxscore_context, load_boxscore, with_evidence
 from .file_loader import SavedResponse
-from .overrides import REVIEWED_CORRECTIONS, reviewed_overrides
+from .overrides import reviewed_overrides
 from .possessions.loader import StatsNbaV3PossessionLoader
 from .web_loader import HEADERS, get, stats_url
 
@@ -265,6 +264,7 @@ def save_game(
     aliases=None,
     skip_absent_aliases=False,
     indent=4,
+    file_directory=None,
 ):
     """Parse one game into possessions and write them to ``output`` as JSON.
 
@@ -274,8 +274,8 @@ def save_game(
     needs. Offline, ``raw["live"]`` (with ``raw["live_url"]``) supplies a saved
     live response. ``responses`` keeps the raw responses in that directory,
     also for a rejected game. An alias for a player outside the box score is an
-    error unless ``skip_absent_aliases``, which batches use. Reviewed
-    corrections apply only to their reviewed bytes. Returns the loader.
+    error unless ``skip_absent_aliases``, which batches use. The override files
+    of ``file_directory`` apply. Returns the loader.
     """
     offline = raw is not None
     if not offline:
@@ -301,7 +301,7 @@ def save_game(
 
     overrides = None
     try:
-        overrides = reviewed_overrides(game_id, raw["pbp"])
+        overrides = reviewed_overrides(file_directory, game_id, raw["pbp"])
         loader = load_game(
             game_id,
             raw["pbp"],
@@ -373,6 +373,9 @@ def main(argv=None):
         metavar="PERSON_ID=NAME",
         help="Reviewed extra name for a box-score player (repeatable)",
     )
+    parser.add_argument(
+        "--dir", type=Path, help="Data directory whose overrides_v3 files apply"
+    )
     args = parser.parse_args(argv)
     aliases = {}
     for item in args.alias:
@@ -402,6 +405,7 @@ def main(argv=None):
         session=requests.Session(),
         responses=args.save_responses,
         aliases=aliases,
+        file_directory=args.dir,
     )
     print(
         "{}: {} possessions, credited {}, final score {} -> {}".format(

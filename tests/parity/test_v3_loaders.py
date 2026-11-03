@@ -27,6 +27,9 @@ from pbpstats.data_loader.factory import DataLoaderFactory
 from pbpstats.data_loader.stats_nba.base import StatsNbaLoaderBase
 from pbpstats.data_loader.stats_nba.enhanced_pbp.loader import StatsNbaEnhancedPbpLoader
 from pbpstats.data_loader.stats_nba.pbp.loader import StatsNbaPbpLoader
+from pbpstats.data_loader.stats_nba.possessions.loader import (
+    TeamHasBackToBackPossessionsException,
+)
 from pbpstats.data_loader.stats_nba_v3 import (
     V3DecodeError,
     V3EvidenceRequired,
@@ -55,8 +58,9 @@ PLAIN, LIVE, STARTERS, CORRECTED, ALIAS = (
 
 def data_directory(root, game_id):
     """A data directory with a game's recorded responses where the file sources read them."""
-    for folder in ("pbp", "game_details", "overrides"):
+    for folder in ("pbp", "game_details"):
         (root / folder).mkdir(exist_ok=True)
+    shutil.copytree(ROOT / "overrides_v3", root / "overrides_v3", dirs_exist_ok=True)
     shutil.copy(DATA / f"stats_v3_{game_id}.json", root / "pbp")
     shutil.copy(DATA / f"stats_v3_boxscore_{game_id}.json", root / "game_details")
     if (DATA / f"live_{game_id}.json").exists():
@@ -83,7 +87,7 @@ def recorded_game(game_id, aliases=None):
         "recorded",
         fetch_boxscore=fetch_boxscore,
         aliases=aliases,
-        overrides=web.reviewed_overrides(game_id, pbp),
+        overrides=web.reviewed_overrides(ROOT, game_id, pbp),
         fetch_live=(lambda url: web.SavedResponse(live.read_bytes(), url))
         if live.exists()
         else None,
@@ -99,6 +103,13 @@ def test_file_source_gives_the_game_load_game_gives(tmp_path, game_id):
     source = StatsNbaV3PossessionFileLoader(str(data_directory(tmp_path, game_id)))
     loader = StatsNbaV3PossessionLoader(game_id, source)
     assert as_json(loader) == as_json(recorded_game(game_id))
+
+
+def test_file_source_reads_override_files_from_the_v3_folder(tmp_path):
+    directory = data_directory(tmp_path, CORRECTED)
+    shutil.move(str(directory / "overrides_v3"), str(directory / "overrides"))
+    with pytest.raises(TeamHasBackToBackPossessionsException):
+        StatsNbaV3PossessionLoader(CORRECTED, StatsNbaV3PossessionFileLoader(str(directory)))
 
 
 def test_evidence_is_read_only_when_the_parse_asks_for_it(tmp_path):
@@ -134,7 +145,7 @@ def test_reviewed_aliases_come_from_the_overrides_folder(tmp_path):
     with pytest.raises(V3DecodeError, match="'Hansen' is unresolved"):
         StatsNbaV3PossessionLoader(ALIAS, source)
     # As an import applies them, an alias for anyone outside the box score is left out.
-    (directory / "overrides" / "player_aliases.json").write_text(
+    (directory / "overrides_v3" / "player_aliases.json").write_text(
         json.dumps({"1642905": ["Hansen"], "1": ["Nobody"]}), encoding="utf-8"
     )
     loader = StatsNbaV3PossessionLoader(ALIAS, source)

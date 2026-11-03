@@ -22,7 +22,7 @@ class StatsNbaV3EnhancedPbpWebLoader(StatsNbaV3PbpWebLoader):
         Directory in which data should be either stored, in the files
         :obj:`~pbpstats.data_loader.stats_nba_v3.enhanced_pbp.file.StatsNbaV3EnhancedPbpFileLoader` reads.
         Only a successful period-start box score response is stored.
-        If not provided response data will not be saved on disk.
+        If not provided response data will not be saved on disk, and no override files apply.
     """
 
     def __init__(self, file_directory=None):
@@ -30,7 +30,7 @@ class StatsNbaV3EnhancedPbpWebLoader(StatsNbaV3PbpWebLoader):
         self.boxscore_source_loader = StatsNbaV3BoxscoreWebLoader(file_directory)
 
     def load_overrides(self, game_id, pbp_bytes):
-        return reviewed_overrides(game_id, pbp_bytes)
+        return reviewed_overrides(self.file_directory, game_id, pbp_bytes)
 
     def load_aliases(self, boxscore):
         return reviewed_aliases(self.file_directory, boxscore)
