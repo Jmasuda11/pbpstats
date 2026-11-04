@@ -11,6 +11,7 @@ from pbpstats.data_loader.stats_nba_v3 import (
     V3EvidenceRequired,
     web,
 )
+from pbpstats.data_loader.stats_nba_v3.decoder import live_play_by_play_url
 from tools.parity import starter_cases
 from tools.parity.reference import ROOT
 from tools.parity.scenarios import AWAY, HOME, GAME, e, encode_v3, wrap
@@ -158,9 +159,10 @@ def test_fetch_and_save_writes_possessions_json(tmp_path):
     base = web.stats_url("0022500089")
     responses.add(responses.GET, base + "playbyplayv3", body=pbp)
     responses.add(responses.GET, base + "boxscoretraditionalv3", body=box)
+    responses.add(responses.GET, live_play_by_play_url("0022500089"), status=403)
     output = tmp_path / "game.json"
     web.main(["0022500089", "-o", str(output)])
-    first, second = (call.request for call in responses.calls)
+    first, second, _ = (call.request for call in responses.calls)
     assert first.url.startswith("https://stats.nba.com/stats/playbyplayv3?")
     assert "GameID=0022500089" in first.url and "StartPeriod=0" in first.url
     assert "boxscoretraditionalv3?" in second.url and "RangeType=0" in second.url
@@ -168,6 +170,20 @@ def test_fetch_and_save_writes_possessions_json(tmp_path):
     data = json.loads(output.read_text(encoding="utf-8"))
     assert len(data["possessions"]) == 208
     assert data["sources"]["pbp"]["sha256"] == web.hashlib.sha256(pbp).hexdigest()
+    assert data["sources"]["live_play_by_play"] is None
+
+
+@responses.activate
+def test_fetch_game_keeps_the_live_play_by_play_where_the_host_holds_it():
+    pbp, box = recorded("0022500100")
+    live = (DATA / "live_0022500100.json").read_bytes()
+    base = web.stats_url("0022500100")
+    responses.add(responses.GET, base + "playbyplayv3", body=pbp)
+    responses.add(responses.GET, base + "boxscoretraditionalv3", body=box)
+    url = live_play_by_play_url("0022500100")
+    responses.add(responses.GET, url, body=live)
+    raw = web.fetch_game("0022500100")
+    assert (raw["live"], raw["live_url"]) == (live, url)
 
 
 def test_save_game_keeps_responses_and_can_skip_absent_aliases(tmp_path):

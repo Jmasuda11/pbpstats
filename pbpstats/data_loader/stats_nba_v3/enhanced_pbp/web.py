@@ -7,16 +7,17 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     reviewed_overrides,
 )
 from pbpstats.data_loader.stats_nba_v3.pbp.web import StatsNbaV3PbpWebLoader
-from pbpstats.data_loader.stats_nba_v3.web_loader import get, save_response
+from pbpstats.data_loader.stats_nba_v3.web_loader import get, get_live, save_response
 
 
 class StatsNbaV3EnhancedPbpWebLoader(StatsNbaV3PbpWebLoader):
     """
     A ``StatsNbaV3EnhancedPbpWebLoader`` object should be instantiated and passed into ``StatsNbaV3EnhancedPbpLoader`` when loading data directly from the NBA Stats API
 
-    Evidence is requested only when the parse asks for it: the original's
-    period-start box score request, and the league's live play-by-play for a
-    jump ball V3 leaves undecided.
+    The league's live play-by-play is requested for its fouled players, and
+    a game whose host does not hold it goes without them. Other evidence is
+    requested only when the parse asks for it: the original's period-start box
+    score request, and the live play-by-play for a jump ball V3 leaves undecided.
 
     :param str file_directory: (optional, use it if you want to store the response data on disk)
         Directory in which data should be either stored, in the files
@@ -41,6 +42,16 @@ class StatsNbaV3EnhancedPbpWebLoader(StatsNbaV3PbpWebLoader):
             save_response(
                 self.file_directory,
                 f"{self.file_directory}/game_details/stats_boxscoretraditionalv2_{self.game_id}_period_{period}.json",
+                response.content,
+            )
+        return response
+
+    def load_live_if_recorded(self, url):
+        response = get_live(url)
+        if response is not None:
+            save_response(
+                self.file_directory,
+                f"{self.file_directory}/pbp/live_{self.game_id}.json",
                 response.content,
             )
         return response

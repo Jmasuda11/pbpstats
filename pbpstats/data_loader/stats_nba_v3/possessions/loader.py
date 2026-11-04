@@ -48,7 +48,8 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
     Possessions are stored in items attribute as :obj:`~pbpstats.resources.possessions.possession.Possession` objects
 
     Native V3 event classes; the original's enhancement and possession
-    decisions. Detailed V3 stats are gated.
+    decisions. Detailed V3 stats are gated for a game without every fouled
+    player from the live play-by-play.
 
     :param str game_id: NBA Stats Game Id
     :param source_loader: :obj:`~pbpstats.data_loader.stats_nba_v3.possessions.file.StatsNbaV3PossessionFileLoader` or :obj:`~pbpstats.data_loader.stats_nba_v3.possessions.web.StatsNbaV3PossessionWebLoader` object
@@ -108,6 +109,13 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
             V3Possession(events) for events in self._split_events_by_possession()
         ]
         self._add_extra_attrs_to_all_possessions()
+        # A double technical's other party is also unknown attribution, but has
+        # no statistic, so only a foul with no fouled player gates the game.
+        detailed_stats_available = bool(decoded.live_fouls) and not any(
+            unknown["role"] == "foul_drawn" for unknown in decoded.unknown_attribution
+        )
+        for possession in self.items:
+            possession.detailed_stats_available = detailed_stats_available
         held_balls = [
             event.diagnostic
             for event in self.events
@@ -130,7 +138,7 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
         self.capabilities = {
             "processing_rules": "original_v2_e7ccf2f",
             "full_game_validated": False,
-            "detailed_event_stats": "unavailable",
+            "detailed_event_stats": "available" if detailed_stats_available else "unavailable",
             "source_order_checked": validate_source_order,
             "possession_sequence_checked": validate_possessions,
             "defect_guards": [TEAM_IDS_GUARD],
@@ -227,6 +235,8 @@ class StatsNbaV3PossessionLoader(StatsNbaPossessionLoader):
 
     @property
     def event_stats(self):
-        raise V3DecodeError(
-            "Detailed statistics are unavailable until attribution completeness is verified"
-        )
+        if self.capabilities["detailed_event_stats"] != "available":
+            raise V3DecodeError(
+                "Detailed statistics are unavailable until attribution completeness is verified"
+            )
+        return [stat for event in self.events for stat in event.event_stats]

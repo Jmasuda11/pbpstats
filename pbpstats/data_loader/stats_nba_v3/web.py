@@ -5,8 +5,9 @@ file and web sources supply the play-by-play, the box score and, only when the
 parse asks for it, recorded evidence. This module parses a game from responses
 already in hand through the same loaders. ``load_game`` binds the context to
 the exact play-by-play and box score bytes, and records any period-start box
-score that the original's starter recovery asks for. A jump ball V3 leaves
-undecided is completed from the league's live play-by-play, also recorded.
+score that the original's starter recovery asks for. The league's live
+play-by-play, also recorded, gives the fouled players V3 has no field for and
+completes a jump ball V3 leaves undecided.
 A data directory's override files reach the parse as V3Overrides. Possessions
 come from the unchanged original engine.
 
@@ -20,13 +21,12 @@ from pathlib import Path
 
 import requests
 
-from pbpstats import REQUEST_TIMEOUT
-
+from .decoder import live_play_by_play_url
 from .enhanced_pbp.loader import boxscore_context, load_boxscore, with_evidence
 from .file_loader import SavedResponse
 from .overrides import reviewed_overrides
 from .possessions.loader import StatsNbaV3PossessionLoader
-from .web_loader import HEADERS, get, stats_url
+from .web_loader import HEADERS, get, get_live, stats_url
 
 
 class RecordedResponse:
@@ -46,7 +46,8 @@ class RecordedGame(RecordedResponse):
     StatsNbaV3PossessionLoader and StatsNbaV3EnhancedPbpLoader (see load_game).
 
     ``fetch_boxscore`` and ``fetch_live`` supply recorded evidence; None means
-    the parse rejects a game that needs it.
+    the parse rejects a game that needs it. ``live`` is a live play-by-play
+    response in hand, which also gives the fouled players.
     """
 
     def __init__(
@@ -58,6 +59,7 @@ class RecordedGame(RecordedResponse):
         aliases=None,
         overrides=None,
         fetch_live=None,
+        live=None,
     ):
         super().__init__(pbp_bytes)
         self.source = source
@@ -65,6 +67,7 @@ class RecordedGame(RecordedResponse):
         self.enhanced_pbp_source_loader = self
         self.load_starter_boxscore = fetch_boxscore
         self.load_live = fetch_live
+        self.live = live
         self.aliases, self.overrides = aliases, overrides
 
     def load_overrides(self, game_id, pbp_bytes):
@@ -73,9 +76,13 @@ class RecordedGame(RecordedResponse):
     def load_aliases(self, boxscore):
         return self.aliases
 
+    def load_live_if_recorded(self, url):
+        return self.live
+
 
 def fetch_game(game_id, session=None):
-    """Raw V3 play-by-play and box score responses for one game."""
+    """Raw V3 play-by-play and box score responses for one game, and its live
+    play-by-play where the host holds it."""
     base = stats_url(game_id)
     pbp = get(
         base + "playbyplayv3",
@@ -96,9 +103,13 @@ def fetch_game(game_id, session=None):
     )
     for response in (pbp, box):
         response.raise_for_status()
-    return dict(
+    raw = dict(
         pbp=pbp.content, boxscore=box.content, pbp_url=pbp.url, boxscore_url=box.url
     )
+    live = get_live(live_play_by_play_url(game_id), session)
+    if live is not None:
+        raw.update(live=live.content, live_url=live.url)
+    return raw
 
 
 def context_from_boxscore(game_id, pbp_bytes, box_bytes, source, aliases=None):
@@ -147,6 +158,7 @@ def load_game(
     aliases=None,
     overrides=None,
     fetch_live=None,
+    live=None,
 ):
     """Possessions from a game's play-by-play and box score responses.
 
@@ -157,12 +169,13 @@ def load_game(
     loader checks each such resolution against the original's lineup. The
     loader's context then lists those starters. A jump ball that stays
     undecided, including a team-won one, is completed from the live
-    play-by-play that ``fetch_live(url)`` returns.
+    play-by-play that ``fetch_live(url)`` returns. ``live``, a live play-by-play
+    response in hand, gives the fouled players and serves any such jump ball.
     """
     return StatsNbaV3PossessionLoader(
         game_id,
         RecordedGame(
-            pbp_bytes, box_bytes, source, fetch_boxscore, aliases, overrides, fetch_live
+            pbp_bytes, box_bytes, source, fetch_boxscore, aliases, overrides, fetch_live, live
         ),
     )
 
@@ -220,8 +233,9 @@ def _possession(possession, teams):
 def possessions_json(loader, sources=None):
     """Possessions as plain JSON data, each with the original's possession_stats.
 
-    The game-level aggregates stay gated; ``unknown_attribution`` lists the
-    events whose other party V3 does not record, such as a fouled player.
+    ``unknown_attribution`` lists the events whose other party neither V3 nor
+    any live play-by-play records. A fouled player among them, or no live
+    play-by-play, gates the game-level aggregates (see ``capabilities``).
     """
     teams = loader.decoded.context.team_ids
     return dict(
@@ -270,9 +284,9 @@ def save_game(
 
     ``raw`` reuses saved responses in fetch_game's shape; otherwise they are
     fetched with ``session``, as is any period-start box score the original's
-    starter recovery requests and any live play-by-play an undecided jump ball
-    needs. Offline, ``raw["live"]`` (with ``raw["live_url"]``) supplies a saved
-    live response. ``responses`` keeps the raw responses in that directory,
+    starter recovery requests. ``raw["live"]`` (with ``raw["live_url"]``), the
+    live play-by-play where there is one, gives the fouled players and completes
+    an undecided jump ball. ``responses`` keeps the raw responses in that directory,
     also for a rejected game. An alias for a player outside the box score is an
     error unless ``skip_absent_aliases``, which batches use. The override files
     of ``file_directory`` apply. Returns the loader.
@@ -284,20 +298,16 @@ def save_game(
     if skip_absent_aliases:
         present = boxscore_players(raw["boxscore"])
         aliases = {person: names for person, names in aliases.items() if person in present}
-    fetched, live = {}, []
+    fetched = {}
+    live = (
+        SavedResponse(raw["live"], raw.get("live_url") or live_play_by_play_url(game_id))
+        if raw.get("live")
+        else None
+    )
 
     def fetch_boxscore(period, url, params):
         fetched[period] = get(url, params, session)
         return fetched[period]
-
-    def fetch_live(url):
-        if offline:
-            response = SavedResponse(raw["live"], raw.get("live_url") or url)
-        else:
-            response = (session or requests).get(url, timeout=REQUEST_TIMEOUT)
-            response.raise_for_status()
-        live.append(response)
-        return response
 
     overrides = None
     try:
@@ -310,7 +320,7 @@ def save_game(
             fetch_boxscore=None if offline else fetch_boxscore,
             aliases=aliases,
             overrides=overrides,
-            fetch_live=fetch_live if not offline or raw.get("live") else None,
+            live=live,
         )
     finally:
         if responses:
@@ -321,7 +331,7 @@ def save_game(
                 name = "boxscoretraditionalv2_period_{}.json".format(period)
                 (responses / name).write_bytes(response.content)
             if live:
-                (responses / "playbyplay_live.json").write_bytes(live[0].content)
+                (responses / "playbyplay_live.json").write_bytes(live.content)
 
     def digest(data):
         return hashlib.sha256(data).hexdigest()
@@ -333,9 +343,7 @@ def save_game(
             str(period): dict(url=r.url, status=r.status_code, sha256=digest(r.content))
             for period, r in fetched.items()
         },
-        live_play_by_play=(
-            dict(url=live[0].url, sha256=digest(live[0].content)) if live else None
-        ),
+        live_play_by_play=dict(url=live.url, sha256=digest(live.content)) if live else None,
         reviewed_aliases={str(k): v for k, v in aliases.items()},
         reviewed_correction=overrides.source if overrides else None,
     )

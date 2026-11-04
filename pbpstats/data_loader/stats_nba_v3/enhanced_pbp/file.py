@@ -16,7 +16,8 @@ class StatsNbaV3EnhancedPbpFileLoader(StatsNbaV3PbpFileLoader):
     A ``StatsNbaV3EnhancedPbpFileLoader`` object should be instantiated and passed into ``StatsNbaV3EnhancedPbpLoader`` when loading data from file
 
     Recorded evidence is read only when the parse asks for it; a request that
-    is not recorded is an error naming it.
+    is not recorded is an error naming it. Any live play-by-play is also read
+    for its fouled players, which a game can go without.
 
     :param str file_directory:
         Directory in which data should be loaded from.
@@ -46,6 +47,10 @@ class StatsNbaV3EnhancedPbpFileLoader(StatsNbaV3PbpFileLoader):
                 f"{path} does not exist", period=period, url=url, params=params
             )
         return SavedResponse(path.read_bytes(), url)
+
+    def load_live_if_recorded(self, url):
+        path = Path(f"{self.file_directory}/pbp/live_{self.game_id}.json")
+        return SavedResponse(path.read_bytes(), url) if path.is_file() else None
 
     def load_live(self, url):
         path = Path(f"{self.file_directory}/pbp/live_{self.game_id}.json")

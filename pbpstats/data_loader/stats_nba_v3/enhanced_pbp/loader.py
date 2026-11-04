@@ -37,8 +37,12 @@ from pbpstats.data_loader.stats_nba_v3.decoder import (
     V3DecodeError,
     V3JumpBallEvidenceRequired,
     clock_text,
+    live_play_by_play_url,
 )
-from pbpstats.data_loader.stats_nba_v3.jump_balls import V3JumpBallEvidence
+from pbpstats.data_loader.stats_nba_v3.jump_balls import (
+    V3FouledPlayerEvidence,
+    V3JumpBallEvidence,
+)
 from pbpstats.data_loader.stats_nba_v3.names import (
     add_actor_aliases,
     add_unaccented_names,
@@ -260,9 +264,9 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
         """Events from recorded V3 bytes and a given game context, with no I/O.
 
         ``options`` are ``validate_source_order``, reviewed ``overrides``, and
-        recorded ``event_order``, ``starter_boxscores`` and ``jump_balls``
-        evidence; a parse that needs evidence it is not given raises the error
-        naming it.
+        recorded ``event_order``, ``starter_boxscores``, ``jump_balls`` and
+        ``fouled_players`` evidence; a parse that needs evidence it is not given
+        raises the error naming it.
         """
         loader = cls.__new__(cls)
         loader.source_data = source_bytes
@@ -285,6 +289,17 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
             source_loader.source,
             source_loader.load_aliases(boxscore),
         )
+        # The fouled players come from the live play-by-play where it records
+        # the game; a jump ball that needs it then reads the same response.
+        live = source_loader.load_live_if_recorded(
+            live_play_by_play_url(self.game_id)
+        )
+        fouled_players, load_live = None, source_loader.load_live
+        if live is not None:
+            fouled_players = V3FouledPlayerEvidence(
+                live.content, live.url, context.pbp_sha256
+            )
+            load_live = lambda url: live
 
         def parse(fetch_live=None):
             with_evidence(
@@ -293,6 +308,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
                     overrides=overrides,
                     starter_boxscores=boxscores,
                     jump_balls=jump_balls,
+                    fouled_players=fouled_players,
                 ),
                 context,
                 source_loader.load_starter_boxscore,
@@ -315,13 +331,13 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
                 try:
                     return parse()
                 except V3JumpBallEvidenceRequired:
-                    if source_loader.load_live is None:
+                    if load_live is None:
                         raise
-            elif source_loader.load_live is None or not isinstance(
+            elif load_live is None or not isinstance(
                 error, V3JumpBallEvidenceRequired
             ):
                 raise
-            parse(source_loader.load_live)
+            parse(load_live)
 
     def _load(
         self,
@@ -332,6 +348,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
         event_order=None,
         starter_boxscores=None,
         jump_balls=None,
+        fouled_players=None,
     ):
         self.overrides, self.override_diagnostics = (
             overrides.decode(self.source_data) if overrides is not None else ({}, [])
@@ -364,6 +381,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
                 self.overrides, EVENT_SUBSTITUTION_OUTGOING, context.game_id, {}
             ),
             blank_rows=reviewed_entries(self.overrides, EVENT_BLANK_ROWS, context.game_id, {}),
+            fouled_players=fouled_players,
         )
         self.decoded = decoded
         self.game_id = context.game_id

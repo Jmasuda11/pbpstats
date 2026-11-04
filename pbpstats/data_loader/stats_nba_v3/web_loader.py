@@ -33,6 +33,18 @@ def get(url, params, session=None):
     )
 
 
+def get_live(url, session=None):
+    """The live play-by-play, or None for a game its host does not hold.
+
+    The host answers 403 for seasons before 2019-20 and for some 2019-20 games.
+    """
+    response = (session or requests).get(url, timeout=REQUEST_TIMEOUT)
+    if response.status_code in (403, 404):
+        return None
+    response.raise_for_status()
+    return response
+
+
 def stats_url(game_id):
     """Stats API base URL for a supported league; nothing is requested otherwise."""
     if not isinstance(game_id, str) or game_id[:2] not in STATS_URLS:

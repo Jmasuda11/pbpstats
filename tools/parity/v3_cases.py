@@ -3,7 +3,11 @@
 import hashlib
 import json
 
-from pbpstats.data_loader.stats_nba_v3 import StatsNbaV3PossessionLoader, V3Context
+from pbpstats.data_loader.stats_nba_v3 import (
+    StatsNbaV3PossessionLoader,
+    V3Context,
+    V3FouledPlayerEvidence,
+)
 from tools.parity.scenarios import AWAY, HOME, GAME, encode_v3
 
 
@@ -11,7 +15,7 @@ def load_synthetic(events):
     return load_synthetic_rows(encode_v3(events))
 
 
-def load_synthetic_rows(rows):
+def load_synthetic_rows(rows, live=None):
     source = json.dumps({"game": {"gameId": GAME, "actions": rows}}).encode()
     roster = {
         player: {"team_id": team, "names": ["Player{}".format(player)]}
@@ -27,7 +31,11 @@ def load_synthetic_rows(rows):
         hashlib.sha256(source).hexdigest(),
     )
     return StatsNbaV3PossessionLoader.from_context(
-        source, context, validate_possessions=False, validate_source_order=False
+        source,
+        context,
+        validate_possessions=False,
+        validate_source_order=False,
+        fouled_players=V3FouledPlayerEvidence(live, "recorded", context.pbp_sha256) if live else None,
     )
 
 

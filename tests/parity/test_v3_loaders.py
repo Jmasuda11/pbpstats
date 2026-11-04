@@ -9,6 +9,7 @@ import json
 import shutil
 
 import pytest
+import requests
 import responses
 
 from pbpstats.client import Client
@@ -88,7 +89,7 @@ def recorded_game(game_id, aliases=None):
         fetch_boxscore=fetch_boxscore,
         aliases=aliases,
         overrides=web.reviewed_overrides(ROOT, game_id, pbp),
-        fetch_live=(lambda url: web.SavedResponse(live.read_bytes(), url))
+        live=web.SavedResponse(live.read_bytes(), live_play_by_play_url(game_id))
         if live.exists()
         else None,
     )
@@ -96,6 +97,10 @@ def recorded_game(game_id, aliases=None):
 
 def as_json(loader):
     return json.loads(json.dumps(web.possessions_json(loader)))
+
+
+def fouls_with_no_fouled_player(loader):
+    return [u for u in loader.decoded.unknown_attribution if u["role"] == "foul_drawn"]
 
 
 @pytest.mark.parametrize("game_id", [PLAIN, LIVE, STARTERS, CORRECTED])
@@ -139,6 +144,17 @@ def test_missing_recorded_evidence_names_its_file(tmp_path):
     assert needed.value.period == 5 and needed.value.params["GameId"] == STARTERS
 
 
+def test_file_source_reads_any_live_play_by_play_for_its_fouled_players(tmp_path):
+    (tmp_path / "live").mkdir()
+    (tmp_path / "plain").mkdir()
+    directory = data_directory(tmp_path / "live", LIVE)
+    loader = StatsNbaV3PossessionLoader(LIVE, StatsNbaV3PossessionFileLoader(str(directory)))
+    assert not fouls_with_no_fouled_player(loader)
+    directory = data_directory(tmp_path / "plain", PLAIN)
+    loader = StatsNbaV3PossessionLoader(PLAIN, StatsNbaV3PossessionFileLoader(str(directory)))
+    assert len(fouls_with_no_fouled_player(loader)) == 46
+
+
 def test_reviewed_aliases_come_from_the_overrides_folder(tmp_path):
     directory = data_directory(tmp_path, ALIAS)
     source = StatsNbaV3PossessionFileLoader(str(directory))
@@ -171,6 +187,35 @@ def test_web_source_saves_the_exact_bytes_the_file_source_reads(tmp_path):
     assert (tmp_path / "pbp" / f"live_{LIVE}.json").read_bytes() == live
     saved = StatsNbaV3PossessionLoader(LIVE, StatsNbaV3PossessionFileLoader(str(tmp_path)))
     assert as_json(fetched) == as_json(saved) == as_json(recorded_game(LIVE))
+    # Its fouled players and its undecided jump ball read one response.
+    assert not fouls_with_no_fouled_player(fetched)
+    assert sum(c.request.url == live_play_by_play_url(LIVE) for c in responses.calls) == 1
+
+
+def plain_game_responses(live_response):
+    base = web.stats_url(PLAIN)
+    responses.add(responses.GET, base + "playbyplayv3",
+                  body=(DATA / f"stats_v3_{PLAIN}.json").read_bytes())
+    responses.add(responses.GET, base + "boxscoretraditionalv3",
+                  body=(DATA / f"stats_v3_boxscore_{PLAIN}.json").read_bytes())
+    responses.add(responses.GET, live_play_by_play_url(PLAIN), **live_response)
+
+
+@responses.activate
+def test_web_source_goes_without_fouled_players_for_a_game_the_host_refuses(tmp_path):
+    for folder in ("pbp", "game_details"):
+        (tmp_path / folder).mkdir()
+    plain_game_responses(dict(status=403))
+    loader = StatsNbaV3PossessionLoader(PLAIN, StatsNbaV3PossessionWebLoader(str(tmp_path)))
+    assert len(fouls_with_no_fouled_player(loader)) == 46
+    assert not (tmp_path / "pbp" / f"live_{PLAIN}.json").exists()
+
+
+@responses.activate
+def test_web_source_does_not_take_a_failed_live_request_for_a_refusal():
+    plain_game_responses(dict(status=500))
+    with pytest.raises(requests.HTTPError):
+        StatsNbaV3PossessionLoader(PLAIN, StatsNbaV3PossessionWebLoader())
 
 
 @responses.activate
@@ -184,6 +229,7 @@ def test_web_source_saves_the_original_period_start_request(tmp_path):
                   body=(DATA / f"stats_v3_boxscore_{STARTERS}.json").read_bytes())
     period = (DATA / f"stats_boxscoretraditionalv2_{STARTERS}_period_5.json").read_bytes()
     responses.add(responses.GET, base + "boxscoretraditionalv2", body=period)
+    responses.add(responses.GET, live_play_by_play_url(STARTERS), status=403)
     fetched = StatsNbaV3PossessionLoader(STARTERS, StatsNbaV3PossessionWebLoader(str(tmp_path)))
     request = next(c.request for c in responses.calls if "boxscoretraditionalv2" in c.request.url)
     assert "RangeType=2" in request.url and "GameId=" + STARTERS in request.url
@@ -277,6 +323,27 @@ def test_client_keeps_detailed_statistics_gated(tmp_path, game_class):
     for name in ("team_stats", "opponent_stats", "player_stats", "lineup_stats", "lineup_opponent_stats"):
         with pytest.raises(V3DecodeError, match="attribution completeness"):
             getattr(possessions, name)
+
+
+def test_client_gives_detailed_statistics_for_a_game_with_every_fouled_player(
+    tmp_path, game_class
+):
+    directory = str(data_directory(tmp_path, LIVE))
+    client = Client(dict(
+        dir=directory, Possessions={"source": "file", "data_provider": "stats_nba_v3"}
+    ))
+    possessions = client.Game(LIVE).possessions
+    loader = StatsNbaV3PossessionLoader(LIVE, StatsNbaV3PossessionFileLoader(directory))
+    assert loader.capabilities["detailed_event_stats"] == "available"
+    for team, count in loader.counts_by_team.items():
+        assert {
+            row["stat_value"]
+            for row in possessions.team_stats
+            if row["team_id"] == team and row["stat_key"] == "OffPoss"
+        } == {count}
+    assert [r for r in possessions.player_stats if r["stat_key"] == "Shooting Fouls Drawn"]
+    for name in ("opponent_stats", "lineup_stats", "lineup_opponent_stats"):
+        assert getattr(possessions, name)
 
 
 def test_enhanced_loader_is_built_on_the_pbp_loader_as_the_originals_is(tmp_path):

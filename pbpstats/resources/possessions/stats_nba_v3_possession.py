@@ -18,7 +18,12 @@ class V3Possession(Possession):
 
     A possession that follows a reviewed game-clock reset starts at the clock
     the reset set, not at the previous possession's last clock.
+
+    The possession loader says whether its game has every fouled player, which
+    the game-level statistics need.
     """
+
+    detailed_stats_available = False
 
     @property
     def start_time(self):

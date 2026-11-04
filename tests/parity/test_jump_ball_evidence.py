@@ -189,6 +189,7 @@ def test_save_game_records_the_live_response(tmp_path):
         url="https://example.invalid/live.json", sha256=hashlib.sha256(live).hexdigest()
     )
     assert (tmp_path / "raw/playbyplay_live.json").read_bytes() == live
+    assert not [u for u in data["unknown_attribution"] if u["role"] == "foul_drawn"]
     del raw["live"]
     with pytest.raises(V3JumpBallEvidenceRequired):
         web.save_game("0022500100", tmp_path / "other.json", raw=raw)

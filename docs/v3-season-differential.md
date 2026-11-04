@@ -27,7 +27,7 @@ The paired evidence pins both projections: V2's clock is the floor of V3's for a
 Two shared inputs and gaps are declared:
 
 - **Shot coordinates:** the pinned evidence has no V2 shot chart, so the original's shot-chart files are written from the V3 export's `xLegacy`/`yLegacy`. Both sides therefore see identical coordinates.
-- **Fouled player:** V3 does not record it. Foul `player3_id` and fouls-drawn statistics are compared separately, as a known gap, rather than masking other differences.
+- **Fouled player:** V3 does not record it. Foul `player3_id` and fouls-drawn statistics are compared separately, as a known gap, rather than masking other differences. This comparison gives V3 no fouled player; the parser reads one from the live play-by-play (see [the contract](v3-parity-contract.md)).
 
 Each comparable game is compared on:
 

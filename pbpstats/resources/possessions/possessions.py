@@ -29,9 +29,12 @@ class Possessions(Base):
         return self.__dict__
 
     def _aggregate_event_stats(self, *args):
-        # V3 does not record every fouled player, so its detailed statistics
-        # are gated here as on the V3 possession loader.
-        if any(isinstance(item, V3Possession) for item in self.items):
+        # V3 does not record the fouled player, so a V3 game without all of them
+        # from the live play-by-play is gated here as on the V3 possession loader.
+        if any(
+            isinstance(item, V3Possession) and not item.detailed_stats_available
+            for item in self.items
+        ):
             # Imported here: the data loaders import the resources.
             from pbpstats.data_loader.stats_nba_v3.decoder import V3DecodeError
 

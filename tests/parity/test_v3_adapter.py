@@ -231,6 +231,16 @@ def test_double_technical_with_an_unidentified_coach_keeps_the_game():
         load_synthetic_rows(rows)
 
 
+def test_double_technical_coach_does_not_gate_detailed_statistics():
+    rows, foul = double_foul_rows("Double Technical - Player2, Coach (A.Referee)")
+    foul["subType"] = "Double Technical"
+    live = dict(game=dict(gameId=GAME, actions=[dict(actionNumber=1, actionType="foul")]))
+    loaded = load_synthetic_rows(rows, live=json.dumps(live).encode())
+    assert [u["role"] for u in loaded.decoded.unknown_attribution] == ["double_foul_opponent"]
+    assert loaded.capabilities["detailed_event_stats"] == "available"
+    assert loaded.event_stats
+
+
 def test_double_foul_description_must_name_its_actor_first():
     rows, _ = double_foul_rows(
         " Foul : Double Personal - Player3 (1 PF), Player12 (1 PF)"

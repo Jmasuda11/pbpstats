@@ -414,7 +414,7 @@ class DecodedV3:
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
         v2_jump_balls=None, free_throw_subtypes=None, substitution_outgoing=None,
-        blank_rows=None,
+        blank_rows=None, fouled_players=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -425,6 +425,12 @@ class DecodedV3:
             if jump_balls is not None
             else (None, None)
         )
+        self.live_fouls, fouls_input = (
+            fouled_players.decode(self.source_bytes, context.game_id)
+            if fouled_players is not None
+            else ({}, None)
+        )
+        self.live_input = self.live_input or fouls_input
         self.recorded_jump_balls = []
         # Reviewed facts an event cannot be decoded without (see overrides):
         # a team heave's side, a renumbered jump ball's live action, the team of
@@ -906,9 +912,11 @@ class DecodedV3:
                     dict(event_num=row["actionNumber"], role="double_foul_opponent")
                 )
             elif kind == "Foul" and subtype not in self.fouls_without_fouled_player:
-                self.unknown_attribution.append(
-                    dict(event_num=row["actionNumber"], role="foul_drawn")
-                )
+                event["player3_id"] = self._live_fouled_player(row, team)
+                if event["player3_id"] is None:
+                    self.unknown_attribution.append(
+                        dict(event_num=row["actionNumber"], role="foul_drawn")
+                    )
         elif kind == "Rebound":
             if subtype not in REBOUNDS:
                 raise V3DecodeError("Unsupported rebound subtype")
@@ -997,6 +1005,26 @@ class DecodedV3:
             # or no one, stands as its team. A replay keeps no team.
             event["team_id"], event["player1_id"] = event["player1_id"], 0
         return event
+
+    def _live_fouled_player(self, row, team):
+        """The fouled player V3 has no field for, from the live foul with the same number.
+
+        The action number, period and fouling person identify the action, and
+        the player must be on the opposing roster. Anything else leaves the foul
+        with no fouled player, as with no live play-by-play: it is never inferred.
+        """
+        found = self.live_fouls.get(row["actionNumber"], [])
+        live = found[0] if len(found) == 1 else {}
+        player = live.get("foulDrawnPersonId")
+        if (
+            type(player) is int
+            and live.get("period") == row["period"]
+            and live.get("personId") == row["personId"]
+            and player in self.context.roster
+            and self.context.roster[player]["team_id"] != team
+        ):
+            return player
+        return None
 
     def _recorded_jump_ball(self, row, opponent, match):
         """Jump-ball facts V3 omits, from the live action with the same number.
