@@ -414,7 +414,7 @@ class DecodedV3:
         self, source_bytes, context, jump_balls=None, locations=None, live_numbers=None,
         teams=None, foul_opponents=None, removed=(), block_removals=(),
         v2_jump_balls=None, free_throw_subtypes=None, substitution_outgoing=None,
-        blank_rows=None, fouled_players=None,
+        blank_rows=None, fouled_players=None, shot_subtypes=None, deletions=None,
     ):
         context = deepcopy(context)
         context.validate(source_bytes)
@@ -439,9 +439,11 @@ class DecodedV3:
         # block that did not happen, the V2 export row of a jump ball V3
         # leaves undecided when no live play-by-play records the game, the
         # subtype of a free throw V3 records with none, the player a
-        # substitution took off when V3 names one already off, and the event a
-        # row that records nothing belongs to. The recorded rows stay
-        # unchanged; each fact must be used by its event.
+        # substitution took off when V3 names one already off, the event a
+        # row that records nothing belongs to, the subtype of a field goal V3
+        # records with none, and the event that keeps the rows of one the
+        # scorer deleted. The recorded rows stay unchanged; each fact must be
+        # used by its event.
         self.reviewed_locations = dict(locations or {})
         self.reviewed_live_numbers = dict(live_numbers or {})
         self.reviewed_teams = dict(teams or {})
@@ -451,6 +453,8 @@ class DecodedV3:
         self.reviewed_free_throw_subtypes = dict(free_throw_subtypes or {})
         self.reviewed_substitution_outgoing = dict(substitution_outgoing or {})
         self.reviewed_blank_rows = dict(blank_rows or {})
+        self.reviewed_shot_subtypes = dict(shot_subtypes or {})
+        self.reviewed_deletions = dict(deletions or {})
         self._unused_reviewed = {
             "location": set(self.reviewed_locations),
             "live-number": set(self.reviewed_live_numbers),
@@ -461,6 +465,8 @@ class DecodedV3:
             "free-throw-subtype": set(self.reviewed_free_throw_subtypes),
             "substitution-outgoing": set(self.reviewed_substitution_outgoing),
             "blank-row": set(self.reviewed_blank_rows),
+            "shot-subtype": set(self.reviewed_shot_subtypes),
+            "deletion": set(self.reviewed_deletions),
         }
         self.team_technicals = []
         self.label_rules = []
@@ -543,8 +549,36 @@ class DecodedV3:
             ):
                 raise V3DecodeError("Ambiguous action group {}".format(number))
             groups.append((primary[0][0], primary[0][1], rows))
+        primaries = {row["actionNumber"]: row for _, row, _ in groups}
         active_period, active_players = None, None
         for index, row, group in sorted(groups, key=lambda group: group[0]):
+            if row["actionNumber"] in self.reviewed_deletions:
+                # An event the scorer deleted is not decoded, as if it were
+                # gone from the play-by-play file. It is no basket or free
+                # throw, and its rows go with another event of its period, so
+                # every recorded row still belongs to exactly one event.
+                kept = primaries.get(self.reviewed_deletions[row["actionNumber"]])
+                if (
+                    kept is None
+                    or kept["actionNumber"] in self.reviewed_deletions
+                    or kept["period"] != row["period"]
+                    or row["actionType"] in ("Made Shot", "Free Throw")
+                ):
+                    raise V3DecodeError(
+                        "Game {}, source rows {}: Event deletion override does not fit "
+                        "the recorded event".format(context.game_id, [i for i, _ in group])
+                    )
+                self._unused_reviewed["deletion"].discard(row["actionNumber"])
+                self.reviewed_inputs.append(dict(
+                    code="reviewed_deleted_event", event_num=row["actionNumber"],
+                    kept=kept["actionNumber"],
+                ))
+                self.groups[row["actionNumber"]] = dict(
+                    primary_index=index,
+                    source_indices=tuple(i for i, _ in group),
+                    primary=deepcopy(row),
+                )
+                continue
             try:
                 if row["period"] != active_period:
                     active_period = row["period"]
@@ -796,6 +830,21 @@ class DecodedV3:
                 and "3PT" in row["description"]
             ):
                 raise V3DecodeError("Description contradicts field goal facts")
+            if row["actionNumber"] in self.reviewed_shot_subtypes:
+                # Only a field goal V3 records with no subtype; the reviewed
+                # label must be one the decoder supports. The text stays as
+                # recorded, as for other subtype edits.
+                reviewed = self.reviewed_shot_subtypes[row["actionNumber"]]
+                if subtype or reviewed not in SHOTS:
+                    raise V3DecodeError(
+                        "Event shot-subtype override does not fit the recorded event"
+                    )
+                self._unused_reviewed["shot-subtype"].discard(row["actionNumber"])
+                subtype = event["sub_type"] = reviewed
+                self.reviewed_inputs.append(dict(
+                    code="reviewed_shot_subtype", event_num=row["actionNumber"],
+                    subtype=reviewed,
+                ))
             if subtype not in SHOTS:
                 raise V3DecodeError("Unsupported shot subtype {!r}".format(subtype))
             # Shared shot value reads the description; retain explicit V3 value in

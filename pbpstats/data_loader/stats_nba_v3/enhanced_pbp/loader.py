@@ -55,6 +55,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
+    EVENT_DELETIONS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
     EVENT_FREE_THROW_SUBTYPES,
@@ -64,6 +65,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_ORDER,
     EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
+    EVENT_SHOT_SUBTYPES,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
@@ -382,6 +384,10 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
             ),
             blank_rows=reviewed_entries(self.overrides, EVENT_BLANK_ROWS, context.game_id, {}),
             fouled_players=fouled_players,
+            shot_subtypes=reviewed_entries(
+                self.overrides, EVENT_SHOT_SUBTYPES, context.game_id, {}
+            ),
+            deletions=reviewed_entries(self.overrides, EVENT_DELETIONS, context.game_id, {}),
         )
         self.decoded = decoded
         self.game_id = context.game_id
@@ -429,7 +435,13 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
         dropped = {
             **self._reviewed_entries(EVENT_DUPLICATES, {}),
             **self._reviewed_entries(EVENT_REMOVALS, {}),
+            **self._reviewed_entries(EVENT_DELETIONS, {}),
         }
+        if set(self._reviewed_entries(EVENT_DELETIONS, {}).values()) - {
+            event.event_num for event in self.items
+        }:
+            # A deleted event's rows go with an event that is kept.
+            raise V3DecodeError("Event deletion override does not keep a recorded event")
         for event in self.items:
             event.reviewed_clock_reset = self.clock_resets.get(event.event_num)
             if event.event_num in self.added_rows:
@@ -441,7 +453,7 @@ class StatsNbaV3EnhancedPbpLoader(StatsNbaV3PbpLoader, NbaEnhancedPbpLoader):
             indices = group["source_indices"]
             copies = [copy for copy, kept in sorted(dropped.items()) if kept == event.event_num]
             if copies:
-                # A dropped copy's or removed event's recorded rows belong to
+                # A dropped copy's, removed or deleted event's recorded rows belong to
                 # the event kept, so every recorded row still belongs to
                 # exactly one event.
                 indices = tuple(sorted(indices + tuple(

@@ -33,6 +33,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
+    EVENT_DELETIONS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
     EVENT_FREE_THROW_SUBTYPES,
@@ -42,6 +43,7 @@ from pbpstats.data_loader.stats_nba_v3.overrides import (
     EVENT_ORDER,
     EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
+    EVENT_SHOT_SUBTYPES,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
@@ -809,6 +811,7 @@ def test_substitution_outgoing_edit_needs_the_recorded_player_off_the_floor():
     (EVENT_TEAMS, True),
     (EVENT_TIP_RECIPIENTS, True),
     (EVENT_BLANK_ROWS, False),
+    (EVENT_DELETIONS, False),
     (EVENT_DUPLICATES, False),
     (EVENT_LIVE_NUMBERS, False),
     (EVENT_MOVES, False),
@@ -878,6 +881,108 @@ def test_blank_row_edits_are_validated(values, message):
     values = {str(n.get(key, key)): n.get(value, value) for key, value in values.items()}
     with pytest.raises(V3DecodeError, match=message):
         load(rows, files=edits(EVENT_BLANK_ROWS, values))
+
+
+
+def shot_without_a_subtype():
+    """HOME's missed three is recorded with no subtype, as V3 records 2026-27
+    game 0022600022's last shot of the 1st quarter, which the live play-by-play
+    records as a hook."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("miss", 590, HOME, 1, value=3),
+        e("rebound", 589, AWAY, 11),
+        e("make", 570, AWAY, 12),
+    ]))
+    miss = next(r for r in rows if r["actionType"] == "Missed Shot")
+    miss.update(subType="", description="MISS Player1 3PT Shot")
+    return rows, dict(miss=miss["actionNumber"], rebound=numbered(rows, "Rebound"))
+
+
+def test_shot_subtype_edit_labels_a_field_goal_recorded_without_one():
+    rows, n = shot_without_a_subtype()
+    with pytest.raises(V3DecodeError, match="Unsupported shot subtype ''"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_SHOT_SUBTYPES, {str(n["miss"]): "Hook Shot"}))
+    miss = next(x for x in loaded.events if x.event_num == n["miss"])
+    assert (miss.sub_type, miss.shot_value) == ("Hook Shot", 3)
+    assert miss.description == "MISS Player1 3PT Shot"
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME]
+    assert dict(code="reviewed_shot_subtype", event_num=n["miss"],
+                subtype="Hook Shot") in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("change, values, message", [
+    (dict(subType="Jump Shot"), {"miss": "Hook Shot"}, "shot-subtype override does not fit"),
+    ({}, {"miss": "Hook"}, "shot-subtype override does not fit"),
+    ({}, {"miss": "Hook Shot", "rebound": "Hook Shot"}, "shot-subtype override does not fit"),
+    ({}, {"miss": "Hook Shot", "999": "Hook Shot"}, "shot-subtype override does not fit"),
+    ({}, {"miss": " "}, "Invalid event shot-subtype override"),
+], ids=["recorded_subtype", "unsupported_label", "not_a_field_goal", "unknown_event",
+        "blank_label"])
+def test_shot_subtype_edits_are_validated(change, values, message):
+    rows, n = shot_without_a_subtype()
+    next(r for r in rows if r["actionNumber"] == n["miss"]).update(change)
+    values = {str(n.get(key, key)): value for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_SHOT_SUBTYPES, values))
+
+
+def deleted_technicals():
+    """Two technicals recorded with neither a team nor a person, and no free
+    throw, while HOME has the ball after AWAY's basket: as in 2026-27 game
+    0022600015 Q2 9:21, the scorer deleted them, and the live play-by-play
+    no longer records them."""
+    rows = encode_v3(wrap([
+        e("make", 600, AWAY, 11),
+        e("foul", 590, 0, 0, subtype="Technical"),
+        e("foul", 590, 0, 0, subtype="Technical"),
+        e("make", 580, HOME, 1),
+        e("make", 570, AWAY, 12),
+    ]))
+    first, second = (r for r in rows if r["actionType"] == "Foul")
+    first["description"] = second["description"] = "Technical"
+    makes = [r["actionNumber"] for r in rows if r["actionType"] == "Made Shot"]
+    index = next(i for i, r in enumerate(rows) if r["actionNumber"] == makes[0])
+    return rows, dict(
+        first=first["actionNumber"], second=second["actionNumber"], make=makes[0],
+        home=makes[1], index=index,
+    )
+
+
+def test_deletion_edit_drops_an_event_before_it_is_decoded():
+    rows, n = deleted_technicals()
+    with pytest.raises(V3DecodeError, match="one recorded technical free-throw team"):
+        load(rows)
+    loaded = load(rows, files=edits(EVENT_DELETIONS, {
+        str(n["first"]): n["make"], str(n["second"]): n["make"],
+    }))
+    numbers = [x.event_num for x in loaded.events]
+    assert n["first"] not in numbers and n["second"] not in numbers
+    make = next(x for x in loaded.events if x.event_num == n["make"])
+    assert make.v3_source_indices == (n["index"], n["index"] + 1, n["index"] + 2)
+    assert sorted(i for x in loaded.events for i in x.v3_source_indices) == list(range(len(rows)))
+    assert offenses(loaded) == [AWAY, HOME, AWAY, HOME]
+    assert dict(code="reviewed_deleted_event", event_num=n["first"],
+                kept=n["make"]) in loaded.diagnostics
+    assert loaded.decoded.raw_rows == rows
+
+
+@pytest.mark.parametrize("values, message", [
+    ({"first": "make"}, "one recorded technical free-throw team"),
+    ({"first": "second", "second": "make"}, "deletion override does not fit"),
+    ({"first": 999, "second": "make"}, "deletion override does not fit"),
+    ({"first": "make", "second": "make", "home": "make"}, "deletion override does not fit"),
+    ({"first": "make", "second": "make", "998": "make"}, "deletion override does not fit"),
+    ({"first": "first"}, "Invalid event deletion override"),
+], ids=["one_left", "kept_is_deleted", "no_kept_event", "a_basket", "not_recorded",
+        "its_own"])
+def test_deletion_edits_are_validated(values, message):
+    rows, n = deleted_technicals()
+    values = {str(n.get(key, key)): n.get(value, value) for key, value in values.items()}
+    with pytest.raises(V3DecodeError, match=message):
+        load(rows, files=edits(EVENT_DELETIONS, values))
 
 
 def double_technical_named_nobody():
