@@ -53,7 +53,11 @@ STARTERS = "missing_period_starters.json"
 # scorer does from a lineup that lacks an earlier substitution. A blank-row
 # entry, {event: kept}, drops a row that records nothing (no team, person,
 # subtype or description), keeping its recorded row with an event at the same
-# period and clock.
+# period and clock. A shot-subtype entry, {event: V3 label}, gives the subtype
+# of a field goal V3 records with none. A deletion entry, {event: kept}, drops
+# an event the scorer deleted, one the live play-by-play no longer records and
+# no basket or free throw, before it is decoded, keeping its recorded rows with
+# another event of its period.
 # A penalty-free-throw entry, [event, ...], names the first of penalty free
 # throws shot after play went on, with no foul at their clock; its free throw
 # type is Penalty, as the original's own override gives 0022301195's.
@@ -80,6 +84,8 @@ EVENT_BLOCK_REMOVALS = "event_block_removals.json"
 EVENT_SUBSTITUTION_OUTGOING = "event_substitution_outgoing.json"
 EVENT_PENALTY_FREE_THROWS = "event_penalty_free_throws.json"
 EVENT_BLANK_ROWS = "event_blank_rows.json"
+EVENT_SHOT_SUBTYPES = "event_shot_subtypes.json"
+EVENT_DELETIONS = "event_deletions.json"
 SUPPORTED = {
     BAD_POSSESSIONS,
     CHANGE_EVENTS,
@@ -88,6 +94,7 @@ SUPPORTED = {
     EVENT_BLOCKS,
     EVENT_CLOCK_RESETS,
     EVENT_CLOCKS,
+    EVENT_DELETIONS,
     EVENT_DUPLICATES,
     EVENT_FOUL_OPPONENTS,
     EVENT_FREE_THROW_SUBTYPES,
@@ -97,6 +104,7 @@ SUPPORTED = {
     EVENT_ORDER,
     EVENT_PENALTY_FREE_THROWS,
     EVENT_REMOVALS,
+    EVENT_SHOT_SUBTYPES,
     EVENT_SUBSTITUTION_OUTGOING,
     EVENT_SUBTYPES,
     EVENT_TEAMS,
@@ -108,10 +116,11 @@ SUPPORTED = {
 }
 # Entries that map an event to a number: a kept event, a blocker, a live action,
 # a tip recipient, an event to follow, a team, a foul opponent or a substitution's
-# outgoing player, or the event a blank row belongs to.
+# outgoing player, or the event a blank row or a deleted event's rows belong to.
 NUMBERED = {
     EVENT_BLANK_ROWS: "blank-row",
     EVENT_BLOCKS: "block",
+    EVENT_DELETIONS: "deletion",
     EVENT_DUPLICATES: "duplicate",
     EVENT_FOUL_OPPONENTS: "foul-opponent",
     EVENT_LIVE_NUMBERS: "live-number",
@@ -126,6 +135,7 @@ NUMBERED = {
 # team, whose ID may equal the event's number.
 ACTION_NUMBERED = {
     EVENT_BLANK_ROWS,
+    EVENT_DELETIONS,
     EVENT_DUPLICATES,
     EVENT_LIVE_NUMBERS,
     EVENT_MOVES,
@@ -177,7 +187,9 @@ class V3Overrides:
                     ):
                         raise V3DecodeError("Invalid event-order override move")
                     continue
-                if name in (EVENT_SUBTYPES, EVENT_CLOCKS, EVENT_FREE_THROW_SUBTYPES):
+                if name in (
+                    EVENT_SUBTYPES, EVENT_CLOCKS, EVENT_FREE_THROW_SUBTYPES, EVENT_SHOT_SUBTYPES
+                ):
                     if not isinstance(entries, dict) or not entries or any(
                         type(event) is not int
                         or event < 0
@@ -189,6 +201,7 @@ class V3Overrides:
                         raise V3DecodeError("Invalid event {} override".format({
                             EVENT_SUBTYPES: "subtype", EVENT_CLOCKS: "clock",
                             EVENT_FREE_THROW_SUBTYPES: "free-throw-subtype",
+                            EVENT_SHOT_SUBTYPES: "shot-subtype",
                         }[name]))
                     continue
                 if name == EVENT_CLOCK_RESETS:
